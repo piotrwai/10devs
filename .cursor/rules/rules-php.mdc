@@ -1,0 +1,25 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- projekt jest pisany w PHP;
+- projekt ma działać w PHP 7, ale także powinien nie powodować error-ów czy warning-ów w wersji PHP 8.4;
+- nazwy zmiennych w formacie CamelCase po angielsku: $someExample , $anotherClient , $userLogin
+- nazwy funkcji w formacie CamelCase: getPower , ajaxCategoryMenu , addFilterToProduct , imgResize
+- jeśli funkcja dotyczy operacji na bazie danych (zawiera SQL) to jeśli to SELECT powinna mieć początek nazwy get; jeśli INSERT, UPDATE, REPLACE to set; DELETE to del; pozostałe db. Przykłady: getUserList(), setClientName(), delClientById()
+- komentarze zawsze po polsku
+
+
+# Struktura katalogów
+- './' - główne pliki
+- './classes' - pliki z klasami
+- './templates' - pliki z szablonami HTML
+- './commonDB' - funkcje z SQL
+- './img' - pliki graficzne
+
+# You can @ files here
+# You can use markdown but dont have to
