@@ -1,4 +1,3 @@
-
 CREATE DATABASE IF NOT EXISTS `10devs` DEFAULT CHARACTER SET UTF8MB4 COLLATE utf8_general_ci;  -- utworzenie bazy danych 10devs
 USE `10devs`;  -- wybranie bazy danych 10devs
 
@@ -7,6 +6,7 @@ CREATE TABLE users (
     usr_login VARCHAR(50) NOT NULL UNIQUE COMMENT 'login uzytkownika',
     usr_password VARCHAR(255) NOT NULL COMMENT 'haslo uzytkownika',
     usr_city VARCHAR(150) NOT NULL COMMENT 'miasto bazowe uzytkownika',
+    usr_admin TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'flaga oznaczajaca czy uzytkownik jest administratorem (1 - tak, 0 - nie)',
     usr_date_registration TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'data rejestracji uzytkownika',
     PRIMARY KEY (usr_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4 COMMENT='tabela uzytkownikow';
@@ -15,13 +15,15 @@ CREATE TABLE cities (
     cit_id INT(11) NOT NULL AUTO_INCREMENT COMMENT 'unikalny identyfikator miasta',
     cit_usr_id INT(11) NOT NULL COMMENT 'identyfikator uzytkownika odpowiadajacy miastu',
     cit_name VARCHAR(150) NOT NULL COMMENT 'nazwa miasta',
+    cit_desc VARCHAR(200) NOT NULL COMMENT 'krotki opis miasta',
+    cit_date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'data utworzenia miasta',
     PRIMARY KEY (cit_id),
     UNIQUE KEY cities_unique (cit_usr_id, cit_name),
     KEY idx_cit_usr_id (cit_usr_id),
     CONSTRAINT fk_cit_usr_id FOREIGN KEY (cit_usr_id) REFERENCES users(usr_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4 COMMENT='tabela miast';
 
-CREATE TABLE recomm (
+CREATE TABLE recom (
     rec_id INT(11) NOT NULL AUTO_INCREMENT COMMENT 'unikalny identyfikator rekomendacji',
     rec_usr_id INT(11) NOT NULL COMMENT 'identyfikator uzytkownika, ktorego dotyczy rekomendacja',
     rec_cit_id INT(11) NOT NULL COMMENT 'identyfikator miasta, dla ktorego jest rekomendacja',
@@ -31,8 +33,9 @@ CREATE TABLE recomm (
     rec_date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'data utworzenia rekomendacji',
     rec_date_modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'data modyfikacji rekomendacji',
     rec_status VARCHAR(50) NOT NULL COMMENT 'status rekomendacji',
+    rec_done TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'czy rekomendacja zostala juz odwiedzona przez uzytkownika (1 - tak, 0 - nie)',
     PRIMARY KEY (rec_id),
-    UNIQUE KEY recomm_unique (rec_usr_id, rec_cit_id, rec_title),
+    UNIQUE KEY recom_unique (rec_usr_id, rec_cit_id, rec_title),
     KEY idx_rec_usr_id (rec_usr_id),
     KEY idx_rec_cit_id (rec_cit_id),
     CONSTRAINT fk_rec_usr_id FOREIGN KEY (rec_usr_id) REFERENCES users(usr_id) ON DELETE CASCADE,
@@ -59,3 +62,16 @@ CREATE TABLE ai_inputs (
     PRIMARY KEY (ain_id),
     KEY idx_ain_usr_id (ain_usr_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4 COMMENT='tabela danych wejscia dla AI';
+
+CREATE TABLE error_logs (
+    err_id INT(11) NOT NULL AUTO_INCREMENT COMMENT 'unikalny identyfikator logu błędu',
+    err_type VARCHAR(100) NOT NULL COMMENT 'typ błędu (np. login_error, validation_error, ai_fetch_error, ai_call_error)',
+    err_message TEXT NOT NULL COMMENT 'opis błędu',
+    err_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'czas wystąpienia błędu',
+    err_usr_id INT(11) DEFAULT NULL COMMENT 'identyfikator użytkownika, jeśli dotyczy',
+    err_url VARCHAR(255) DEFAULT NULL COMMENT 'URL wywołania, przy którym wystąpił błąd',
+    err_payload TEXT DEFAULT NULL COMMENT 'dodatkowe dane, np. payload lub stack trace',
+    PRIMARY KEY (err_id),
+    KEY idx_err_usr_id (err_usr_id),
+    CONSTRAINT fk_err_usr_id FOREIGN KEY (err_usr_id) REFERENCES users(usr_id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=UTF8MB4 COMMENT='tabela logów błędów';

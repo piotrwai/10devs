@@ -1,4 +1,66 @@
-# 10x-city
+# 10x-city - System rekomendacji miejsc turystycznych
+
+## Instalacja i konfiguracja
+
+### Wymagania
+- PHP 7.x lub 8.x
+- MySQL/MariaDB
+- Dostęp do API OpenAI (klucz API)
+
+### Instalacja
+1. Sklonuj repozytorium:
+   ```
+   git clone <adres-repozytorium>
+   cd 10devs
+   ```
+
+2. Konfiguracja:
+   - Skopiuj `config.example.php` do `config.php`:
+     ```
+     cp config.example.php config.php
+     ```
+   - Edytuj `config.php` i wprowadź odpowiednie dane:
+     - Dane połączenia do bazy danych
+     - Klucz API OpenAI
+     - Inne ustawienia specyficzne dla środowiska
+
+### Struktura projektu
+- `./api/` - Endpointy API REST
+- `./classes/` - Klasy PHP
+- `./commonDB/` - Funkcje do operacji na bazie danych
+- `./templates/` - Pliki szablonów HTML
+- `./img/` - Pliki graficzne
+
+## Endpointy API
+
+### Miasta
+- `POST /api/cities/search` - Wyszukiwanie miasta i generowanie rekomendacji
+  
+### Rekomendacje
+- `POST /api/recommendation/save` - Zapisywanie rekomendacji dla miasta
+
+## Bezpieczeństwo
+
+### Wrażliwe dane
+W projekcie zarządzamy wrażliwymi danymi przy użyciu pliku `config.php`, który nigdy nie powinien być commitowany do repozytorium. W pliku tym przechowujemy:
+
+- Dane dostępowe do bazy danych
+- Klucze API (np. OpenAI)
+- Klucze JWT do podpisywania tokenów
+- Inne wrażliwe ustawienia konfiguracyjne
+
+Zawsze używaj pliku `.gitignore` aby zapobiec przypadkowemu commitowaniu tych danych.
+
+## Developement
+
+### Testowanie API bez OpenAI
+Podczas developmentu możesz testować API bez konieczności wywoływania rzeczywistego API OpenAI. W pliku `AiService.php` znajdziesz zakomentowany kod produkcyjny oraz przykładową odpowiedź dla celów testowych. Możesz również użyć przykładów błędnych odpowiedzi, aby testować obsługę błędów.
+
+### Używane narzędzia
+- PHP 7.x (kompatybilne z PHP 8.x)
+- MySQL/MariaDB jako baza danych
+- JWT do autoryzacji
+- OpenAI API (model gpt-4.1-mini) do generowania rekomendacji
 
 ## Table of Contents
 - [Project Description](#project-description)

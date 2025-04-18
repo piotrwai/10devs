@@ -716,10 +716,10 @@ Końcowy wynik powinien zawierać tylko treść w formacie markdown. Upewnij si�
 <decisions>
 1. Tabela users zostanie zaprojektowana z polami: usr_id (INT(11) AUTO_INCREMENT, PK), usr_login (VARCHAR(50), UNIQUE), usr_password, usr_citybase (VARCHAR(150)) oraz usr_date_registration (DATETIME, ustawiane automatycznie).  
 2. Każdy użytkownik będzie miał swoją listę miast – tabela cities z polami: cit_id (INT(11) AUTO_INCREMENT, PK), cit_usr_id (INT(11), FK do users), cit_name (VARCHAR(150)) z unikalnym ograniczeniem (cit_usr_id, cit_name).  
-3. Tabela recomm będzie przechowywać rekomendacje specyficzne dla użytkownika z polami: rec_id (INT(11) AUTO_INCREMENT, PK), rec_usr_id (INT(11), FK do users), rec_cit_id (INT(11), FK do cities), rec_title (VARCHAR(200)), rec_desc (TEXT), rec_model (VARCHAR(50) – wartość odpowiadająca modelowi lub 'manual'), rec_date_created (DATETIME), rec_date_modified (DATETIME) oraz rec_status (VARCHAR z ograniczonymi wartościami). Dodatkowo, zostanie zastosowane unikalne ograniczenie na parze (rec_usr_id, rec_cit_id, rec_title).  
-4. Tabela ai_logs (prefiks ail_) będzie miała pola: ail_id (INT(11) AUTO_INCREMENT, PK), ail_usr_id (INT(11), FK do users), ail_rec_id (INT(11), FK do recomm), ail_date (DATETIME) oraz ail_status (VARCHAR).  
+3. Tabela recom będzie przechowywać rekomendacje specyficzne dla użytkownika z polami: rec_id (INT(11) AUTO_INCREMENT, PK), rec_usr_id (INT(11), FK do users), rec_cit_id (INT(11), FK do cities), rec_title (VARCHAR(200)), rec_desc (TEXT), rec_model (VARCHAR(50) – wartość odpowiadająca modelowi lub 'manual'), rec_date_created (DATETIME), rec_date_modified (DATETIME) oraz rec_status (VARCHAR z ograniczonymi wartościami). Dodatkowo, zostanie zastosowane unikalne ograniczenie na parze (rec_usr_id, rec_cit_id, rec_title).  
+4. Tabela ai_logs (prefiks ail_) będzie miała pola: ail_id (INT(11) AUTO_INCREMENT, PK), ail_usr_id (INT(11), FK do users), ail_rec_id (INT(11), FK do recom), ail_date (DATETIME) oraz ail_status (VARCHAR).  
 5. Dodana zostanie tabela ai_inputs (prefiks ain_) z polami: ain_id (INT(11) AUTO_INCREMENT, PK), ain_usr_id (INT(11), FK do users), ain_date (DATETIME), ain_content (TEXT) oraz ain_source (VARCHAR(150)).  
-6. Mechanizm RLS zostanie wdrożony przy użyciu widoków filtrujących dane w głównych tabelach (users, cities, recomm) na podstawie usr_id.
+6. Mechanizm RLS zostanie wdrożony przy użyciu widoków filtrujących dane w głównych tabelach (users, cities, recom) na podstawie usr_id.
 </decisions>
 
 <matched_recommendations>
@@ -732,13 +732,13 @@ Końcowy wynik powinien zawierać tylko treść w formacie markdown. Upewnij si�
 </matched_recommendations>
 
 <database_planning_summary>
-Schemat bazy danych dla MVP obejmuje pięć głównych tabel: users, cities, recomm, ai_logs oraz ai_inputs. Każda tabela została zaprojektowana z unikalnymi małymi nazwami oraz prefiksami określającymi jej przynależność (usr_, cit_, rec_, ail_, ain_).  
+Schemat bazy danych dla MVP obejmuje pięć głównych tabel: users, cities, recom, ai_logs oraz ai_inputs. Każda tabela została zaprojektowana z unikalnymi małymi nazwami oraz prefiksami określającymi jej przynależność (usr_, cit_, rec_, ail_, ain_).  
 Główne wymagania to:
 - Przechowywanie danych użytkowników, w tym loginy, hasła, miasto bazowe oraz datę rejestracji.
 - Umożliwienie każdemu użytkownikowi posiadania własnej, unikalnej listy miast.
 - Przechowywanie rekomendacji specyficznych dla użytkownika z określonymi polami: tytuł (200 znaków), opis (64000 znaków), model generacji (50 znaków lub 'manual'), daty utworzenia/modyfikacji oraz status.
 - Zapisywanie logów działań AI oraz danych wejściowych, z odpowiednimi kluczami obcymi do użytkowników.
-Relacje między encjami są zdefiniowane poprzez klucze obce, z unikalnymi ograniczeniami np. dla pary (cit_usr_id, cit_name) w tabeli cities oraz (rec_usr_id, rec_cit_id, rec_title) w tabeli recomm.  
+Relacje między encjami są zdefiniowane poprzez klucze obce, z unikalnymi ograniczeniami np. dla pary (cit_usr_id, cit_name) w tabeli cities oraz (rec_usr_id, rec_cit_id, rec_title) w tabeli recom.  
 Kwestie bezpieczeństwa obejmują implementację mechanizmu RLS przy użyciu widoków, co zapewnia użytkownikom dostęp jedynie do ich własnych danych w głównych tabelach. Skalowalność została zapewniona poprzez prostą strukturę bazy danych z indeksowaniem kluczowych kolumn, bez zastosowania partycjonowania.
 </database_planning_summary>
 
@@ -764,10 +764,10 @@ Jest to dokument wymagań produktu, który określa cechy, funkcjonalności i wy
 <decisions>
 1. Tabela users zostanie zaprojektowana z polami: usr_id (INT(11) AUTO_INCREMENT, PK), usr_login (VARCHAR(50), UNIQUE), usr_password, usr_citybase (VARCHAR(150)) oraz usr_date_registration (DATETIME, ustawiane automatycznie).  
 2. Każdy użytkownik będzie miał swoją listę miast – tabela cities z polami: cit_id (INT(11) AUTO_INCREMENT, PK), cit_usr_id (INT(11), FK do users), cit_name (VARCHAR(150)) z unikalnym ograniczeniem (cit_usr_id, cit_name).  
-3. Tabela recomm będzie przechowywać rekomendacje specyficzne dla użytkownika z polami: rec_id (INT(11) AUTO_INCREMENT, PK), rec_usr_id (INT(11), FK do users), rec_cit_id (INT(11), FK do cities), rec_title (VARCHAR(200)), rec_desc (TEXT), rec_model (VARCHAR(50) – wartość odpowiadająca modelowi lub 'manual'), rec_date_created (DATETIME), rec_date_modified (DATETIME) oraz rec_status (VARCHAR z ograniczonymi wartościami). Dodatkowo, zostanie zastosowane unikalne ograniczenie na parze (rec_usr_id, rec_cit_id, rec_title).  
-4. Tabela ai_logs (prefiks ail_) będzie miała pola: ail_id (INT(11) AUTO_INCREMENT, PK), ail_usr_id (INT(11), FK do users), ail_rec_id (INT(11), FK do recomm), ail_date (DATETIME) oraz ail_status (VARCHAR).  
+3. Tabela recom będzie przechowywać rekomendacje specyficzne dla użytkownika z polami: rec_id (INT(11) AUTO_INCREMENT, PK), rec_usr_id (INT(11), FK do users), rec_cit_id (INT(11), FK do cities), rec_title (VARCHAR(200)), rec_desc (TEXT), rec_model (VARCHAR(50) – wartość odpowiadająca modelowi lub 'manual'), rec_date_created (DATETIME), rec_date_modified (DATETIME) oraz rec_status (VARCHAR z ograniczonymi wartościami). Dodatkowo, zostanie zastosowane unikalne ograniczenie na parze (rec_usr_id, rec_cit_id, rec_title).  
+4. Tabela ai_logs (prefiks ail_) będzie miała pola: ail_id (INT(11) AUTO_INCREMENT, PK), ail_usr_id (INT(11), FK do users), ail_rec_id (INT(11), FK do recom), ail_date (DATETIME) oraz ail_status (VARCHAR).  
 5. Dodana zostanie tabela ai_inputs (prefiks ain_) z polami: ain_id (INT(11) AUTO_INCREMENT, PK), ain_usr_id (INT(11), FK do users), ain_date (DATETIME), ain_content (TEXT) oraz ain_source (VARCHAR(150)).  
-6. Mechanizm RLS zostanie wdrożony przy użyciu widoków filtrujących dane w głównych tabelach (users, cities, recomm) na podstawie usr_id.
+6. Mechanizm RLS zostanie wdrożony przy użyciu widoków filtrujących dane w głównych tabelach (users, cities, recom) na podstawie usr_id.
 </decisions>
 
 <matched_recommendations>
@@ -780,13 +780,13 @@ Jest to dokument wymagań produktu, który określa cechy, funkcjonalności i wy
 </matched_recommendations>
 
 <database_planning_summary>
-Schemat bazy danych dla MVP obejmuje pięć głównych tabel: users, cities, recomm, ai_logs oraz ai_inputs. Każda tabela została zaprojektowana z unikalnymi małymi nazwami oraz prefiksami określającymi jej przynależność (usr_, cit_, rec_, ail_, ain_).  
+Schemat bazy danych dla MVP obejmuje pięć głównych tabel: users, cities, recom, ai_logs oraz ai_inputs. Każda tabela została zaprojektowana z unikalnymi małymi nazwami oraz prefiksami określającymi jej przynależność (usr_, cit_, rec_, ail_, ain_).  
 Główne wymagania to:
 - Przechowywanie danych użytkowników, w tym loginy, hasła, miasto bazowe oraz datę rejestracji.
 - Umożliwienie każdemu użytkownikowi posiadania własnej, unikalnej listy miast.
 - Przechowywanie rekomendacji specyficznych dla użytkownika z określonymi polami: tytuł (200 znaków), opis (64000 znaków), model generacji (50 znaków lub 'manual'), daty utworzenia/modyfikacji oraz status.
 - Zapisywanie logów działań AI oraz danych wejściowych, z odpowiednimi kluczami obcymi do użytkowników.
-Relacje między encjami są zdefiniowane poprzez klucze obce, z unikalnymi ograniczeniami np. dla pary (cit_usr_id, cit_name) w tabeli cities oraz (rec_usr_id, rec_cit_id, rec_title) w tabeli recomm.  
+Relacje między encjami są zdefiniowane poprzez klucze obce, z unikalnymi ograniczeniami np. dla pary (cit_usr_id, cit_name) w tabeli cities oraz (rec_usr_id, rec_cit_id, rec_title) w tabeli recom.  
 Kwestie bezpieczeństwa obejmują implementację mechanizmu RLS przy użyciu widoków, co zapewnia użytkownikom dostęp jedynie do ich własnych danych w głównych tabelach. Skalowalność została zapewniona poprzez prostą strukturę bazy danych z indeksowaniem kluczowych kolumn, bez zastosowania partycjonowania.
 </database_planning_summary>
 
@@ -851,7 +851,7 @@ W odpowiedzi należy podać tylko ostateczny schemat bazy danych w formacie mark
 - cit_name: VARCHAR(150) NOT NULL
 - CONSTRAINT cities_unique UNIQUE (cit_usr_id, cit_name)
 
-### 1.3 recomm
+### 1.3 recom
 - rec_id: SERIAL PRIMARY KEY
 - rec_usr_id: INTEGER NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE
 - rec_cit_id: INTEGER NOT NULL REFERENCES cities(cit_id) ON DELETE CASCADE
@@ -861,12 +861,12 @@ W odpowiedzi należy podać tylko ostateczny schemat bazy danych w formacie mark
 - rec_date_created: TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 - rec_date_modified: TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 - rec_status: VARCHAR(50) NOT NULL
-- CONSTRAINT recomm_unique UNIQUE (rec_usr_id, rec_cit_id, rec_title)
+- CONSTRAINT recom_unique UNIQUE (rec_usr_id, rec_cit_id, rec_title)
 
 ### 1.4 ai_logs
 - ail_id: SERIAL PRIMARY KEY
 - ail_usr_id: INTEGER NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE
-- ail_rec_id: INTEGER NOT NULL REFERENCES recomm(rec_id) ON DELETE CASCADE
+- ail_rec_id: INTEGER NOT NULL REFERENCES recom(rec_id) ON DELETE CASCADE
 - ail_date: TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 - ail_status: VARCHAR(50) NOT NULL
 
@@ -880,10 +880,10 @@ W odpowiedzi należy podać tylko ostateczny schemat bazy danych w formacie mark
 
 2. Relacje między tabelami
 - users (1) : cities (N) – relacja przez cit_usr_id
-- users (1) : recomm (N) – relacja przez rec_usr_id
-- cities (1) : recomm (N) – relacja przez rec_cit_id
+- users (1) : recom (N) – relacja przez rec_usr_id
+- cities (1) : recom (N) – relacja przez rec_cit_id
 - users (1) : ai_logs (N) – relacja przez ail_usr_id
-- recomm (1) : ai_logs (N) – relacja przez ail_rec_id
+- recom (1) : ai_logs (N) – relacja przez ail_rec_id
 - users (1) : ai_inputs (N) – relacja przez ain_usr_id
 
 
@@ -891,15 +891,15 @@ W odpowiedzi należy podać tylko ostateczny schemat bazy danych w formacie mark
 - Domyślne indeksy tworzone przez PRIMARY KEY i UNIQUE constraints.
 - Dodatkowe indeksy:
   - CREATE INDEX idx_cities_cit_usr_id ON cities (cit_usr_id);
-  - CREATE INDEX idx_recomm_rec_usr_id ON recomm (rec_usr_id);
-  - CREATE INDEX idx_recomm_rec_cit_id ON recomm (rec_cit_id);
+  - CREATE INDEX idx_recom_rec_usr_id ON recom (rec_usr_id);
+  - CREATE INDEX idx_recom_rec_cit_id ON recom (rec_cit_id);
   - CREATE INDEX idx_ai_logs_ail_usr_id ON ai_logs (ail_usr_id);
   - CREATE INDEX idx_ai_logs_ail_rec_id ON ai_logs (ail_rec_id);
   - CREATE INDEX idx_ai_inputs_ain_usr_id ON ai_inputs (ain_usr_id);
 
 
 4. Zasady RLS (Row-Level Security)
-- Główne tabele (users, cities, recomm) będą chronione poprzez widoki filtrujące dane na podstawie usr_id, tak aby użytkownik widział tylko swoje rekordy.
+- Główne tabele (users, cities, recom) będą chronione poprzez widoki filtrujące dane na podstawie usr_id, tak aby użytkownik widział tylko swoje rekordy.
 - Alternatywnie, można wykorzystać natywne mechanizmy RLS PostgreSQL, np.:
 
 ```sql
@@ -909,8 +909,8 @@ CREATE POLICY users_policy ON users USING (usr_id = current_setting('app.current
 ALTER TABLE cities ENABLE ROW LEVEL SECURITY;
 CREATE POLICY cities_policy ON cities USING (cit_usr_id = current_setting('app.current_user_id')::integer);
 
-ALTER TABLE recomm ENABLE ROW LEVEL SECURITY;
-CREATE POLICY recomm_policy ON recomm USING (rec_usr_id = current_setting('app.current_user_id')::integer);
+ALTER TABLE recom ENABLE ROW LEVEL SECURITY;
+CREATE POLICY recom_policy ON recom USING (rec_usr_id = current_setting('app.current_user_id')::integer);
 ```
 
 5. Dodatkowe uwagi
@@ -954,7 +954,7 @@ CREATE TABLE cities (
     CONSTRAINT fk_cit_usr_id FOREIGN KEY (cit_usr_id) REFERENCES users(usr_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='tabela miast';
 
-CREATE TABLE recomm (
+CREATE TABLE recom (
     rec_id INT(11) NOT NULL AUTO_INCREMENT COMMENT 'unikalny identyfikator rekomendacji',
     rec_usr_id INT(11) NOT NULL COMMENT 'identyfikator uzytkownika, ktorego dotyczy rekomendacja',
     rec_cit_id INT(11) NOT NULL COMMENT 'identyfikator miasta, dla ktorego jest rekomendacja',
@@ -965,7 +965,7 @@ CREATE TABLE recomm (
     rec_date_modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'data modyfikacji rekomendacji',
     rec_status VARCHAR(50) NOT NULL COMMENT 'status rekomendacji',
     PRIMARY KEY (rec_id),
-    UNIQUE KEY recomm_unique (rec_usr_id, rec_cit_id, rec_title),
+    UNIQUE KEY recom_unique (rec_usr_id, rec_cit_id, rec_title),
     KEY idx_rec_usr_id (rec_usr_id),
     KEY idx_rec_cit_id (rec_cit_id),
     CONSTRAINT fk_rec_usr_id FOREIGN KEY (rec_usr_id) REFERENCES users(usr_id) ON DELETE CASCADE,
@@ -982,7 +982,7 @@ CREATE TABLE ai_logs (
     KEY idx_ail_usr_id (ail_usr_id),
     KEY idx_ail_rec_id (ail_rec_id),
     CONSTRAINT fk_ail_usr_id FOREIGN KEY (ail_usr_id) REFERENCES users(usr_id) ON DELETE CASCADE,
-    CONSTRAINT fk_ail_rec_id FOREIGN KEY (ail_rec_id) REFERENCES recomm(rec_id) ON DELETE CASCADE
+    CONSTRAINT fk_ail_rec_id FOREIGN KEY (ail_rec_id) REFERENCES recom(rec_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='tabela logow AI';
 
 CREATE TABLE ai_inputs (
@@ -997,15 +997,726 @@ CREATE TABLE ai_inputs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='tabela danych wejscia dla AI';
 ```
 
------------
+------------------------
+
+
+<db-plan>
+@db-plan.md 
+<db-plan>
+
+<prd>
+@prd.md
+</prd>
+
+<tech-stack>
+@tech-stack.md
+</tech-stack>
+
+Jesteś doświadczonym architektem API, którego zadaniem jest stworzenie kompleksowego planu API REST. Twój plan będzie oparty na podanym schemacie bazy danych, dokumencie wymagań produktu (PRD) i stacku technologicznym podanym powyżej. Uważnie przejrzyj dane wejściowe i wykonaj następujące kroki:
+
+1. Przeanalizuj schemat bazy danych:
+   - Zidentyfikuj główne encje (tabele)
+   - Zanotuj relacje między jednostkami
+   - Rozważ wszelkie indeksy, które mogą mieć wpływ na projekt API
+   - Zwróć uwagę na warunki walidacji określone w schemacie.
+
+2. Przeanalizuj PRD:
+   - Zidentyfikuj kluczowe cechy i funkcjonalności
+   - Zwróć uwagę na konkretne wymagania dotyczące operacji na danych (pobieranie, tworzenie, aktualizacja, usuwanie)
+   - Zidentyfikuj wymagania logiki biznesowej, które wykraczają poza operacje CRUD
+
+3. Rozważ stack technologiczny:
+   - Upewnij się, że plan API jest zgodny z określonymi technologiami.
+   - Rozważ, w jaki sposób te technologie mogą wpłynąć na projekt API
+
+4. Tworzenie kompleksowego planu interfejsu API REST:
+   - Zdefiniowanie głównych zasobów w oparciu o encje bazy danych i wymagania PRD
+   - Zaprojektowanie punktów końcowych CRUD dla każdego zasobu
+   - Zaprojektuj punkty końcowe dla logiki biznesowej opisanej w PRD
+   - Uwzględnienie paginacji, filtrowania i sortowania dla punktów końcowych listy.
+   - Zaplanuj odpowiednie użycie metod HTTP
+   - Zdefiniowanie struktur ładunku żądania i odpowiedzi
+   - Uwzględnienie mechanizmów uwierzytelniania i autoryzacji, jeśli wspomniano o nich w PRD
+   - Rozważenie ograniczenia szybkości i innych środków bezpieczeństwa
+
+Przed dostarczeniem ostatecznego planu, pracuj wewnątrz tagów <api_analysis> w swoim bloku myślenia, aby rozbić swój proces myślowy i upewnić się, że uwzględniłeś wszystkie niezbędne aspekty. W tej sekcji:
+
+1. Wymień główne encje ze schematu bazy danych. Ponumeruj każdą encję i zacytuj odpowiednią część schematu.
+2. Wymień kluczowe funkcje logiki biznesowej z PRD. Ponumeruj każdą funkcję i zacytuj odpowiednią część PRD.
+3. Zmapuj funkcje z PRD do potencjalnych punktów końcowych API. Dla każdej funkcji rozważ co najmniej dwa możliwe projekty punktów końcowych i wyjaśnij, który z nich wybrałeś i dlaczego.
+4. Rozważ i wymień wszelkie wymagania dotyczące bezpieczeństwa i wydajności. Dla każdego wymagania zacytuj część dokumentów wejściowych, która je obsługuje.
+5. Wyraźnie mapuj logikę biznesową z PRD na punkty końcowe API.
+6. Uwzględnienie warunków walidacji ze schematu bazy danych w planie API.
+
+Ta sekcja może być dość długa.
+
+Ostateczny plan API powinien być sformatowany w markdown i zawierać następujące sekcje:
+
+``markdown
+# REST API Plan
+
+## 1. Zasoby
+- Wymień każdy główny zasób i odpowiadającą mu tabelę bazy danych
+
+## 2. Punkty końcowe
+Dla każdego zasobu podaj:
+- Metoda HTTP
+- Ścieżka URL
+- Krótki opis
+- Parametry zapytania (jeśli dotyczy)
+- Struktura ładunku żądania JSON (jeśli dotyczy)
+- Struktura ładunku odpowiedzi JSON
+- Kody i komunikaty powodzenia
+- Kody i komunikaty błędów
+
+## 3. Uwierzytelnianie i autoryzacja
+- Opisz wybrany mechanizm uwierzytelniania i szczegóły implementacji
+
+## 4. Walidacja i logika biznesowa
+- Lista warunków walidacji dla każdego zasobu
+- Opisz, w jaki sposób logika biznesowa jest zaimplementowana w API
+```
+
+Upewnij się, że Twój plan jest kompleksowy, dobrze skonstruowany i odnosi się do wszystkich aspektów materiałów wejściowych. Jeśli musisz przyjąć jakieś założenia z powodu niejasnych informacji wejściowych, określ je wyraźnie w swojej analizie.
+
+Końcowy wynik powinien składać się wyłącznie z planu API w formacie markdown w języku angielskim, który zapiszesz w .ai/api-plan.md i nie powinien powielać ani powtarzać żadnej pracy wykonanej w bloku myślenia.
+
+
+--------------------------
+
+Wygenerował, dodałem poprawki dot. kilku błędów.
+Wersja końcowa:
+
+# REST API Plan
+
+## 1. Resources
+
+- **Users** (table `users`): Contains user credentials and basic info such as login, hashed password, and base city. 
+- **Cities** (table `cities`): Represents cities associated with users. Each city has a name and is linked to a user. May include a visited flag and a summary (up to 150 characters).
+- **Recommendations** (table `recom`): Contains attraction proposals for cities. Includes title, description, model type (manual or AI-generated), creation/modification timestamps, and status (e.g., accepted, edited, rejected). Duplicate titles per user and city are not allowed.
+- **AI Logs** (table `ai_logs`): Logs actions taken by AI regarding recommendations (e.g., accepted, edited, rejected), including timestamps and statuses.
+- **AI Inputs** (table `ai_inputs`): Stores inputs sent to the AI for processing recommendations.
+
+## 2. Endpoints
+
+### 2.1 Users
+
+#### POST /api/users/register
+- **Description**: Register a new user. The request must include a unique login, a password (which will be hashed), and a base city.
+- **Request Payload**:
+  ```json
+  {
+    "login": "string",              // must be unique and 2 to 50 characters
+    "password": "string",           // plain password to be hashed on the server minimum 8 characters
+    "cityBase": "string"            // base city, up to 150 characters
+  }
+  ```
+- **Response**:
+  - **Success (201 Created)**: Returns the created user details (excluding the password).
+  - **Error (400 Bad Request)**: Validation errors.
+  - **Error (409 Conflict)**: If the login is already taken.
+
+#### POST /api/users/login
+- **Description**: Authenticate a user and issue a JWT token.
+- **Request Payload**:
+  ```json
+  {
+    "login": "string",
+    "password": "string"
+  }
+  ```
+- **Response**:
+  - **Success (200 OK)**: Returns a JWT token and user information.
+  - **Error (401 Unauthorized)**: Invalid login or password.
+
+#### GET /api/users/me
+- **Description**: Retrieve the authenticated user's profile.
+- **Response (200 OK)**:
+  ```json
+  {
+    "id": number,
+    "login": "string",
+    "cityBase": "string"
+  }
+  ```
+
+### 2.2 Cities
+
+#### GET /api/cities
+- **Description**: List all cities for the authenticated user along with the count of recommendations.
+- **Query Parameters**:
+  - `page` (optional): Page number for pagination.
+  - `per_page` (optional): Number of cities per page.
+  - `visited` (optional): Boolean filter to show only visited/unvisited cities.
+- **Response (200 OK)**:
+  ```json
+  [
+    {
+      "id": number,
+      "name": "string",             // corresponds to cit_name
+      "recommendationCount": number,
+      "visited": boolean
+    },
+    ...
+  ]
+  ```
+
+#### POST /api/cities/search
+- **Description**: Search for a city and generate AI recommendations for attractions. This is the initial step when a user wants to explore a new city.
+- **Request Payload**:
+  ```json
+  {
+    "cityName": "string"           // name of the city to search for
+  }
+  ```
+- **Response**:
+  - **Success (200 OK)**:
+    ```json
+    {
+      "city": {
+        "id": number,             // will be null if city is not yet saved for this user
+        "name": "string",
+        "summary": "string"       // AI-generated summary (up to 150 characters)
+      },
+      "recommendations": [
+        {
+          "id": number,           // will be null as these are not yet saved
+          "title": "string",
+          "description": "string",
+          "model": "string"       // AI model identifier
+        },
+        // ... up to 10 recommendations
+      ]
+    }
+    ```
+  - **Error (400 Bad Request)**: If the city name is invalid or empty.
+
+#### POST /api/cities/save-recommendations
+- **Description**: Save AI-generated city and recommendations after a user decides to keep them. This creates a new city record for the user (if not exists) and saves all accepted recommendations.
+- **Request Payload**:
+  ```json
+  {
+    "city": {
+      "name": "string",
+      "summary": "string"
+    },
+    "recommendations": [
+      {
+        "title": "string",
+        "description": "string",
+        "model": "string",
+        "status": "string"         // 'accepted', 'edited', or 'rejected'
+      },
+      // ... recommendations to save
+    ]
+  }
+  ```
+- **Response**:
+  - **Success (201 Created)**:
+    ```json
+    {
+      "city": {
+        "id": number,
+        "name": "string",
+        "summary": "string"
+      },
+      "savedRecommendations": number,  // count of recommendations saved
+      "recommendations": [ { ... } ]   // array of saved recommendation objects with IDs
+    }
+    ```
+  - **Error (400 Bad Request)**: Validation errors.
+
+#### GET /api/cities/{cityId}
+- **Description**: Get detailed information about a city, including a short summary (up to 150 characters) and its recommendations.
+- **Response**:
+  - **Success (200 OK)**:
+    ```json
+    {
+      "id": number,
+      "name": "string",
+      "summary": "string",          // derived or provided summary
+      "recommendations": [ { ... } ]  // list of recommendation objects
+    }
+    ```
+  - **Error (404 Not Found)**: If the cityId does not exist.
+
+#### PUT /api/cities/{cityId}
+- **Description**: Update city information, such as marking it as visited.
+- **Request Payload**:
+  ```json
+  {
+    "visited": boolean
+  }
+  ```
+- **Response**:
+  - **Success (200 OK)**: Returns the updated city details.
+  - **Error (404 Not Found)**: If the cityId does not exist.
+
+#### POST /api/cities/{cityId}/recommendations/accept-all
+- **Description**: Accept all recommendations for a city at once.
+- **Response**:
+  - **Success (200 OK)**:
+    ```json
+    {
+      "message": "All recommendations have been accepted.",
+      "acceptedCount": number
+    }
+    ```
+  - **Error (404 Not Found)**: If the cityId does not exist.
+
+#### POST /api/cities/{cityId}/recommendations/supplement
+- **Description**: Trigger supplementary recommendations if the acceptance rate of recommendations falls below 60%. This action can be performed only once per city.
+- **Response (200 OK)**:
+  ```json
+  {
+    "message": "Supplementary recommendations added successfully.",
+    "newRecommendations": [ { ... } ]
+  }
+  ```
+- **Error (400 Bad Request)**: If the supplement action has already been performed.
+
+### 2.3 Recommendations
+
+#### GET /api/cities/{cityId}/recommendations
+- **Description**: Retrieve a paginated list of recommendations for a given city. If no recommendations are available, an empty list is returned.
+- **Query Parameters**:
+  - `page` (optional): Page number.
+  - `per_page` (optional, default up to 10): Number of recommendations per page.
+- **Response (200 OK)**:
+  ```json
+  [
+    {
+      "id": number,
+      "title": "string",             // up to 150 characters
+      "description": "string",
+      "model": "string",             // e.g., 'manual' or AI model identifier
+      "dateCreated": "timestamp",
+      "dateModified": "timestamp",
+      "status": "string"             // e.g., 'accepted', 'edited', 'rejected'
+    },
+    ...
+  ]
+  ```
+
+#### GET /api/recommendations/{id}
+- **Description**: Retrieve details of a specific recommendation.
+- **Response (200 OK)**:
+  ```json
+  {
+    "id": number,
+    "cityId": number,
+    "title": "string",
+    "description": "string",
+    "model": "string",
+    "dateCreated": "timestamp",
+    "dateModified": "timestamp",
+    "status": "string"
+  }
+  ```
+  - **Error (404 Not Found)**: If the id does not exist.
+
+#### POST /api/recommendations
+- **Description**: Create a new recommendation manually with duplicate checks (unique title per user and city).
+- **Request Payload**:
+  ```json
+  {
+    "cityId": number,
+    "title": "string",
+    "description": "string",
+    "model": "manual"
+  }
+  ```
+- **Response**:
+  - **Success (201 Created)**: Returns the created recommendation.
+  - **Error (400 Bad Request)**: Validation errors.
+  - **Error (409 Conflict)**: Duplicate recommendation detected.
+
+#### PUT /api/recommendations/{id}
+- **Description**: Update an existing recommendation (edit, accept, or reject). Also allows marking a recommendation as visited.
+- **Request Payload** (all fields optional):
+  ```json
+  {
+    "title": "string",
+    "description": "string",
+    "status": "string",     // e.g., 'accepted', 'edited', 'rejected'
+    "done": boolean         // whether the recommendation has been visited by the user
+  }
+  ```
+- **Response (200 OK)**: Returns the updated recommendation.
+- **Note**: Changes are saved immediately upon updating.
+
+#### PUT /api/recommendations/update-done
+- **Description**: Mark multiple recommendations as visited or not visited.
+- **Request Payload**:
+  ```json
+  {
+    "recommendationIds": [number],  // array of recommendation IDs to update
+    "done": boolean                 // whether the recommendations have been visited
+  }
+  ```
+- **Response (200 OK)**:
+  ```json
+  {
+    "message": "Recommendations updated successfully.",
+    "updatedCount": number
+  }
+  ```
+
+#### DELETE /api/recommendations/{id}
+- **Description**: Delete a recommendation. Clients must confirm deletion before calling this endpoint.
+- **Response (204 No Content)**: No content on success.
+- **Error (404 Not Found)**: If the id does not exist.
+
+### 2.4 AI Logs and AI Inputs
+
+#### GET /api/ai-logs
+- **Description**: (Optional, for administrative purposes) Retrieve logs of AI actions related to recommendations. If the log list is empty, a message is returned to the client.
+- **Response (200 OK)**:
+  ```json
+  [
+    {
+      "id": number,
+      "userId": number,
+      "recommendationId": number,
+      "date": "timestamp",
+      "status": "string"
+    },
+    ...
+  ]
+  ```
+- **Response (204 No Content)**: If the log list is empty, a message "No AI logs found" is returned.
+
+#### POST /api/ai-logs
+- **Description**: Create a new AI log entry to track recommendation status changes (accept, edit, reject).
+- **Request Payload**:
+  ```json
+  {
+    "recommendationId": number,
+    "status": "string"       // e.g., 'accepted', 'edited', 'rejected'
+  }
+  ```
+- **Response (201 Created)**: Returns the created AI log record.
+- **Note**: This endpoint is typically called automatically when a recommendation status changes but can also be called directly if needed.
+
+#### POST /api/ai-inputs
+- **Description**: Record an input sent to the AI for processing recommendations.
+- **Request Payload**:
+  ```json
+  {
+    "content": "string",
+    "source": "string"        // e.g., description of the input context
+  }
+  ```
+- **Response (201 Created)**: Returns the created AI input record.
+
+## 3. Authentication and Authorization
+
+- The API uses token-based authentication (JWT). Upon successful login, a JWT is issued and must be included in the `Authorization` header for subsequent requests (format: `Bearer <token>`).
+- Endpoints enforce row-level security by filtering data based on the user ID extracted from the token.
+- Sensitive operations (such as supplementing recommendations or deleting records) require proper authentication and authorization checks.
+
+## 4. Validation and Business Logic
+
+- **Data Validation**:
+  - **Users**: Ensure that the login is unique and that the password meets security standards before hashing.
+  - **Cities**: City names should adhere to length constraints. A summary (if provided) must not exceed 150 characters.
+  - **Recommendations**: Titles are limited to 150 characters and must be unique per user and city. Duplicate checks are enforced at the API level before database operations.
+
+- **Business Logic**:
+  - **Immediate Saving**: Edits to recommendations are saved immediately upon update without requiring additional confirmations.
+  - **Supplementary Recommendations**: The API checks the acceptance rate of recommendations. If it falls below 60%, the endpoint to supplement recommendations is enabled. This action is allowed only once per city per user.
+  - **Logging**: AI actions (accept, edit, reject) are automatically logged in the `ai_logs` table for audit and analysis.
+
+- **Performance and Security**:
+  - **Pagination, Filtering, and Sorting**: List endpoints support query parameters for pagination and filtering.
+  - **Database Indexes**: Queries leverage indexes (e.g., on `cit_usr_id`, `rec_usr_id`, `rec_cit_id`) to optimize performance.
+  - **Input Sanitization**: All inputs are validated and sanitized to prevent SQL injection and other common vulnerabilities.
 
 
 
+-----------------------------------------
+
+Plan implementacji endpointa /api/cities/search
+
+
+Jesteś doświadczonym architektem oprogramowania, którego zadaniem jest stworzenie szczegółowego planu wdrożenia punktu końcowego REST API. Twój plan poprowadzi programistów w skutecznym i poprawnym wdrożeniu tego punktu końcowego.
+
+Zanim zaczniemy, zapoznaj się z poniższymi informacjami:
+
+1. Route API specification:
+<route_api_specification>
+#### POST /api/cities/search
+- **Description**: Search for a city and generate AI recommendations for attractions. This is the initial step when a user wants to explore a new city.
+- **Request Payload**:
+  ```json
+  {
+    "cityName": "string"           // name of the city to search for
+  }
+  ```
+- **Response**:
+  - **Success (200 OK)**:
+    ```json
+    {
+      "city": {
+        "id": number,             // will be null if city is not yet saved for this user
+        "name": "string",
+        "summary": "string"       // AI-generated summary (up to 150 characters)
+      },
+      "recommendations": [
+        {
+          "id": number,           // will be null as these are not yet saved
+          "title": "string",
+          "description": "string",
+          "model": "string"       // AI model identifier
+        },
+        // ... up to 10 recommendations
+      ]
+    }
+    ```
+  - **Error (400 Bad Request)**: If the city name is invalid or empty.
+</route_api_specification>
+
+2. Related database resources:
+<related_db_resources>
+@db.sql
+</related_db_resources>
+
+3. Tech stack:
+<tech_stack>
+@tech-stack.md 
+</tech_stack>
+
+4. Implementation rules:
+<implementation_rules>
+@rules-php.mdc
+</implementation_rules>
+
+Twoim zadaniem jest stworzenie kompleksowego planu wdrożenia endpointu interfejsu API REST. Przed dostarczeniem ostatecznego planu użyj znaczników <analysis>, aby przeanalizować informacje i nakreślić swoje podejście. W tej analizie upewnij się, że:
+
+1. Podsumuj kluczowe punkty specyfikacji API.
+2. Wymień wymagane i opcjonalne parametry ze specyfikacji API.
+4. Zastanów się, jak wyodrębnić logikę do service (istniejącego lub nowego, jeśli nie istnieje).
+5. Zaplanuj walidację danych wejściowych zgodnie ze specyfikacją API endpointa, zasobami bazy danych i regułami implementacji.
+6. Określenie sposobu rejestrowania błędów w tabeli błędów (jeśli dotyczy).
+7. Identyfikacja potencjalnych zagrożeń bezpieczeństwa w oparciu o specyfikację API i stack technologiczny.
+8. Nakreśl potencjalne scenariusze błędów i odpowiadające im kody stanu.
+
+Po przeprowadzeniu analizy utwórz szczegółowy plan wdrożenia w formacie markdown. Plan powinien zawierać następujące sekcje:
+
+1. Przegląd punktu końcowego
+2. Szczegóły żądania
+3. Szczegóły odpowiedzi
+4. Przepływ danych
+5. Względy bezpieczeństwa
+6. Obsługa błędów
+7. Wydajność
+8. Kroki implementacji
+
+W całym planie upewnij się, że
+- Używać prawidłowych kodów stanu API:
+  - 200 dla pomyślnego odczytu
+  - 201 dla pomyślnego utworzenia
+  - 400 dla nieprawidłowych danych wejściowych
+  - 401 dla nieautoryzowanego dostępu
+  - 404 dla nie znalezionych zasobów
+  - 500 dla błędów po stronie serwera
+- Dostosowanie do dostarczonego stacku technologicznego
+- Postępuj zgodnie z podanymi zasadami implementacji
+
+Końcowym wynikiem powinien być dobrze zorganizowany plan wdrożenia w formacie markdown. Oto przykład tego, jak powinny wyglądać dane wyjściowe:
+
+``markdown
+# API Endpoint Implementation Plan: [Nazwa punktu końcowego]
+
+## 1. Przegląd punktu końcowego
+[Krótki opis celu i funkcjonalności punktu końcowego]
+
+## 2. Szczegóły żądania
+- Metoda HTTP: [GET/POST/PUT/DELETE]
+- Struktura URL: [wzorzec URL]
+- Parametry:
+  - Wymagane: [Lista wymaganych parametrów]
+  - Opcjonalne: [Lista opcjonalnych parametrów]
+- Request Body: [Struktura treści żądania, jeśli dotyczy]
+
+## 3. Szczegóły odpowiedzi
+[Oczekiwana struktura odpowiedzi i kody statusu]
+
+## 4. Przepływ danych
+[Opis przepływu danych, w tym interakcji z zewnętrznymi usługami lub bazami danych]
+
+## 5. Względy bezpieczeństwa
+[Szczegóły uwierzytelniania, autoryzacji i walidacji danych]
+
+## 6. Obsługa błędów
+[Lista potencjalnych błędów i sposób ich obsługi]
+
+## 7. Rozważania dotyczące wydajności
+[Potencjalne wąskie gardła i strategie optymalizacji]
+
+## 8. Etapy wdrożenia
+1. [Krok 1]
+2. [Krok 2]
+3. [Krok 3]
+...
+```
+
+Końcowe wyniki powinny składać się wyłącznie z planu wdrożenia w formacie markdown i nie powinny powielać ani powtarzać żadnej pracy wykonanej w sekcji analizy.
+
+Pamiętaj, aby zapisać swój plan wdrożenia jako .ai/search-endpoint-implementation-plan.md. Upewnij się, że plan jest szczegółowy, przejrzysty i zapewnia kompleksowe wskazówki dla zespołu programistów.
 
 
 
+------------------------
 
 
+# API Endpoint Implementation Plan: /api/cities/search
 
+## 1. Przegląd punktu końcowego
+Punkt końcowy służy do wyszukiwania miasta i generowania rekomendacji atrakcji turystycznych przez AI. Umożliwia użytkownikowi otrzymanie informacji o mieście (wraz z opcjonalnym podsumowaniem generowanym przez AI) oraz listy rekomendacji atrakcji, które mogą być później zapisane.
+
+## 2. Szczegóły żądania
+- Metoda HTTP: POST
+- URL: /api/cities/search
+- Parametry:
+  - Wymagane:
+    - `cityName` (string) – nazwa miasta do wyszukania.
+  - Opcjonalne: brak
+- Treść żądania (Request Body):
+  ```json
+  {
+    "cityName": "string"
+  }
+  ```
+
+## 3. Szczegóły odpowiedzi
+- Sukces (200 OK):
+  ```json
+  {
+    "city": {
+      "id": number,           // null, jeśli miasto nie zostało zapisane dla użytkownika
+      "name": "string",
+      "summary": "string"     // Podsumowanie wygenerowane przez AI (do 150 znaków)
+    },
+    "recommendations": [
+      {
+        "id": number,         // null, ponieważ rekomendacje nie są jeszcze zapisane
+        "title": "string",
+        "description": "string",
+        "model": "string"     // Identyfikator modelu AI
+      }
+      // ... maksymalnie 10 rekomendacji
+    ]
+  }
+  ```
+- Błąd – 400 Bad Request: gdy nazwa miasta jest pusta lub nieprawidłowa.
+
+## 4. Przepływ danych
+1. Odbiór żądania POST z JSON zawierającym `cityName`.
+2. Weryfikacja autentykacji poprzez token JWT.
+3. Walidacja danych wejściowych – sprawdzenie, czy `cityName` nie jest pusty i mieści się w ustalonych granicach (do 150 znaków).
+4. Sprawdzenie, czy miasto już istnieje w bazie danych dla danego użytkownika:
+   - Jeśli miasto istnieje, pobranie jego danych (np. id, nazwa).
+   - Jeśli nie, ustawienie `id` jako null.
+5. Wywołanie serwisu AI, który generuje:
+   - Podsumowanie miasta (summary).
+   - Listę rekomendacji (do 10 elementów) zawierających tytuł, opis oraz identyfikator modelu AI.
+6. Utworzenie obiektu odpowiedzi zgodnie z powyższą specyfikacją.
+7. Zwrócenie odpowiedzi.
+
+## 5. Względy bezpieczeństwa
+- Uwierzytelnienie: Wymagane jest użycie tokena JWT przesyłanego w nagłówku `Authorization: Bearer <token>`.
+- Autoryzacja: Logika powinna zapewniać, że użytkownik widzi tylko swoje dane.
+- Walidacja danych wejściowych: Użycie filtrów i przygotowanych zapytań (prepared statements) w celu zapobiegania SQL Injection.
+- Ograniczenie danych: Zapewnienie, że podsumowanie miasta nie przekracza 150 znaków oraz tytuły rekomendacji do 150 znaków (zgodnie z wymaganiami) oraz treść rekomendacji nie przekracza 64000 znaków.
+- Sprawdzenie wersji PHP oraz zgodność z PHP 7 i PHP 8.4 – unikanie błędów i ostrzeżeń.
+
+## 6. Obsługa błędów
+- Błąd 400 Bad Request: W przypadku nieprawidłowych lub brakujących danych (pusty `cityName`).
+- Błąd 500 Internal Server Error: W przypadku awarii po stronie serwera, np. błąd połączenia z bazą danych lub serwisem AI.
+- Rejestracja błędów: Wszystkie błędy powinny być logowane do tabeli `error_logs` z odpowiednimi danymi (typ błędu, wiadomość, URL, ewentualny payload).
+
+## 7. Rozważania dotyczące wydajności
+- Optymalizacja zapytań do bazy danych poprzez wykorzystanie indeksów (np. `cit_usr_id`, `cit_name`).
+- Ograniczenie liczby rekomendacji do maksymalnie 10, aby zmniejszyć obciążenie serwera i AI.
+- Rozważenie cachowania wyników z serwisu AI w razie dużego obciążenia.
+- Asynchroniczne wywołania do zewnętrznego serwisu AI, jeśli obsługa czasu odpowiedzi staje się krytyczna.
+- 60 sekund czasu oczekiwania na odpowiedź AI. Po przekroczeniu czasu błąd AI timeout.
+
+## 8. Kroki implementacji
+1. Utworzenie kontrolera dla endpointa `/api/cities/search`.
+   - Implementacja metody obsługującej żądanie POST.
+2. Walidacja tokena JWT oraz autoryzacja użytkownika.
+3. Walidacja danych wejściowych – sprawdzenie, czy `cityName` jest dostarczony i prawidłowy.
+4. Sprawdzenie w bazie danych, czy miasto już istnieje dla użytkownika.
+5. Integracja z zewnętrznym serwisem AI:
+   - Wywołanie modelu AI do generowania summary dla miasta.
+   - Odebranie listy rekomendacji.
+6. Zbudowanie obiektu odpowiedzi zgodnie z dokumentacją.
+7. Obsługa wyjątków:
+   - Logowanie błędów w tabeli `error_logs`.
+   - Odpowiadanie odpowiednimi kodami statusu.
+9. Weryfikacja zgodności kodu z PHP 7 oraz PHP 8.4.
+
+
+--------------------------
+
+
+Twoim zadaniem jest wdrożenie endpointa interfejsu API REST w oparciu o podany plan wdrożenia. Twoim celem jest stworzenie solidnej i dobrze zorganizowanej implementacji, która zawiera odpowiednią walidację, obsługę błędów i podąża za wszystkimi logicznymi krokami opisanymi w planie.
+
+Najpierw dokładnie przejrzyj dostarczony plan wdrożenia:
+
+<implementation_plan>
+@search-endpoint-implementation-plan.md
+</implementation_plan>
+
+<implementation_rules>
+@rules-php.mdc
+</implementation_rules>
+
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+Teraz wykonaj następujące kroki, aby zaimplementować punkt końcowy interfejsu API REST:
+
+1. Przeanalizuj plan wdrożenia:
+   - Określ metodę HTTP (GET, POST, PUT, DELETE itp.) dla punktu końcowego.
+   - Określenie struktury adresu URL punktu końcowego
+   - Lista wszystkich oczekiwanych parametrów wejściowych
+   - Zrozumienie wymaganej logiki biznesowej i etapów przetwarzania danych
+   - Zwróć uwagę na wszelkie szczególne wymagania dotyczące walidacji lub obsługi błędów.
+
+2. Rozpocznij implementację:
+   - Rozpocznij od zdefiniowania funkcji punktu końcowego z prawidłowym dekoratorem metody HTTP.
+   - Skonfiguruj parametry funkcji w oparciu o oczekiwane dane wejściowe
+   - Wdrożenie walidacji danych wejściowych dla wszystkich parametrów
+   - Postępuj zgodnie z logicznymi krokami opisanymi w planie wdrożenia
+   - Wdrożenie obsługi błędów dla każdego etapu procesu
+   - Zapewnienie właściwego przetwarzania i transformacji danych zgodnie z wymaganiami
+   - Przygotowanie struktury danych odpowiedzi
+
+3. Walidacja i obsługa błędów:
+   - Wdrożenie dokładnej walidacji danych wejściowych dla wszystkich parametrów
+   - Używanie odpowiednich kodów statusu HTTP dla różnych scenariuszy (np. 400 dla błędnych żądań, 404 dla nie znaleziono, 500 dla błędów serwera).
+   - Dostarczanie jasnych i informacyjnych komunikatów o błędach w odpowiedzi.
+   - Obsługa potencjalnych wyjątków, które mogą wystąpić podczas przetwarzania.
+
+4. Rozważania dotyczące testowania:
+   - Należy rozważyć edge case'y i potencjalne problemy, które powinny zostać przetestowane.
+   - Upewnienie się, że wdrożenie obejmuje wszystkie scenariusze wymienione w planie.
+
+5. Dokumentacja:
+   - Dodaj jasne komentarze, aby wyjaśnić złożoną logikę lub ważne decyzje
+   - Dołącz dokumentację dla głównej funkcji i wszelkich funkcji pomocniczych.
+
+Po zakończeniu implementacji upewnij się, że zawiera wszystkie niezbędne importy, definicje funkcji i wszelkie dodatkowe funkcje pomocnicze lub klasy wymagane do implementacji.
+
+Jeśli musisz przyjąć jakieś założenia lub masz jakiekolwiek pytania dotyczące planu implementacji, przedstaw je przed pisaniem kodu.
+
+Pamiętaj, aby przestrzegać najlepszych praktyk projektowania REST API, stosować się do wytycznych dotyczących stylu języka programowania i upewnić się, że kod jest czysty, czytelny i dobrze zorganizowany.
+
+
+---------------------
 
 
