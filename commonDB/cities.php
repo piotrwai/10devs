@@ -93,28 +93,84 @@ function getCityById($cityId, $userId) {
  */
 function addCity($cityName, $userId, $description = null) {
     try {
+        // Walidacja danych wejściowych
+        if (empty($cityName) || !is_string($cityName)) {
+            error_log("Błąd addCity: Nieprawidłowa nazwa miasta");
+            return null;
+        }
+        
+        if (!is_numeric($userId) || $userId <= 0) {
+            error_log("Błąd addCity: Nieprawidłowy ID użytkownika: $userId");
+            return null;
+        }
+        
         // Dołączenie pliku z połączeniem do bazy danych
         require_once __DIR__ . '/dbConnect.php';
         
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         
-        // Przygotowanie zapytania
+        // Sprawdzenie, czy miasto już istnieje (podwójne sprawdzenie)
+        $checkQuery = "SELECT cit_id FROM cities WHERE cit_name = ? AND cit_usr_id = ?";
+        $checkStmt = mysqli_prepare($db, $checkQuery);
+        mysqli_stmt_bind_param($checkStmt, 'si', $cityName, $userId);
+        mysqli_stmt_execute($checkStmt);
+        mysqli_stmt_store_result($checkStmt);
+        
+        if (mysqli_stmt_num_rows($checkStmt) > 0) {
+            // Miasto już istnieje - pobieramy jego ID
+            mysqli_stmt_bind_result($checkStmt, $existingCityId);
+            mysqli_stmt_fetch($checkStmt);
+            mysqli_stmt_close($checkStmt);
+            
+            error_log("Miasto '$cityName' już istnieje dla użytkownika $userId, ID: $existingCityId");
+            return $existingCityId;
+        }
+        
+        mysqli_stmt_close($checkStmt);
+        
+        // Przygotowanie zapytania INSERT
         $query = "INSERT INTO cities (cit_name, cit_usr_id, cit_desc) VALUES (?, ?, ?)";
+        
+        // Jeśli opis jest pusty, ustawiamy domyślny opis - kolumna cit_desc ma ograniczenie NOT NULL
+        if ($description === null || $description === '') {
+            $description = 'Brak opisu. Opis zostanie wygenerowany automatycznie.';
+            error_log("Użyto domyślnego opisu dla miasta '$cityName'");
+        }
         
         // Przygotowanie i wykonanie zapytania
         $stmt = mysqli_prepare($db, $query);
+        
+        if (!$stmt) {
+            error_log("Błąd przygotowania zapytania: " . mysqli_error($db));
+            return null;
+        }
+        
         mysqli_stmt_bind_param($stmt, 'sis', $cityName, $userId, $description);
-        mysqli_stmt_execute($stmt);
+        $executeResult = mysqli_stmt_execute($stmt);
+        
+        if (!$executeResult) {
+            $errorMessage = mysqli_stmt_error($stmt);
+            error_log("Błąd wykonania zapytania: " . $errorMessage);
+            mysqli_stmt_close($stmt);
+            return null;
+        }
         
         // Sprawdzenie czy insert się powiódł
-        if (mysqli_stmt_affected_rows($stmt) > 0) {
-            return mysqli_insert_id($db);
+        $affectedRows = mysqli_stmt_affected_rows($stmt);
+        if ($affectedRows > 0) {
+            $newCityId = mysqli_insert_id($db);
+            error_log("Dodano nowe miasto '$cityName' dla użytkownika $userId, przydzielono ID: $newCityId");
+            mysqli_stmt_close($stmt);
+            return $newCityId;
         } else {
+            error_log("Nie dodano żadnego rekordu dla miasta '$cityName', użytkownik: $userId");
+            mysqli_stmt_close($stmt);
             return null;
         }
     } catch (Exception $e) {
         // Logowanie błędu
+        error_log("Wyjątek w addCity: " . $e->getMessage());
         require_once __DIR__ . '/../classes/ErrorLogger.php';
         ErrorLogger::logError('db_error', 'Błąd podczas dodawania miasta: ' . $e->getMessage(), $userId);
         return null;

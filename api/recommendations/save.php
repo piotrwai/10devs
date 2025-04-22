@@ -56,6 +56,31 @@ try {
         exit;
     }
     
+    // Sprawdzanie poprawności formatu rekomendacji przed zapisaniem
+    $validRecommendationsCount = 0;
+    $invalidRecommendationsCount = 0;
+    
+    foreach ($recommendations as $rec) {
+        if (!isset($rec['title']) || empty(trim($rec['title'])) || !isset($rec['description']) || empty(trim($rec['description']))) {
+            $invalidRecommendationsCount++;
+        } else {
+            $validRecommendationsCount++;
+        }
+    }
+    
+    // Jeśli wszystkie rekomendacje są nieprawidłowe, zwracamy błąd
+    if ($validRecommendationsCount === 0) {
+        error_log("Wszystkie " . count($recommendations) . " rekomendacji ma nieprawidłowy format");
+        ErrorLogger::logError('validation_error', 'Wszystkie rekomendacje mają nieprawidłowy format', $userId, null, $cityId);
+        Response::sendError(400, 'Wszystkie rekomendacje mają nieprawidłowy format. Wymagane są pola title i description.');
+        exit;
+    }
+    
+    // Jeśli niektóre rekomendacje są nieprawidłowe, logujemy to
+    if ($invalidRecommendationsCount > 0) {
+        error_log("$invalidRecommendationsCount z " . count($recommendations) . " rekomendacji ma nieprawidłowy format i zostanie pominięte");
+    }
+    
     // Zapisanie rekomendacji do bazy danych
     $savedRecommendations = [];
     
@@ -113,6 +138,6 @@ try {
     ErrorLogger::logError('api_error', $e->getMessage(), $userId ?? null, $_SERVER['REQUEST_URI'] ?? null, json_encode($requestData ?? []));
     
     // Wysłanie odpowiedzi z błędem
-    Response::sendError(500, 'Wystąpił błąd podczas przetwarzania żądania: ' . $e->getMessage());
+    Response::sendError(500, 'Wystąpił błąd podczas przetwarzania żądania');
     exit;
 } 

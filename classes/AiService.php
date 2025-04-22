@@ -13,7 +13,7 @@ class AiService {
      */
     public function __construct() {
         // Wczytanie konfiguracji z pliku
-        $config = require_once __DIR__ . '/../config.php';
+        $config = require __DIR__ . '/../config.php';
         
         // Pobranie danych konfiguracyjnych
         $this->apiKey = $config['openai']['api_key'];
@@ -28,9 +28,10 @@ class AiService {
      * 
      * @param string $cityName Nazwa miasta
      * @param int $userId ID użytkownika
+     * @param int|null $cityId ID miasta, jeśli jest już znane
      * @return array|null Dane wygenerowane przez AI (city summary i recommendations)
      */
-    public function generateCityRecommendations($cityName, $userId) {
+    public function generateCityRecommendations($cityName, $userId, $cityId = null) {
         try {
             // Ustawienie limitu czasu wykonania skryptu
             set_time_limit($this->timeout + 10);
@@ -39,6 +40,7 @@ class AiService {
             $payload = [
                 'city' => $cityName,
                 'user_id' => $userId,
+                'city_id' => $cityId,
                 'max_recommendations' => 10
             ];
             
@@ -54,7 +56,7 @@ class AiService {
                 throw new Exception("Niepoprawny format odpowiedzi z serwisu AI");
             }
             
-            // Ograniczenie długości summarys
+            // Ograniczenie długości summary
             $citySummary = mb_substr($response['city_summary'], 0, 150);
             
             // Przygotowanie listy rekomendacji
@@ -85,8 +87,13 @@ class AiService {
             // Logowanie udanego wywołania
             $this->logAiCall($userId, null, 'success', $cityName);
             
+            // Zwracamy dane w formacie zgodnym z API
             return [
-                'summary' => $citySummary,
+                'city' => [
+                    'id' => $cityId, // Używamy przekazanego ID miasta, jeśli jest dostępne
+                    'name' => $cityName,
+                    'summary' => $citySummary
+                ],
                 'recommendations' => $recommendations
             ];
             
@@ -114,7 +121,7 @@ class AiService {
          * ZAKOMENTOWANY KOD PRODUKCYJNY - TO JEST WŁAŚCIWE WYWOŁANIE API OpenAI
          * Ten kod będzie używany w produkcji do rzeczywistego wywołania API OpenAI.
          */
-        /*
+        /* 
         // Przygotowanie danych do wysłania do API OpenAI
         $requestData = [
             'model' => $this->model,
@@ -188,28 +195,34 @@ class AiService {
          * Ten kod zwraca przykładową odpowiedź dla celów testowych.
          * W produkcji zostanie zastąpiony rzeczywistym wywołaniem API powyżej.
          */
+        
         return [
             'city_summary' => 'Miasto ' . $payload['city'] . ' to urokliwe miejsce położone w centralnej części kraju, znane z bogatej historii, pięknej architektury i licznych atrakcji turystycznych.',
             'recommendations' => [
                 [
-                    'title' => 'Rynek Główny',
-                    'description' => 'Największy średniowieczny rynek w Europie, otoczony zabytkowymi kamienicami i kościołami. Warto odwiedzić Sukiennice, które znajdują się w centralnej części rynku, gdzie można zakupić pamiątki i rękodzieło.'
+                    'title' => 'Rynek Główny sześciokątny',
+                    'description' => 'Największy średniowieczny rynek w Europie, otoczony zabytkowymi kamienicami i kościołami. Warto odwiedzić Sukiennice, które znajdują się w centralnej części rynku, gdzie można zakupić pamiątki i rękodzieło.',
+                    'model' => $this->model
                 ],
                 [
                     'title' => 'Zamek Królewski',
-                    'description' => 'Imponująca budowla z XIV wieku położona na wzgórzu, oferująca piękny widok na miasto i rzekę. Wnętrza zamku kryją cenne kolekcje sztuki, meble z epoki oraz interesujące wystawy historyczne.'
+                    'description' => 'Imponująca budowla z XIV wieku położona na wzgórzu, oferująca piękny widok na miasto i rzekę. Wnętrza zamku kryją cenne kolekcje sztuki, meble z epoki oraz interesujące wystawy historyczne.',
+                    'model' => $this->model
                 ],
                 [
                     'title' => 'Stare Miasto',
-                    'description' => 'Zabytkowa dzielnica pełna urokliwych uliczek, kamienic i kościołów. Idealne miejsce na spacer, z licznymi kawiarniami, restauracjami i sklepami z pamiątkami.'
+                    'description' => 'Zabytkowa dzielnica pełna urokliwych uliczek, kamienic i kościołów. Idealne miejsce na spacer, z licznymi kawiarniami, restauracjami i sklepami z pamiątkami.',
+                    'model' => $this->model
                 ],
                 [
                     'title' => 'Muzeum Narodowe',
-                    'description' => 'Jedno z najważniejszych muzeów w kraju, prezentujące bogaty zbiór dzieł sztuki od średniowiecza po współczesność, w tym obrazy, rzeźby, rzemiosło artystyczne i artefakty historyczne.'
+                    'description' => 'Jedno z najważniejszych muzeów w kraju, prezentujące bogaty zbiór dzieł sztuki od średniowiecza po współczesność, w tym obrazy, rzeźby, rzemiosło artystyczne i artefakty historyczne.',
+                    'model' => $this->model
                 ],
                 [
                     'title' => 'Park Miejski',
-                    'description' => 'Rozległy park w centrum miasta, idealny na relaks i aktywny wypoczynek. Oferuje piękne alejki, jeziorka, ogrody kwiatowe i place zabaw dla dzieci.'
+                    'description' => 'Rozległy park w centrum miasta, idealny na relaks i aktywny wypoczynek. Oferuje piękne alejki, jeziorka, ogrody kwiatowe i place zabaw dla dzieci.',
+                    'model' => $this->model
                 ]
             ]
         ];
@@ -220,29 +233,33 @@ class AiService {
          * Aby przetestować scenariusz błędu, można zamienić powyższą odpowiedź na tę poniżej.
          *
          * // Przykład 1: Brak wymaganego pola city_summary
-         * return [
-         *    'recommendations' => [
-         *       [
-         *          'title' => 'Miejsce X',
-         *          'description' => 'Opis miejsca X'
-         *       ]
-         *    ]
-         * ];
-         *
-         * // Przykład 2: Brak wymaganego pola recommendations
-         * return [
-         *    'city_summary' => 'Opis miasta'
-         * ];
-         *
-         * // Przykład 3: Nieprawidłowa struktura rekomendacji (brak wymaganego pola description)
-         * return [
-         *    'city_summary' => 'Opis miasta',
-         *    'recommendations' => [
-         *       [
-         *          'title' => 'Miejsce bez opisu'
-         *       ]
-         *    ]
-         * ];
+         * 
+          return [
+             'recommendations' => [
+                [
+                   'title' => 'Miejsce X',
+                   'description' => 'Opis miejsca X',
+                   'model' => $this->model
+                ]
+             ]
+          ];
+         */
+        /*
+          // Przykład 2: Brak wymaganego pola recommendations
+          return [
+             'city_summary' => 'Opis miasta'
+          ];
+         
+          // Przykład 3: Nieprawidłowa struktura rekomendacji (brak wymaganego pola description)
+          return [
+             'city_summary' => 'Opis miasta',
+             'recommendations' => [
+                [
+                   'title' => 'Miejsce bez opisu',
+                   'model' => $this->model
+                ]
+             ]
+          ];
          */
     }
     

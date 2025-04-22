@@ -16,7 +16,7 @@ function getDbConnection() {
     }
     
     // Wczytanie konfiguracji z pliku
-    $config = require_once __DIR__ . '/../config.php';
+    $config = require __DIR__ . '/../config.php';
     
     // Pobranie danych z konfiguracji
     $dbHost = $config['database']['host'];

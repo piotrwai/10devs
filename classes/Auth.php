@@ -11,7 +11,7 @@ class Auth {
      */
     public function __construct() {
         // Wczytanie konfiguracji z pliku
-        $config = require_once __DIR__ . '/../config.php';
+        $config = require __DIR__ . '/../config.php';
         
         // Pobranie danych konfiguracyjnych JWT
         $this->secretKey = $config['jwt']['secret_key'] ?? 'default-secret-key';
