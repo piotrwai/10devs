@@ -11,6 +11,7 @@
 *.cache
 *.tmp
 smarty/templates_c/*
+!smarty/templates_c/.gitkeep
 
 # Katalogi IDE
 .idea/
