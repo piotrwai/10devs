@@ -3,13 +3,14 @@
 .ai/prd-10xdevs.md
 
 # Pliki konfiguracyjne zawierające wrażliwe dane
-config.php
+/config.php
 .env
 
 # Pliki tymczasowe
 *.log
 *.cache
 *.tmp
+smarty/templates_c/*
 
 # Katalogi IDE
 .idea/
