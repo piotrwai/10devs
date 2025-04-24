@@ -1,6 +1,10 @@
 <?php
 // Klasa obsługująca interakcje z serwisami AI
 
+// Dołączenie potrzebnych plików
+require_once __DIR__ . '/../commonDB/aiLogs.php';
+require_once __DIR__ . '/ErrorLogger.php';
+
 class AiService {
     private $apiKey;
     private $apiEndpoint;
@@ -99,7 +103,6 @@ class AiService {
             
         } catch (Exception $e) {
             // Logowanie błędu
-            require_once __DIR__ . '/ErrorLogger.php';
             ErrorLogger::logError('ai_error', $e->getMessage(), $userId, null, $cityName);
             $this->logAiCall($userId, null, 'error', $cityName);
             return null;
@@ -306,9 +309,6 @@ PROMPT;
      */
     private function logAiCall($userId, $recommendationId = null, $status, $content = null) {
         try {
-            // Dodanie wpisu do AI inputs
-            require_once __DIR__ . '/../commonDB/aiLogs.php';
-            
             if ($recommendationId) {
                 // Jeśli mamy ID rekomendacji, zapisz do ai_logs
                 return setAiLog($userId, $recommendationId, $status);
@@ -318,7 +318,6 @@ PROMPT;
             }
         } catch (Exception $e) {
             // Logowanie błędu
-            require_once __DIR__ . '/ErrorLogger.php';
             ErrorLogger::logError('ai_log_error', $e->getMessage(), $userId);
             return false;
         }

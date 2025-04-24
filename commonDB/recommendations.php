@@ -1,6 +1,10 @@
 <?php
 // Funkcje do obsługi operacji na bazie danych związanych z rekomendacjami
 
+// Dołączenie plików wspólnych - tylko raz na początku pliku
+require_once __DIR__ . '/dbConnect.php';
+require_once __DIR__ . '/../classes/ErrorLogger.php';
+
 /**
  * Dodaje nową rekomendację do bazy danych
  * 
@@ -14,9 +18,6 @@
  */
 function addRecommendation($userId, $cityId, $title, $description, $model, $status = 'accepted') {
     try {
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
-        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         
@@ -42,7 +43,6 @@ function addRecommendation($userId, $cityId, $title, $description, $model, $stat
         }
     } catch (Exception $e) {
         // Logowanie błędu
-        require_once __DIR__ . '/../classes/ErrorLogger.php';
         ErrorLogger::logError('db_error', 'Błąd podczas dodawania rekomendacji: ' . $e->getMessage(), $userId);
         return null;
     }
@@ -58,9 +58,6 @@ function addRecommendation($userId, $cityId, $title, $description, $model, $stat
  */
 function isRecommendationTitleDuplicate($userId, $cityId, $title) {
     try {
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
-        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         
@@ -80,7 +77,6 @@ function isRecommendationTitleDuplicate($userId, $cityId, $title) {
         return ($row['count'] > 0);
     } catch (Exception $e) {
         // Logowanie błędu
-        require_once __DIR__ . '/../classes/ErrorLogger.php';
         ErrorLogger::logError('db_error', 'Błąd podczas sprawdzania duplikatu rekomendacji: ' . $e->getMessage(), $userId);
         return false; // W przypadku błędu zwracamy false, aby nie blokować dodawania
     }
@@ -95,9 +91,6 @@ function isRecommendationTitleDuplicate($userId, $cityId, $title) {
  */
 function getRecommendationsByCityId($userId, $cityId) {
     try {
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
-        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         
@@ -132,7 +125,6 @@ function getRecommendationsByCityId($userId, $cityId) {
         return $recommendations;
     } catch (Exception $e) {
         // Logowanie błędu
-        require_once __DIR__ . '/../classes/ErrorLogger.php';
         ErrorLogger::logError('db_error', 'Błąd podczas pobierania rekomendacji: ' . $e->getMessage(), $userId);
         return null;
     }
@@ -148,9 +140,6 @@ function getRecommendationsByCityId($userId, $cityId) {
  */
 function updateRecommendationStatus($userId, $recommendationId, $status) {
     try {
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
-        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         
@@ -167,7 +156,6 @@ function updateRecommendationStatus($userId, $recommendationId, $status) {
         return (mysqli_stmt_affected_rows($stmt) > 0);
     } catch (Exception $e) {
         // Logowanie błędu
-        require_once __DIR__ . '/../classes/ErrorLogger.php';
         ErrorLogger::logError('db_error', 'Błąd podczas aktualizacji statusu rekomendacji: ' . $e->getMessage(), $userId);
         return false;
     }
@@ -182,9 +170,6 @@ function updateRecommendationStatus($userId, $recommendationId, $status) {
  */
 function markRecommendationAsDone($userId, $recommendationId) {
     try {
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
-        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         
@@ -201,7 +186,6 @@ function markRecommendationAsDone($userId, $recommendationId) {
         return (mysqli_stmt_affected_rows($stmt) > 0);
     } catch (Exception $e) {
         // Logowanie błędu
-        require_once __DIR__ . '/../classes/ErrorLogger.php';
         ErrorLogger::logError('db_error', 'Błąd podczas aktualizacji rekomendacji: ' . $e->getMessage(), $userId);
         return false;
     }

@@ -13,6 +13,7 @@
 - cit_usr_id: INTEGER NOT NULL REFERENCES users(usr_id) ON DELETE CASCADE
 - cit_name: VARCHAR(150) NOT NULL
 - cit_desc: VARCHAR(200) NOT NULL
+- cit_visited TINYINT(1) NOT NULL DEFAULT 0
 - cit_date_created: TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 - CONSTRAINT cities_unique UNIQUE (cit_usr_id, cit_name)
 

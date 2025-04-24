@@ -1,6 +1,11 @@
 <?php
 // Funkcje do obsługi operacji na bazie danych związanych z miastami
 
+// Dołączenie plików wspólnych - tylko raz na początku pliku
+require_once __DIR__ . '/dbConnect.php';
+require_once __DIR__ . '/errorLogs.php';
+require_once __DIR__ . '/../classes/ErrorLogger.php';
+
 /**
  * Pobiera dane miasta na podstawie nazwy i ID użytkownika
  * 
@@ -10,9 +15,6 @@
  */
 function getCityByNameAndUserId($cityName, $userId) {
     try {
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
-        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         
@@ -36,7 +38,6 @@ function getCityByNameAndUserId($cityName, $userId) {
         }
     } catch (Exception $e) {
         // Logowanie błędu
-        require_once __DIR__ . '/../classes/ErrorLogger.php';
         ErrorLogger::logError('db_error', 'Błąd podczas pobierania miasta: ' . $e->getMessage(), $userId);
         return null;
     }
@@ -51,9 +52,6 @@ function getCityByNameAndUserId($cityName, $userId) {
  */
 function getCityById($cityId, $userId) {
     try {
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
-        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         
@@ -77,7 +75,6 @@ function getCityById($cityId, $userId) {
         }
     } catch (Exception $e) {
         // Logowanie błędu
-        require_once __DIR__ . '/../classes/ErrorLogger.php';
         ErrorLogger::logError('db_error', 'Błąd podczas pobierania miasta: ' . $e->getMessage(), $userId);
         return null;
     }
@@ -103,9 +100,6 @@ function addCity($cityName, $userId, $description = null) {
             error_log("Błąd addCity: Nieprawidłowy ID użytkownika: $userId");
             return null;
         }
-        
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
         
         // Pobranie połączenia do bazy
         $db = getDbConnection();
@@ -171,7 +165,6 @@ function addCity($cityName, $userId, $description = null) {
     } catch (Exception $e) {
         // Logowanie błędu
         error_log("Wyjątek w addCity: " . $e->getMessage());
-        require_once __DIR__ . '/../classes/ErrorLogger.php';
         ErrorLogger::logError('db_error', 'Błąd podczas dodawania miasta: ' . $e->getMessage(), $userId);
         return null;
     }
@@ -187,9 +180,6 @@ function addCity($cityName, $userId, $description = null) {
  */
 function updateCityDescription($cityId, $userId, $description) {
     try {
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
-        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         
@@ -205,8 +195,163 @@ function updateCityDescription($cityId, $userId, $description) {
         return (mysqli_stmt_affected_rows($stmt) > 0);
     } catch (Exception $e) {
         // Logowanie błędu
-        require_once __DIR__ . '/../classes/ErrorLogger.php';
         ErrorLogger::logError('db_error', 'Błąd podczas aktualizacji opisu miasta: ' . $e->getMessage(), $userId);
+        return false;
+    }
+}
+
+/**
+ * Pobiera listę miast użytkownika wraz z liczbą rekomendacji
+ * z obsługą paginacji i filtrowania
+ * 
+ * @param int $userId ID użytkownika
+ * @param int $page Numer strony (domyślnie 1)
+ * @param int $perPage Liczba elementów na stronę (domyślnie 10)
+ * @param bool|null $visited Filtrowanie po statusie odwiedzenia (null = wszystkie)
+ * @return array Tablica z danymi miast i licznikiem rekomendacji
+ */
+function getUserCitiesWithRecommendationCount($userId, $page = 1, $perPage = 10, $visited = null) {
+    try {
+        // Pobranie połączenia do bazy
+        $db = getDbConnection();
+        
+        // Obliczenie offsetu dla paginacji
+        $offset = ($page - 1) * $perPage;
+        
+        // Budowanie zapytania bazowego
+        $query = "SELECT 
+                    c.cit_id AS id, 
+                    c.cit_name AS name,
+                    COALESCE(COUNT(r.rec_id), 0) AS recommendationCount,
+                    CASE WHEN c.cit_visited = 1 THEN TRUE ELSE FALSE END AS visited
+                  FROM 
+                    cities c
+                  LEFT JOIN 
+                    recom r ON c.cit_id = r.rec_cit_id AND r.rec_usr_id = c.cit_usr_id
+                  WHERE 
+                    c.cit_usr_id = ?";
+        
+        // Dodanie warunku filtrowania po statusie odwiedzenia
+        $params = [$userId];
+        $types = 'i';
+        
+        if ($visited !== null) {
+            $query .= " AND c.cit_visited = ?";
+            $params[] = $visited ? 1 : 0;
+            $types .= 'i';
+        }
+        
+        // Dodanie grupowania, sortowania i limitu
+        $query .= " GROUP BY c.cit_id, c.cit_name, c.cit_visited
+                   ORDER BY c.cit_name ASC
+                   LIMIT ? OFFSET ?";
+        
+        // Dodanie parametrów dla LIMIT i OFFSET
+        $params[] = $perPage;
+        $params[] = $offset;
+        $types .= 'ii';
+        
+        // Przygotowanie i wykonanie zapytania
+        $stmt = mysqli_prepare($db, $query);
+        
+        if ($stmt === false) {
+            throw new Exception("Błąd przygotowania zapytania: " . mysqli_error($db));
+        }
+        
+        // Bindowanie parametrów
+        mysqli_stmt_bind_param($stmt, $types, ...$params);
+        
+        // Wykonanie zapytania
+        if (!mysqli_stmt_execute($stmt)) {
+            throw new Exception("Błąd wykonania zapytania: " . mysqli_stmt_error($stmt));
+        }
+        
+        // Pobranie wyników
+        $result = mysqli_stmt_get_result($stmt);
+        $cities = [];
+        
+        // Formatowanie wyników
+        while ($row = mysqli_fetch_assoc($result)) {
+            $cities[] = $row;
+        }
+        
+        mysqli_stmt_close($stmt);
+        return $cities;
+        
+    } catch (Exception $e) {
+        // Logowanie błędu
+        ErrorLogger::logError('db_error', 'Błąd podczas pobierania listy miast: ' . $e->getMessage(), $userId);
+        return [];
+    }
+}
+
+/**
+ * Aktualizuje status odwiedzenia miasta
+ * 
+ * @param int $cityId ID miasta
+ * @param int $userId ID użytkownika
+ * @param bool $visited Nowy status odwiedzenia
+ * @return bool Czy operacja się powiodła
+ */
+function updateCityVisitedStatus($cityId, $userId, $visited) {
+    try {
+        // Pobranie połączenia do bazy
+        $db = getDbConnection();
+        
+        // Przygotowanie zapytania
+        $query = "UPDATE cities SET cit_visited = ? WHERE cit_id = ? AND cit_usr_id = ?";
+        
+        // Konwersja wartości boolean na integer (0 lub 1)
+        $visitedValue = $visited ? 1 : 0;
+        
+        // Przygotowanie i wykonanie zapytania
+        $stmt = mysqli_prepare($db, $query);
+        mysqli_stmt_bind_param($stmt, 'iii', $visitedValue, $cityId, $userId);
+        mysqli_stmt_execute($stmt);
+        
+        // Sprawdzenie czy update się powiódł
+        $success = (mysqli_stmt_affected_rows($stmt) > 0);
+        mysqli_stmt_close($stmt);
+        
+        return $success;
+    } catch (Exception $e) {
+        // Logowanie błędu
+        ErrorLogger::logError('db_error', 'Błąd podczas aktualizacji statusu odwiedzenia miasta: ' . $e->getMessage(), $userId);
+        return false;
+    }
+}
+
+/**
+ * Sprawdza czy użytkownik ma jakiekolwiek miasta w bazie danych
+ * 
+ * @param int $userId ID użytkownika
+ * @return bool Czy użytkownik ma jakiekolwiek miasta
+ */
+function userHasAnyCities($userId) {
+    try {
+        // Pobranie połączenia do bazy
+        $db = getDbConnection();
+        
+        // Przygotowanie zapytania
+        $query = "SELECT COUNT(*) as count FROM cities WHERE cit_usr_id = ?";
+        
+        // Przygotowanie i wykonanie zapytania
+        $stmt = mysqli_prepare($db, $query);
+        mysqli_stmt_bind_param($stmt, 'i', $userId);
+        mysqli_stmt_execute($stmt);
+        
+        // Pobranie wyników
+        $result = mysqli_stmt_get_result($stmt);
+        $row = mysqli_fetch_assoc($result);
+        
+        mysqli_stmt_close($stmt);
+        
+        // Zwrócenie informacji czy liczba miast jest większa od 0
+        return ($row['count'] > 0);
+        
+    } catch (Exception $e) {
+        // Logowanie błędu
+        ErrorLogger::logError('db_error', 'Błąd podczas sprawdzania miast użytkownika: ' . $e->getMessage(), $userId);
         return false;
     }
 } 

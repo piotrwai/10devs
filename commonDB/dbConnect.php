@@ -1,18 +1,20 @@
 <?php
 // Plik obsługujący połączenie z bazą danych
 
+// Zmienna przechowująca instancję połączenia (Singleton)
+$GLOBALS['dbConnection'] = null;
+
 /**
  * Zwraca obiekt połączenia do bazy danych
+ * Implementacja wzorca Singleton - jedno połączenie dla całej aplikacji
  * 
  * @throws Exception W przypadku problemów z połączeniem
  * @return resource Połączenie do bazy danych
  */
 function getDbConnection() {
-    static $connection = null;
-    
     // Jeśli połączenie już istnieje, zwróć je (singleton)
-    if ($connection !== null) {
-        return $connection;
+    if ($GLOBALS['dbConnection'] !== null) {
+        return $GLOBALS['dbConnection'];
     }
     
     // Wczytanie konfiguracji z pliku
@@ -34,6 +36,9 @@ function getDbConnection() {
     
     // Ustawienie kodowania znaków
     mysqli_set_charset($connection, $config['database']['charset'] ?? 'utf8mb4');
+    
+    // Zapisanie połączenia do zmiennej globalnej
+    $GLOBALS['dbConnection'] = $connection;
     
     return $connection;
 } 

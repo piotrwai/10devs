@@ -1,0 +1,378 @@
+Plan implementacji endpointa /api/cities/search
+- prompt dla modeli reasoningowych, np. o3-mini
+- podpięte pliki: api-plan.md / db.sql / db-plan.md / tech-stack.md / rules-php.mdc
+- typ modelu: Agent
+
+----------------------------------------------
+
+Jesteś doświadczonym architektem oprogramowania, którego zadaniem jest stworzenie szczegółowego planu wdrożenia punktu końcowego REST API. Twój plan poprowadzi programistów w skutecznym i poprawnym wdrożeniu tego punktu końcowego.
+
+Zanim zaczniemy, zapoznaj się z poniższymi informacjami:
+
+1. Route API specification:
+<route_api_specification>
+#### POST /api/cities/search
+- **Description**: Search for a city and generate AI recommendations for attractions. This is the initial step when a user wants to explore a new city.
+- **Request Payload**:
+  ```json
+  {
+    "cityName": "string"           // name of the city to search for
+  }
+  ```
+- **Response**:
+  - **Success (200 OK)**:
+    ```json
+    {
+      "city": {
+        "id": number,             // will be null if city is not yet saved for this user
+        "name": "string",
+        "summary": "string"       // AI-generated summary (up to 150 characters)
+      },
+      "recommendations": [
+        {
+          "id": number,           // will be null as these are not yet saved
+          "title": "string",
+          "description": "string",
+          "model": "string"       // AI model identifier
+        },
+        // ... up to 10 recommendations
+      ]
+    }
+    ```
+  - **Error (400 Bad Request)**: If the city name is invalid or empty.
+</route_api_specification>
+
+2. Related database resources:
+<related_db_resources>
+@db.sql
+</related_db_resources>
+
+3. Tech stack:
+<tech_stack>
+@tech-stack.md 
+</tech_stack>
+
+4. Implementation rules:
+<implementation_rules>
+@rules-php.mdc
+</implementation_rules>
+
+5. Project
+Zapoznaj się z istniejącym już kodem projektu. Wykorzystaj jego format, ustawienia, funkcje i dane.
+
+Twoim zadaniem jest stworzenie kompleksowego planu wdrożenia endpointu interfejsu API REST. Przed dostarczeniem ostatecznego planu użyj znaczników <analysis>, aby przeanalizować informacje i nakreślić swoje podejście. W tej analizie upewnij się, że:
+
+1. Podsumuj kluczowe punkty specyfikacji API.
+2. Wymień wymagane i opcjonalne parametry ze specyfikacji API.
+4. Zastanów się, jak wyodrębnić logikę do service (istniejącego lub nowego, jeśli nie istnieje).
+5. Zaplanuj walidację danych wejściowych zgodnie ze specyfikacją API endpointa, zasobami bazy danych i regułami implementacji.
+6. Określenie sposobu rejestrowania błędów w tabeli błędów (jeśli dotyczy).
+7. Identyfikacja potencjalnych zagrożeń bezpieczeństwa w oparciu o specyfikację API i stack technologiczny.
+8. Nakreśl potencjalne scenariusze błędów i odpowiadające im kody stanu.
+
+Po przeprowadzeniu analizy utwórz szczegółowy plan wdrożenia w formacie markdown. Plan powinien zawierać następujące sekcje:
+
+1. Przegląd punktu końcowego
+2. Szczegóły żądania
+3. Szczegóły odpowiedzi
+4. Przepływ danych
+5. Względy bezpieczeństwa
+6. Obsługa błędów
+7. Wydajność
+8. Kroki implementacji
+
+W całym planie upewnij się, że
+- Używać prawidłowych kodów stanu API:
+  - 200 dla pomyślnego odczytu
+  - 201 dla pomyślnego utworzenia
+  - 400 dla nieprawidłowych danych wejściowych
+  - 401 dla nieautoryzowanego dostępu
+  - 404 dla nie znalezionych zasobów
+  - 500 dla błędów po stronie serwera
+- Dostosowanie do dostarczonego stacku technologicznego
+- Postępuj zgodnie z podanymi zasadami implementacji
+
+Końcowym wynikiem powinien być dobrze zorganizowany plan wdrożenia w formacie markdown. Oto przykład tego, jak powinny wyglądać dane wyjściowe:
+
+``markdown
+# API Endpoint Implementation Plan: [Nazwa punktu końcowego]
+
+## 1. Przegląd punktu końcowego
+[Krótki opis celu i funkcjonalności punktu końcowego]
+
+## 2. Szczegóły żądania
+- Metoda HTTP: [GET/POST/PUT/DELETE]
+- Struktura URL: [wzorzec URL]
+- Parametry:
+  - Wymagane: [Lista wymaganych parametrów]
+  - Opcjonalne: [Lista opcjonalnych parametrów]
+- Request Body: [Struktura treści żądania, jeśli dotyczy]
+
+## 3. Szczegóły odpowiedzi
+[Oczekiwana struktura odpowiedzi i kody statusu]
+
+## 4. Przepływ danych
+[Opis przepływu danych, w tym interakcji z zewnętrznymi usługami lub bazami danych]
+
+## 5. Względy bezpieczeństwa
+[Szczegóły uwierzytelniania, autoryzacji i walidacji danych]
+
+## 6. Obsługa błędów
+[Lista potencjalnych błędów i sposób ich obsługi]
+
+## 7. Rozważania dotyczące wydajności
+[Potencjalne wąskie gardła i strategie optymalizacji]
+
+## 8. Etapy wdrożenia
+1. [Krok 1]
+2. [Krok 2]
+3. [Krok 3]
+...
+```
+
+Końcowe wyniki powinny składać się wyłącznie z planu wdrożenia w formacie markdown i nie powinny powielać ani powtarzać żadnej pracy wykonanej w sekcji analizy.
+
+Pamiętaj, aby zapisać swój plan wdrożenia jako .ai/search-endpoint-implementation-plan.md. Upewnij się, że plan jest szczegółowy, przejrzysty i zapewnia kompleksowe wskazówki dla zespołu programistów.
+
+
+
+------------------------
+
+
+# API Endpoint Implementation Plan: /api/cities/search
+
+## 1. Przegląd punktu końcowego
+Punkt końcowy służy do wyszukiwania miasta i generowania rekomendacji atrakcji turystycznych przez AI. Umożliwia użytkownikowi otrzymanie informacji o mieście (wraz z opcjonalnym podsumowaniem generowanym przez AI) oraz listy rekomendacji atrakcji, które mogą być później zapisane.
+
+## 2. Szczegóły żądania
+- Metoda HTTP: POST
+- URL: /api/cities/search
+- Parametry:
+  - Wymagane:
+    - `cityName` (string) – nazwa miasta do wyszukania.
+  - Opcjonalne: brak
+- Treść żądania (Request Body):
+  ```json
+  {
+    "cityName": "string"
+  }
+  ```
+
+## 3. Szczegóły odpowiedzi
+- Sukces (200 OK):
+  ```json
+  {
+    "city": {
+      "id": number,           // null, jeśli miasto nie zostało zapisane dla użytkownika
+      "name": "string",
+      "summary": "string"     // Podsumowanie wygenerowane przez AI (do 150 znaków)
+    },
+    "recommendations": [
+      {
+        "id": number,         // null, ponieważ rekomendacje nie są jeszcze zapisane
+        "title": "string",
+        "description": "string",
+        "model": "string"     // Identyfikator modelu AI
+      }
+      // ... maksymalnie 10 rekomendacji
+    ]
+  }
+  ```
+- Błąd – 400 Bad Request: gdy nazwa miasta jest pusta lub nieprawidłowa.
+
+## 4. Przepływ danych
+1. Odbiór żądania POST z JSON zawierającym `cityName`.
+2. Weryfikacja autentykacji poprzez token JWT.
+3. Walidacja danych wejściowych – sprawdzenie, czy `cityName` nie jest pusty i mieści się w ustalonych granicach (do 150 znaków).
+4. Sprawdzenie, czy miasto już istnieje w bazie danych dla danego użytkownika:
+   - Jeśli miasto istnieje, pobranie jego danych (np. id, nazwa).
+   - Jeśli nie, ustawienie `id` jako null.
+5. Wywołanie serwisu AI, który generuje:
+   - Podsumowanie miasta (summary).
+   - Listę rekomendacji (do 10 elementów) zawierających tytuł, opis oraz identyfikator modelu AI.
+6. Utworzenie obiektu odpowiedzi zgodnie z powyższą specyfikacją.
+7. Zwrócenie odpowiedzi.
+
+## 5. Względy bezpieczeństwa
+- Uwierzytelnienie: Wymagane jest użycie tokena JWT przesyłanego w nagłówku `Authorization: Bearer <token>`.
+- Autoryzacja: Logika powinna zapewniać, że użytkownik widzi tylko swoje dane.
+- Walidacja danych wejściowych: Użycie filtrów i przygotowanych zapytań (prepared statements) w celu zapobiegania SQL Injection.
+- Ograniczenie danych: Zapewnienie, że podsumowanie miasta nie przekracza 150 znaków oraz tytuły rekomendacji do 150 znaków (zgodnie z wymaganiami) oraz treść rekomendacji nie przekracza 64000 znaków.
+- Sprawdzenie wersji PHP oraz zgodność z PHP 7 i PHP 8.4 – unikanie błędów i ostrzeżeń.
+
+## 6. Obsługa błędów
+- Błąd 400 Bad Request: W przypadku nieprawidłowych lub brakujących danych (pusty `cityName`).
+- Błąd 500 Internal Server Error: W przypadku awarii po stronie serwera, np. błąd połączenia z bazą danych lub serwisem AI.
+- Rejestracja błędów: Wszystkie błędy powinny być logowane do tabeli `error_logs` z odpowiednimi danymi (typ błędu, wiadomość, URL, ewentualny payload).
+
+## 7. Rozważania dotyczące wydajności
+- Optymalizacja zapytań do bazy danych poprzez wykorzystanie indeksów (np. `cit_usr_id`, `cit_name`).
+- Ograniczenie liczby rekomendacji do maksymalnie 10, aby zmniejszyć obciążenie serwera i AI.
+- Rozważenie cachowania wyników z serwisu AI w razie dużego obciążenia.
+- Asynchroniczne wywołania do zewnętrznego serwisu AI, jeśli obsługa czasu odpowiedzi staje się krytyczna.
+- 60 sekund czasu oczekiwania na odpowiedź AI. Po przekroczeniu czasu błąd AI timeout.
+
+## 8. Kroki implementacji
+1. Utworzenie kontrolera dla endpointa `/api/cities/search`.
+   - Implementacja metody obsługującej żądanie POST.
+2. Walidacja tokena JWT oraz autoryzacja użytkownika.
+3. Walidacja danych wejściowych – sprawdzenie, czy `cityName` jest dostarczony i prawidłowy.
+4. Sprawdzenie w bazie danych, czy miasto już istnieje dla użytkownika.
+5. Integracja z zewnętrznym serwisem AI:
+   - Wywołanie modelu AI do generowania summary dla miasta.
+   - Odebranie listy rekomendacji.
+6. Zbudowanie obiektu odpowiedzi zgodnie z dokumentacją.
+7. Obsługa wyjątków:
+   - Logowanie błędów w tabeli `error_logs`.
+   - Odpowiadanie odpowiednimi kodami statusu.
+9. Weryfikacja zgodności kodu z PHP 7 oraz PHP 8.4.
+
+
+--------------------------
+
+Implementacja - zmiana modelu na zwykły (nie reasoningowy), np. claude-3.7-sonnet
+---
+
+Twoim zadaniem jest wdrożenie endpointa interfejsu API REST w oparciu o podany plan wdrożenia. Twoim celem jest stworzenie solidnej i dobrze zorganizowanej implementacji, która zawiera odpowiednią walidację, obsługę błędów i podąża za wszystkimi logicznymi krokami opisanymi w planie.
+
+Najpierw dokładnie przejrzyj dostarczony plan wdrożenia:
+
+<implementation_plan>
+@search-endpoint-implementation-plan.md
+</implementation_plan>
+
+<implementation_rules>
+@rules-php.mdc
+</implementation_rules>
+
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+Teraz wykonaj następujące kroki, aby zaimplementować punkt końcowy interfejsu API REST:
+
+1. Przeanalizuj plan wdrożenia:
+   - Określ metodę HTTP (GET, POST, PUT, DELETE itp.) dla punktu końcowego.
+   - Określenie struktury adresu URL punktu końcowego
+   - Lista wszystkich oczekiwanych parametrów wejściowych
+   - Zrozumienie wymaganej logiki biznesowej i etapów przetwarzania danych
+   - Zwróć uwagę na wszelkie szczególne wymagania dotyczące walidacji lub obsługi błędów.
+
+2. Rozpocznij implementację:
+   - Rozpocznij od zdefiniowania funkcji punktu końcowego z prawidłowym dekoratorem metody HTTP.
+   - Skonfiguruj parametry funkcji w oparciu o oczekiwane dane wejściowe
+   - Wdrożenie walidacji danych wejściowych dla wszystkich parametrów
+   - Postępuj zgodnie z logicznymi krokami opisanymi w planie wdrożenia
+   - Wdrożenie obsługi błędów dla każdego etapu procesu
+   - Zapewnienie właściwego przetwarzania i transformacji danych zgodnie z wymaganiami
+   - Przygotowanie struktury danych odpowiedzi
+
+3. Walidacja i obsługa błędów:
+   - Wdrożenie dokładnej walidacji danych wejściowych dla wszystkich parametrów
+   - Używanie odpowiednich kodów statusu HTTP dla różnych scenariuszy (np. 400 dla błędnych żądań, 404 dla nie znaleziono, 500 dla błędów serwera).
+   - Dostarczanie jasnych i informacyjnych komunikatów o błędach w odpowiedzi.
+   - Obsługa potencjalnych wyjątków, które mogą wystąpić podczas przetwarzania.
+
+4. Rozważania dotyczące testowania:
+   - Należy rozważyć edge case'y i potencjalne problemy, które powinny zostać przetestowane.
+   - Upewnienie się, że wdrożenie obejmuje wszystkie scenariusze wymienione w planie.
+
+5. Dokumentacja:
+   - Dodaj jasne komentarze, aby wyjaśnić złożoną logikę lub ważne decyzje
+   - Dołącz dokumentację dla głównej funkcji i wszelkich funkcji pomocniczych.
+
+Po zakończeniu implementacji upewnij się, że zawiera wszystkie niezbędne importy, definicje funkcji i wszelkie dodatkowe funkcje pomocnicze lub klasy wymagane do implementacji.
+
+Jeśli musisz przyjąć jakieś założenia lub masz jakiekolwiek pytania dotyczące planu implementacji, przedstaw je przed pisaniem kodu.
+
+Pamiętaj, aby przestrzegać najlepszych praktyk projektowania REST API, stosować się do wytycznych dotyczących stylu języka programowania i upewnić się, że kod jest czysty, czytelny i dobrze zorganizowany.
+
+
+--------------------------
+
+Feedback:
+Do współpracy z bazą danych używaj funkcji mysqli_* - popraw wszystkie pliki w których użyłeś innych wywołań.
+
+1. OK
+2. OK
+3. OK
+
+--------------------------
+
+Czy obsługa wywołania AI jest już zakończona? Jeśli nie to pamiętaj, że wywołujemy model `gpt-4.1-mini` z OpenAI - utwórz do tego odpowiedni prompt i właściwe wywołanie przez API. Dodaj też do wywołania cURLem : CURLOPT_SSL_VERIFYPEER równe 0.
+
+1. OK
+2. OK
+3. OK
+
+--------------------------
+
+Czy masz jeszcze jakieś zadanie do wykonania w tym projekcie? Czy wszystko jest zgodne z PRD, bazą danych, @db-plan.md, @api-plan.md ?
+
+--------------------------
+
+Feedback:
+1. Dodaj do cities pole cit_desc długości 200 znaków i zmodyfikuj wszystkie plik, które do tego się odnoszą.
+2. Dodaj to do kodu.
+3. Zmień we wszystkich iejscach i kodzi endpoint na /api/recommendation/save i format danych wejściowych.
+4. Dodaj tą obsługę.
+
+--------------------------
+
+Źle mnie zrozumiełeś. Chodziło mi o to, żeby pojawił się endpoint o nazwie: /api/recommendation/save
+który jest bardziej zgodny z nazewnictwem projektu. 
+Jeśli uważasz inaczej przedstaw na to argumenty.
+Zmodyfikuje wszystkie pliki projektu pod tą zmianę, o ile uznasz ją za prawidłową.
+
+--------------------------
+
+Plik .htaccess nie jest potrzebny. Jesteśmy na etapie developmentu.Nie jest nam potrzebna zgodność wsteczne.
+
+--------------------------
+
+Czy plik save-recommendations.php jest nadal potrzebny? Jeśli nie to go usuń.
+
+--------------------------
+
+Na czas testów zakomentuj wywołanie OpenAI i zastąp je przykładową, prawidłową odpowiedzią. Zaznacz dokładnie co jest prawidłowym kodem wywołania OpenAI, a co tymczasowym odpowiedzią.
+W dodatkowym kometarzu stwórz błędną odpowiedź OpenAI i także ją dobrze opisz.
+
+--------------------------
+
+Zaproponuj gdzie i jak przechowywać dane połączenia do bazy danych (user, pass, dbname, itp) klucze do OpenAI i ewentualnie inne dane któe nie powinny się znaleźć w kodzie, który zostanie wysłany do zewnętrznego repozytorium GITa.
+
+--------------------------
+
+Utwórz wedle Twoich wskazówek , pliki config.php i przykładowy plik config.
+
+--------------------------
+
+Przygotuj zapytania cURLem, zapisane w PHP, któymi mógłbym przetestować utworzone endpointy.
+
+--------------------------
+
+Jak zasymulować logowanie, tak by móc wywołać test_api.php
+Dodać coś do bazy? Zaproponuj rozwiązanie.
+
+--------------------------
+
+Uzgodnij kodowanie tekstu w /test_api.php na UTF-8
+
+--------------------------
+
+Sprawdź czy metoda addCity() z /commonDB/cities.php jest wywoływana prawidłowo i czy zaproponowane przez Ciebie zapytanie SQL w niej zawsze wykonają się prawidłowo. !!! tu był błąd: zapisywał null w polu które na to nie pozwalało.
+
+--------------------------
+
+Opis miasta jest/powinien być przekazywany z AI po wykonaniu wyszukania w nim miasta. Prawdopodobnie jest to city_summary. Sprawdź czy to prawda i czy to zmienia coś w Twoim kodzie?
+
+--------------------------
+
+Popraw jeszcze - jeżeli odpowiedź z AI jest w jakikolwiek sposób błędna, to nie należy zapisać ani miasta (cities) ani rekomendacji (recom). Nieprawidłowa odpowiedź z AI powinna tylko generować logi.
+
+--------------------------
+
+
+
+
+

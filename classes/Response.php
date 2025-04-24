@@ -6,14 +6,21 @@ class Response {
      * Wysyła odpowiedź sukcesu (HTTP 200) z danymi w formacie JSON
      * 
      * @param mixed $data Dane do wysłania w odpowiedzi
+     * @param string|null $message Opcjonalny komunikat do wysłania wraz z danymi
      * @param int $statusCode Kod statusu HTTP (domyślnie 200)
      * @return void
      */
-    public static function sendSuccess($data, $statusCode = 200) {
-        self::sendResponse($statusCode, [
+    public static function sendSuccess($data, $message = null, $statusCode = 200) {
+        $response = [
             'success' => true,
             'data' => $data
-        ]);
+        ];
+        
+        if ($message !== null) {
+            $response['message'] = $message;
+        }
+        
+        self::sendResponse($statusCode, $response);
     }
     
     /**

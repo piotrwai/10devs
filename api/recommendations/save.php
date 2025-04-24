@@ -13,7 +13,7 @@ require_once '../../classes/ErrorLogger.php';
 require_once '../../commonDB/cities.php';
 require_once '../../commonDB/recommendations.php';
 require_once '../../commonDB/aiLogs.php';
-require_once '../../commonDB/errorLogs.php';
+// Plik errorLogs.php zostanie dołączony przez inne pliki
 
 // Sprawdzenie czy żądanie jest metodą POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

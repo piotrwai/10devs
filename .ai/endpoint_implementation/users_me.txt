@@ -1,0 +1,263 @@
+Plan implementacji - prompt dla modeli reasoningowych, np. o3-mini
+- prompt dla modeli reasoningowych, np. o3-mini
+- podpięte pliki: api-plan.md / db.sql / db-plan.md / tech-stack.md / rules-php.mdc
+- typ modelu: Agent
+
+----------------------------------------------
+
+Jesteś doświadczonym architektem oprogramowania, którego zadaniem jest stworzenie szczegółowego planu wdrożenia punktu końcowego REST API. Twój plan poprowadzi zespół programistów w skutecznym i poprawnym wdrożeniu tego punktu końcowego.
+
+Zanim zaczniemy, zapoznaj się z poniższymi informacjami:
+
+1. Route API specification:
+<route_api_specification>
+#### GET /api/users/me
+- **Description**: Retrieve the authenticated user's profile.
+- **Response (200 OK)**:
+  ```json
+  {
+    "id": number,
+    "login": "string",
+    "cityBase": "string",
+    "isAdmin": boolean     // indicates if the user has admin privileges
+  }
+  ```
+</route_api_specification>
+
+2. Related database resources:
+<related_db_resources>
+@db.sql
+</related_db_resources>
+
+3. Tech stack:
+<tech_stack>
+@tech-stack.md 
+</tech_stack>
+
+4. Implementation rules:
+<implementation_rules>
+@rules-php.mdc
+</implementation_rules>
+
+5. Project
+Zapoznaj się z istniejącym już kodem projektu (pomiń /smarty/). Wykorzystaj jego format, ustawienia, funkcje i dane.
+
+
+Twoim zadaniem jest stworzenie kompleksowego planu wdrożenia endpointu interfejsu API REST. Przed dostarczeniem ostatecznego planu użyj znaczników <analysis>, aby przeanalizować informacje i nakreślić swoje podejście. W tej analizie upewnij się, że:
+
+1. Podsumuj kluczowe punkty specyfikacji API.
+2. Wymień wymagane i opcjonalne parametry ze specyfikacji API.
+4. Zastanów się, jak wyodrębnić logikę do service (istniejącego lub nowego, jeśli nie istnieje).
+5. Zaplanuj walidację danych wejściowych zgodnie ze specyfikacją API endpointa, zasobami bazy danych i regułami implementacji.
+6. Określenie sposobu rejestrowania błędów w tabeli błędów (jeśli dotyczy).
+7. Identyfikacja potencjalnych zagrożeń bezpieczeństwa w oparciu o specyfikację API i stack technologiczny.
+8. Nakreśl potencjalne scenariusze błędów i odpowiadające im kody stanu.
+
+Po przeprowadzeniu analizy utwórz szczegółowy plan wdrożenia w formacie markdown. Plan powinien zawierać następujące sekcje:
+
+1. Przegląd punktu końcowego
+2. Szczegóły żądania
+3. Szczegóły odpowiedzi
+4. Przepływ danych
+5. Względy bezpieczeństwa
+6. Obsługa błędów
+7. Wydajność
+8. Kroki implementacji
+
+W całym planie upewnij się, że
+- Używać prawidłowych kodów stanu API:
+  - 200 dla pomyślnego odczytu
+  - 201 dla pomyślnego utworzenia
+  - 400 dla nieprawidłowych danych wejściowych
+  - 401 dla nieautoryzowanego dostępu
+  - 404 dla nie znalezionych zasobów
+  - 500 dla błędów po stronie serwera
+- Dostosowanie do dostarczonego stacku technologicznego
+- Postępuj zgodnie z podanymi zasadami implementacji
+
+Końcowym wynikiem powinien być dobrze zorganizowany plan wdrożenia w formacie markdown. Oto przykład tego, jak powinny wyglądać dane wyjściowe:
+
+``markdown
+# API Endpoint Implementation Plan: [Nazwa punktu końcowego]
+
+## 1. Przegląd punktu końcowego
+[Krótki opis celu i funkcjonalności punktu końcowego]
+
+## 2. Szczegóły żądania
+- Metoda HTTP: [GET/POST/PUT/DELETE]
+- Struktura URL: [wzorzec URL]
+- Parametry:
+  - Wymagane: [Lista wymaganych parametrów]
+  - Opcjonalne: [Lista opcjonalnych parametrów]
+- Request Body: [Struktura treści żądania, jeśli dotyczy]
+
+## 3. Szczegóły odpowiedzi
+[Oczekiwana struktura odpowiedzi i kody statusu]
+
+## 4. Przepływ danych
+[Opis przepływu danych, w tym interakcji z zewnętrznymi usługami lub bazami danych]
+
+## 5. Względy bezpieczeństwa
+[Szczegóły uwierzytelniania, autoryzacji i walidacji danych]
+
+## 6. Obsługa błędów
+[Lista potencjalnych błędów i sposób ich obsługi]
+
+## 7. Rozważania dotyczące wydajności
+[Potencjalne wąskie gardła i strategie optymalizacji]
+
+## 8. Etapy wdrożenia
+1. [Krok 1]
+2. [Krok 2]
+3. [Krok 3]
+...
+```
+
+Końcowe wyniki powinny składać się wyłącznie z planu wdrożenia w formacie markdown i nie powinny powielać ani powtarzać żadnej pracy wykonanej w sekcji analizy.
+
+Pamiętaj, aby zapisać swój plan wdrożenia jako .ai/users-me-implementation-plan.md. Upewnij się, że plan jest szczegółowy, przejrzysty i zapewnia kompleksowe wskazówki dla zespołu programistów.
+
+----------------------------------------------
+
+# API Endpoint Implementation Plan: GET /api/users/me
+
+## 1. Przegląd punktu końcowego
+Endpoint umożliwia pobranie profilu zalogowanego użytkownika. Po weryfikacji tokenu JWT zwracane są następujące dane: identyfikator użytkownika, login, miasto bazowe oraz flaga informująca o uprawnieniach administracyjnych.
+
+## 2. Szczegóły żądania
+- **Metoda HTTP**: GET
+- **Struktura URL**: /api/users/me
+- **Parametry**:
+  - **Wymagane**:
+    - Nagłówek `Authorization` zawierający token JWT (format: Bearer <token>).
+  - **Opcjonalne**: Brak
+- **Request Body**: Brak
+
+## 3. Szczegóły odpowiedzi
+- **Pomyślna odpowiedź (200 OK)**:
+  ```json
+  {
+    "id": number,
+    "login": "string",
+    "cityBase": "string",
+    "isAdmin": boolean
+  }
+  ```
+- **Błędy**:
+  - 401 Unauthorized – Brak lub niepoprawny token JWT.
+  - 404 Not Found – Użytkownik nie został znaleziony.
+  - 500 Internal Server Error – Wewnętrzny błąd serwera.
+
+## 4. Przepływ danych
+1. Otrzymanie żądania na endpoint /api/users/me.
+2. Przekazanie żądania do middleware odpowiedzialnego za weryfikację tokenu JWT.
+3. Weryfikacja poprawności tokenu i wyodrębnienie identyfikatora użytkownika.
+4. Wywołanie funkcji serwisowej `getUserProfile`, która pobiera dane użytkownika z bazy na podstawie `usr_id`.
+5. Wykonanie zapytania SQL z wykorzystaniem prepared statements, wyszukanie rekordu w tabeli `users` wg klucza głównego.
+6. Mapowanie danych z bazy do odpowiedzi JSON:
+   - `id` ← `usr_id`
+   - `login` ← `usr_login`
+   - `cityBase` ← `usr_city`
+   - `isAdmin` ← `usr_admin` (przekonwertowane na typ logiczny)
+7. Zwrócenie odpowiedzi w formacie JSON.
+
+## 5. Względy bezpieczeństwa
+- Weryfikacja tokenu JWT przez middleware'a przed wykonaniem operacji na danych.
+- Wykorzystanie przygotowanych zapytań SQL (prepared statements) w celu zabezpieczenia przed SQL Injection.
+- Ograniczenie przekazywanych informacji tylko do niezbędnych danych użytkownika.
+- Sprawdzenie uprawnień użytkownika przed wykonaniem operacji.
+
+## 6. Obsługa błędów
+- **401 Unauthorized**: W przypadku braku tokenu JWT lub niepoprawnego tokenu – zwrócenie komunikatu o błędzie autoryzacji.
+- **404 Not Found**: Gdy użytkownik nie zostanie znaleziony w bazie danych – zwrócenie odpowiedniego komunikatu.
+- **500 Internal Server Error**: W przypadku nieoczekiwanych błędów wewnętrznych lub problemów z bazą danych.
+- Logowanie krytycznych błędów do tabeli `error_logs` dla późniejszej analizy.
+
+## 7. Rozważania dotyczące wydajności
+- Endpoint wykonuje proste zapytanie o pojedynczy rekord, co wspierane jest przez indeks na kolumnie `usr_id`, zapewniając wysoką wydajność.
+- Możliwość wdrożenia mechanizmu cache'owania danych użytkownika w przyszłości, gdy profil nie zmienia się dynamicznie.
+- Minimalizacja narzutów dzięki lekkiej logice w warstwie serwisowej.
+
+## 8. Kroki implementacji
+1. Dodanie lub weryfikacja middleware'a odpowiedzialnego za weryfikację tokenu JWT.
+2. Utworzenie kontrolera, np. `UsersController`, z metodą `getMe` obsługującą żądanie GET /api/users/me.
+3. Implementacja funkcji serwisowej `getUserProfile` w warstwie serwisowej, która pobiera dane użytkownika na podstawie identyfikatora.
+4. Utworzenie zapytania SQL przy użyciu prepared statements do pobrania użytkownika z tabeli `users`.
+5. Mapowanie danych z bazy do struktury odpowiedzi JSON zgodnie z wymaganiami endpointu.
+6. Implementacja obsługi błędów z odpowiednimi kodami statusu (401, 404, 500) oraz logowanie błędów w tabeli `error_logs`.
+7. Wdrożenie endpointu w środowisku testowym - dodaj jego testowe wywołanie do pliku test_api.php
+
+
+------------------------------------
+
+Implementacja - zmiana modelu na zwykły (nie reasoningowy), np. claude-3.7-sonnet
+---
+
+Twoim zadaniem jest wdrożenie endpointa interfejsu API REST w oparciu o podany plan wdrożenia. Twoim celem jest stworzenie solidnej i dobrze zorganizowanej implementacji, która zawiera odpowiednią walidację, obsługę błędów i podąża za wszystkimi logicznymi krokami opisanymi w planie.
+
+Najpierw dokładnie przejrzyj dostarczony plan wdrożenia:
+
+<implementation_plan>
+@users-me-implementation-plan.md
+</implementation_plan>
+
+<implementation_rules>
+@rules-php.mdc
+</implementation_rules>
+
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+Teraz wykonaj następujące kroki, aby zaimplementować punkt końcowy interfejsu API REST:
+
+1. Przeanalizuj plan wdrożenia:
+   - Określ metodę HTTP (GET, POST, PUT, DELETE itp.) dla punktu końcowego.
+   - Określenie struktury adresu URL punktu końcowego
+   - Lista wszystkich oczekiwanych parametrów wejściowych
+   - Zrozumienie wymaganej logiki biznesowej i etapów przetwarzania danych
+   - Zwróć uwagę na wszelkie szczególne wymagania dotyczące walidacji lub obsługi błędów.
+
+2. Rozpocznij implementację:
+   - Zapoznaj się z istniejącym już kodem projektu. Wykorzystaj jego format, ustawienia, funkcje i dane.
+   - Rozpocznij od zdefiniowania funkcji punktu końcowego z prawidłowym dekoratorem metody HTTP.
+   - Skonfiguruj parametry funkcji w oparciu o oczekiwane dane wejściowe
+   - Wdrożenie walidacji danych wejściowych dla wszystkich parametrów
+   - Postępuj zgodnie z logicznymi krokami opisanymi w planie wdrożenia
+   - Wdrożenie obsługi błędów dla każdego etapu procesu
+   - Zapewnienie właściwego przetwarzania i transformacji danych zgodnie z wymaganiami
+   - Przygotowanie struktury danych odpowiedzi
+
+3. Walidacja i obsługa błędów:
+   - Wdrożenie dokładnej walidacji danych wejściowych dla wszystkich parametrów
+   - Używanie odpowiednich kodów statusu HTTP dla różnych scenariuszy (np. 400 dla błędnych żądań, 404 dla nie znaleziono, 500 dla błędów serwera).
+   - Dostarczanie jasnych i informacyjnych komunikatów o błędach w odpowiedzi.
+   - Obsługa potencjalnych wyjątków, które mogą wystąpić podczas przetwarzania.
+
+4. Rozważania dotyczące testowania:
+   - Należy rozważyć edge case'y i potencjalne problemy, które powinny zostać przetestowane.
+   - Upewnienie się, że wdrożenie obejmuje wszystkie scenariusze wymienione w planie.
+
+5. Dokumentacja:
+   - Dodaj jasne komentarze, aby wyjaśnić złożoną logikę lub ważne decyzje
+   - Dołącz dokumentację dla głównej funkcji i wszelkich funkcji pomocniczych.
+
+Po zakończeniu implementacji upewnij się, że zawiera wszystkie niezbędne importy, definicje funkcji i wszelkie dodatkowe funkcje pomocnicze lub klasy wymagane do implementacji.
+
+Jeśli musisz przyjąć jakieś założenia lub masz jakiekolwiek pytania dotyczące planu implementacji, przedstaw je przed pisaniem kodu.
+
+Pamiętaj, aby przestrzegać najlepszych praktyk projektowania REST API, stosować się do wytycznych dotyczących stylu języka programowania i upewnić się, że kod jest czysty, czytelny i dobrze zorganizowany.
+
+
+---------------------------------------
+
+Feedback:
+Wszystko zrobione w jednym kroku prawidłowo :-)
+
+
+
+
+
+
+
+

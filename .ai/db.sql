@@ -16,6 +16,7 @@ CREATE TABLE cities (
     cit_usr_id INT(11) NOT NULL COMMENT 'identyfikator uzytkownika odpowiadajacy miastu',
     cit_name VARCHAR(150) NOT NULL COMMENT 'nazwa miasta',
     cit_desc VARCHAR(200) NOT NULL COMMENT 'krotki opis miasta',
+    cit_visited TINYINT(1) NOT NULL DEFAULT 0 COMMENT 'czy miasto zostalo odwiedzone przez uzytkownika (1 - tak, 0 - nie)',
     cit_date_created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'data utworzenia miasta',
     PRIMARY KEY (cit_id),
     UNIQUE KEY cities_unique (cit_usr_id, cit_name),

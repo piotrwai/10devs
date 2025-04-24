@@ -1,6 +1,9 @@
 <?php
 // Funkcje do obsługi operacji na bazie danych związanych z rejestrowaniem błędów
 
+// Dołączenie pliku z połączeniem do bazy danych - tylko raz na początku pliku
+require_once __DIR__ . '/dbConnect.php';
+
 /**
  * Zapisuje informacje o błędzie do bazy danych
  * 
@@ -13,9 +16,6 @@
  */
 function setErrorLog($errorType, $errorMessage, $userId = null, $url = null, $payload = null) {
     try {
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
-        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         

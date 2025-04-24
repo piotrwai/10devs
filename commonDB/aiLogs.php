@@ -1,6 +1,9 @@
 <?php
 // Funkcje do obsługi operacji na bazie danych związanych z AI logs i inputs
 
+// Dołączenie pliku z połączeniem do bazy danych - tylko raz na początku pliku
+require_once __DIR__ . '/dbConnect.php';
+
 /**
  * Zapisuje informacje o wywołaniu AI do tabeli ai_logs
  * 
@@ -11,9 +14,6 @@
  */
 function setAiLog($userId, $recommendationId, $status) {
     try {
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
-        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         
@@ -44,9 +44,6 @@ function setAiLog($userId, $recommendationId, $status) {
  */
 function setAiInput($userId, $content, $source = null) {
     try {
-        // Dołączenie pliku z połączeniem do bazy danych
-        require_once __DIR__ . '/dbConnect.php';
-        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         
