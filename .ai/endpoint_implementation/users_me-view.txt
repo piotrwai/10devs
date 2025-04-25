@@ -1,0 +1,416 @@
+Plan implementacji - prompt dla modeli reasoningowych, np. gemini-2.5-pro
+- prompt dla modeli reasoningowych, np. gemini-2.5-pro
+- podpięte pliki: api-plan.md / db.sql / db-plan.md / tech-stack.md / rules-php.mdc
+- typ modelu: Agent
+
+----------------------------------------------
+
+Jako starszy programista frontendu Twoim zadaniem jest stworzenie szczegółowego planu wdrożenia nowego widoku w aplikacji internetowej. Plan ten powinien być kompleksowy i wystarczająco jasny dla innego programisty frontendowego, aby mógł poprawnie i wydajnie wdrożyć widok.
+
+Najpierw przejrzyj następujące informacje:
+
+1. Product Requirements Document (PRD):
+<prd>
+@prd.md
+</prd>
+
+2. Opis widoku:
+<view_description>
+### 2.6. Dane użytkownika
+- **Ścieżka widoku:** /profile
+- **Główny cel:** Przegląd i edycja danych użytkownika (zmiana nazwy, hasła, miasta)
+- **Kluczowe informacje:** Formularz danych, walidacja unikalności nazwy użytkownika
+- **Kluczowe komponenty:** Formularze, przyciski, komunikaty błędów
+- **UX, dostępność, bezpieczeństwo:** Jasny układ formularzy; natychmiastowa walidacja; zabezpieczenia zgodne z dotychczasową implementacją
+</view_description>
+
+3. User Stories:
+<user_stories>
+US-009
+Tytuł: Przeglądanie i modyfikacja danych swojego profilu
+Opis: Jako turysta chcę przejrzeć wszystkie swoje dane w systemie oraz móc zmienić: nazwę/login użytkownika, hasło, miasto bazowe.
+Kryteria akceptacji:
+- Nazwa/login użytkownika musi być unikalny.
+- Miasto bazowe musi być podane.
+- Hasło musi być podane i mieć minimum 5 znaków.
+</user_stories>
+
+4. Endpoint Description:
+<endpoint_description>
+#### GET /api/users/me
+- **Description**: Retrieve the authenticated user's profile.
+- **Response (200 OK)**:
+  ```json
+  {
+    "id": number,
+    "login": "string",
+    "cityBase": "string",
+    "isAdmin": boolean     // indicates if the user has admin privileges
+  }
+  ```
+
+Jeśli to konieczne stwórz nowe endpoint-y dla edycji użytkownika i dodaj ja do pliku api-plan.php
+</endpoint_description>
+
+5. Endpoint Implementation:
+<endpoint_implementation>
+/api/users/me.php
+
+Inne, jakie możesz utworzyć.
+</endpoint_implementation>
+
+6. Tech Stack:
+<tech_stack>
+@tech-stack.md
+</tech_stack>
+
+Przed utworzeniem ostatecznego planu wdrożenia przeprowadź analizę i planowanie wewnątrz tagów <implementation_breakdown> w swoim bloku myślenia. Ta sekcja może być dość długa, ponieważ ważne jest, aby być dokładnym.
+
+W swoim podziale implementacji wykonaj następujące kroki:
+1. Dla każdej sekcji wejściowej (PRD, Opis widoku, User Stories, Endpoint Description, Endpoint Implementation, Tech Stack):
+ - Podsumuj kluczowe punkty
+ - Wymień wszelkie wymagania lub ograniczenia
+ - Zwróć uwagę na wszelkie potencjalne wyzwania lub ważne kwestie
+2. Wyodrębnienie i wypisanie kluczowych wymagań z PRD
+3. Wypisanie wszystkich potrzebnych głównych komponentów, wraz z krótkim opisem ich opisu, potrzebnych typów, obsługiwanych zdarzeń i warunków walidacji
+4. Stworzenie wysokopoziomowego diagramu drzewa komponentów
+6. Zidentyfikuj potencjalne zmienne stanu i niestandardowe hooki, wyjaśniając ich cel i sposób ich użycia
+7. Wymień wymagane wywołania API i odpowiadające im akcje frontendowe
+8. Zmapuj każdej historii użytkownika do konkretnych szczegółów implementacji, komponentów lub funkcji
+9. Wymień interakcje użytkownika i ich oczekiwane wyniki
+10. Wymień warunki wymagane przez API i jak je weryfikować na poziomie komponentów
+11. Zidentyfikuj potencjalne scenariusze błędów i zasugeruj, jak sobie z nimi poradzić
+12. Wymień potencjalne wyzwania związane z wdrożeniem tego widoku i zasugeruj możliwe rozwiązania
+
+Po przeprowadzeniu analizy dostarcz plan wdrożenia w formacie Markdown z następującymi sekcjami:
+
+1. Przegląd: Krótkie podsumowanie widoku i jego celu.
+2. Routing widoku: Określenie ścieżki, na której widok powinien być dostępny.
+3. Struktura komponentów: Zarys głównych komponentów i ich hierarchii.
+4. Szczegóły komponentu: Dla każdego komponentu należy opisać:
+ - Opis komponentu, jego przeznaczenie i z czego się składa
+ - Główne elementy HTML i komponenty dzieci, które budują komponent
+ - Obsługiwane zdarzenia
+ - Warunki walidacji (szczegółowe warunki, zgodnie z API)
+ - Propsy, które komponent przyjmuje od rodzica (interfejs komponentu)
+6. Zarządzanie stanem: Szczegółowy opis sposobu zarządzania stanem w widoku, określenie, czy wymagany jest customowy hook.
+7. Integracja API: Wyjaśnienie sposobu integracji z dostarczonym punktem końcowym. Precyzyjnie wskazuje typy żądania i odpowiedzi.
+8. Interakcje użytkownika: Szczegółowy opis interakcji użytkownika i sposobu ich obsługi.
+9. Warunki i walidacja: Opisz jakie warunki są weryfikowane przez interfejs, których komponentów dotyczą i jak wpływają one na stan interfejsu
+10. Obsługa błędów: Opis sposobu obsługi potencjalnych błędów lub przypadków brzegowych.
+11. Kroki implementacji: Przewodnik krok po kroku dotyczący implementacji widoku.
+
+Upewnij się, że Twój plan jest zgodny z PRD, historyjkami użytkownika i uwzględnia dostarczony stack technologiczny.
+
+Ostateczne wyniki powinny być w języku polskim i zapisane w pliku o nazwie .ai/user_me-view-implementation-plan.md. Nie uwzględniaj żadnej analizy i planowania w końcowym wyniku.
+
+Oto przykład tego, jak powinien wyglądać plik wyjściowy (treść jest do zastąpienia):
+
+```markdown
+# Plan implementacji widoku [Nazwa widoku]
+
+## 1. Przegląd
+[Krótki opis widoku i jego celu]
+
+## 2. Routing widoku
+[Ścieżka, na której widok powinien być dostępny]
+
+## 3. Struktura komponentów
+[Zarys głównych komponentów i ich hierarchii]
+
+## 4. Szczegóły komponentów
+### [Nazwa komponentu 1]
+- Opis komponentu [opis]
+- Główne elementy: [opis]
+- Obsługiwane interakcje: [lista]
+- Obsługiwana walidacja: [lista, szczegółowa]
+- Propsy: [lista]
+
+### [Nazwa komponentu 2]
+[...]
+
+## 6. Zarządzanie stanem
+[Opis zarządzania stanem w widoku]
+
+## 7. Integracja API
+[Wyjaśnienie integracji z dostarczonym endpointem, wskazanie typów żądania i odpowiedzi]
+
+## 8. Interakcje użytkownika
+[Szczegółowy opis interakcji użytkownika]
+
+## 9. Warunki i walidacja
+[Szczegółowy opis warunków i ich walidacji]
+
+## 10. Obsługa błędów
+[Opis obsługi potencjalnych błędów]
+
+## 11. Kroki implementacji
+1. [Krok 1]
+2. [Krok 2]
+3. [...]
+```
+
+Rozpocznij analizę i planowanie już teraz. Twój ostateczny wynik powinien składać się wyłącznie z planu wdrożenia w języku polskim w formacie markdown, który zapiszesz w pliku .ai/user_me-view-implementation-plan.md i nie powinien powielać ani powtarzać żadnej pracy wykonanej w podziale implementacji.
+
+
+
+----------------------------
+
+Implementacja po drobnych poprawkach PW
+----
+
+# Plan implementacji widoku Dane Użytkownika (/profile)
+
+## 1. Przegląd
+Widok "Dane Użytkownika" umożliwia zalogowanemu użytkownikowi przeglądanie i modyfikację swoich danych profilowych: loginu, hasła oraz miasta bazowego. Zapewnia interfejs do aktualizacji tych informacji zgodnie z wymaganiami aplikacji.
+
+## 2. Routing widoku
+Widok powinien być dostępny pod ścieżką `/profile`. Dostęp do tej ścieżki powinien wymagać uwierzytelnienia użytkownika.
+
+## 3. Struktura komponentów
+Ze względu na stack technologiczny (PHP, Smarty, jQuery), nie będziemy tworzyć komponentów w rozumieniu frameworków JS (React/Vue/Angular). Zamiast tego, widok będzie składał się z:
+1.  Głównego szablonu Smarty (`profile.tpl`), który renderuje strukturę HTML.
+2.  Pliku JavaScript (`profile.js`) wykorzystującego jQuery do obsługi logiki frontendu (pobieranie danych, walidacja, wysyłanie formularza, obsługa odpowiedzi API).
+
+Struktura HTML w `profile.tpl` będzie zawierać:
+- Główny kontener widoku.
+- Formularz (`<form id="profile-form">`) do edycji danych.
+- Pola formularza dla loginu, miasta bazowego, nowego hasła i potwierdzenia hasła.
+- Przycisk zapisu zmian.
+- Obszar do wyświetlania komunikatów o sukcesie lub błędach.
+
+## 4. Szczegóły komponentu (Formularz Profilu w `profile.tpl` i `profile.js`)
+
+### Formularz Edycji Profilu (`#profile-form`)
+- **Opis komponentu:** Formularz HTML umożliwiający użytkownikowi edycję loginu, hasła i miasta bazowego. Logika jest zarządzana przez `profile.js`.
+- **Główne elementy HTML:**
+    - `<form id="profile-form">`
+    - `<div class="form-group">` dla każdego pola:
+        - `<label>`
+        - `<input type="text" id="login" name="login" required>`
+        - `<input type="text" id="cityBase" name="cityBase" required>`
+        - `<input type="password" id="password" name="password">` (dla nowego hasła)
+        - `<input type="password" id="confirmPassword" name="confirmPassword">` (dla potwierdzenia nowego hasła)
+        - Elementy do wyświetlania błędów walidacji per pole (np. `<div class="invalid-feedback">`)
+    - `<button type="submit" id="save-profile-btn">Zapisz zmiany</button>`
+    - `<div class="is-admin">` (zawiera informację o użytkowniku: Administrator - Tak/Nie)
+    - `<div id="form-messages">` (do ogólnych komunikatów formularza - sukces, błąd API)
+- **Obsługiwane interakcje:**
+    - Wypełnianie pól formularza.
+    - Utrata focusu z pól (do ewentualnej walidacji "on blur").
+    - Kliknięcie przycisku "Zapisz zmiany" (submit formularza).
+- **Obsługiwana walidacja (w `profile.js` przed wysłaniem):**
+    - **Login:**
+        - Wymagany: Nie może być pusty. Komunikat: "Login jest wymagany."
+        - Unikalność: Sprawdzana po stronie serwera. Komunikat (z API): "Login jest już zajęty."
+    - **Miasto bazowe:**
+        - Wymagane: Nie może być puste. Komunikat: "Miasto bazowe jest wymagane."
+    - **Nowe hasło:**
+        - Wymagane tylko jeśli wypełnione jest pole "Potwierdź nowe hasło".
+        - Minimalna długość: 5 znaków (jeśli niepuste). Komunikat: "Hasło musi mieć minimum 5 znaków."
+    - **Potwierdź nowe hasło:**
+        - Wymagane tylko jeśli wypełnione jest pole "Nowe hasło".
+        - Dopasowanie: Musi być identyczne jak "Nowe hasło". Komunikat: "Hasła nie pasują do siebie."
+- **Propsy (Dane z API):** Dane użytkownika (`id`, `login`, `cityBase`) pobrane z `GET /api/users/me` są używane do wstępnego wypełnienia pól formularza.
+
+## 6. Zarządzanie stanem
+Zarządzanie stanem odbywa się głównie za pomocą jQuery w pliku `profile.js`. Kluczowe elementy stanu:
+- **Dane użytkownika:** Przechowywane w zmiennych JS po pobraniu z API, używane do wypełnienia formularza.
+- **Stan ładowania:** Zmienna (np. `isLoading`) do śledzenia, czy trwa komunikacja z API (np. podczas zapisywania). Może być użyta do deaktywacji przycisku zapisu.
+- **Komunikaty błędów/sukcesu:** Przechowywane w zmiennych lub bezpośrednio wstrzykiwane do odpowiednich elementów DOM (`#form-messages`, `.invalid-feedback`).
+
+Nie jest wymagany dedykowany customowy hook, stan jest zarządzany lokalnie w skrypcie `profile.js`.
+
+## 7. Integracja API
+Integracja z API odbywa się za pomocą asynchronicznych żądań AJAX (jQuery `$.ajax`).
+
+- **Pobieranie danych użytkownika:**
+    - **Endpoint:** `GET /api/users/me`
+    - **Typ żądania:** `GET`
+    - **Ciało żądania:** Brak
+    - **Odpowiedź (Sukces 200 OK):**
+      ```json
+      {
+        "id": number,
+        "login": "string",
+        "cityBase": "string",
+        "isAdmin": boolean
+      }
+      ```
+    - **Odpowiedź (Błąd):** 401 (Unauthorized), 500 (Server Error)
+    - **Akcja frontendowa:** Po załadowaniu widoku, wywołaj ten endpoint. W przypadku sukcesu, wypełnij pola formularza (`#login`, `#cityBase`) i informację w klasie `is-admin`. W przypadku błędu, wyświetl komunikat.
+
+- **Aktualizacja danych użytkownika:**
+    - **Endpoint:** `PUT /api/users/me` (Uwaga: Ten endpoint musi zostać zaimplementowany w backendzie)
+    - **Typ żądania:** `PUT`
+    - **Ciało żądania:**
+      ```json
+      {
+        "login": "string",        // Aktualny login z formularza
+        "cityBase": "string",     // Aktualne miasto z formularza
+        "password": "string"      // Nowe hasło z formularza (tylko jeśli zmieniane, opcjonalne)
+      }
+      ```
+    - **Odpowiedź (Sukces 200 OK):**
+      ```json
+      {
+        "id": number,
+        "login": "string",
+        "cityBase": "string",
+        "isAdmin": boolean
+      }
+      ```
+    - **Odpowiedź (Błąd):**
+        - 400 (Bad Request): Błędy walidacji (np. login zajęty, hasło za krótkie, brakujące pola). Oczekiwany format: `{ "error": "Komunikat błędu", "field": "nazwa_pola" }`
+        - 401 (Unauthorized)
+        - 500 (Server Error)
+    - **Akcja frontendowa:** Po walidacji po stronie klienta i kliknięciu "Zapisz", wywołaj ten endpoint. W przypadku sukcesu, wyświetl komunikat o powodzeniu (np. "Dane zostały zaktualizowane."). Opcjonalnie zaktualizuj pola formularza, jeśli odpowiedź zawiera zaktualizowane dane. W przypadku błędu 400, wyświetl odpowiedni komunikat błędu (najlepiej przy konkretnym polu, jeśli `field` jest dostępne w odpowiedzi, lub jako ogólny komunikat). W przypadku innych błędów, wyświetl ogólny komunikat błędu.
+
+## 8. Interakcje użytkownika
+- **Ładowanie strony:** Użytkownik wchodzi na `/profile`. Skrypt `profile.js` wysyła żądanie `GET /api/users/me`. Formularz jest wypełniany danymi użytkownika. Przycisk "Zapisz" jest aktywny.
+- **Edycja pól:** Użytkownik modyfikuje wartości w polach `login`, `cityBase`.
+- **Zmiana hasła:** Użytkownik wpisuje nowe hasło w polu `password` i powtarza je w `confirmPassword`.
+- **Próba zapisu:** Użytkownik klika "Zapisz zmiany".
+    - Skrypt `profile.js` uruchamia walidację po stronie klienta.
+    - **Jeśli walidacja nie przejdzie:** Wyświetlane są komunikaty błędów przy odpowiednich polach. Przycisk "Zapisz" pozostaje aktywny. Wysyłanie żądania do API jest blokowane.
+    - **Jeśli walidacja przejdzie:** Przycisk "Zapisz" jest deaktywowany (opcjonalnie, aby zapobiec podwójnemu kliknięciu), wyświetlany jest wskaźnik ładowania (opcjonalnie). Skrypt wysyła żądanie `PUT /api/users/me` z danymi z formularza.
+- **Odpowiedź API (Sukces):** Wskaźnik ładowania znika. Wyświetlany jest komunikat o sukcesie. Przycisk "Zapisz" staje się ponownie aktywny. Pola hasła są czyszczone.
+- **Odpowiedź API (Błąd 400 - Walidacja serwera):** Wskaźnik ładowania znika. Wyświetlany jest komunikat błędu zwrócony przez API (jeśli jest `field`, przy odpowiednim polu, w przeciwnym razie jako ogólny komunikat). Przycisk "Zapisz" staje się ponownie aktywny.
+- **Odpowiedź API (Inny błąd):** Wskaźnik ładowania znika. Wyświetlany jest ogólny komunikat o błędzie. Przycisk "Zapisz" staje się ponownie aktywny.
+
+## 9. Warunki i walidacja
+Walidacja odbywa się dwuetapowo: po stronie klienta (w `profile.js`) i po stronie serwera (w implementacji endpointu `PUT /api/users/me`).
+
+- **Walidacja po stronie klienta (przed wysłaniem żądania PUT):**
+    - **Login:** Sprawdzenie, czy pole nie jest puste (`required`).
+    - **Miasto bazowe:** Sprawdzenie, czy pole nie jest puste (`required`).
+    - **Nowe hasło:** Sprawdzenie minimalnej długości (5 znaków), jeśli pole jest wypełnione.
+    - **Potwierdź nowe hasło:** Sprawdzenie, czy jest identyczne z nowym hasłem, jeśli oba pola są wypełnione.
+    - **Wpływ na interfejs:** Jeśli walidacja nie przejdzie, wyświetlane są komunikaty błędów (`.invalid-feedback`) przy odpowiednich polach (np. poprzez dodanie klasy `is-invalid` do inputa w Bootstrapie), a wysłanie żądania jest blokowane.
+
+- **Walidacja po stronie serwera (w `PUT /api/users/me`):**
+    - **Login:** Sprawdzenie unikalności w bazie danych. Sprawdzenie, czy pole nie jest puste.
+    - **Miasto bazowe:** Sprawdzenie, czy pole nie jest puste.
+    - **Nowe hasło:** Sprawdzenie minimalnej długości (5 znaków), jeśli zostało przesłane.
+    - **Wpływ na interfejs:** Jeśli walidacja serwera nie przejdzie (odpowiedź 400), komunikat błędu z API jest wyświetlany użytkownikowi (w `#form-messages` lub przy konkretnym polu, jeśli API dostarczy informacji o polu).
+
+## 10. Obsługa błędów
+- **Błędy walidacji klienta:** Wyświetlanie komunikatów bezpośrednio przy polach formularza. Zapobieganie wysłaniu żądania do API.
+- **Błędy walidacji serwera (400 Bad Request):** Wyświetlanie komunikatu błędu zwróconego przez API. Jeśli API zwraca informację o polu (`field`), błąd jest wyświetlany przy tym polu. W przeciwnym razie, jako ogólny komunikat formularza.
+- **Brak autoryzacji (401 Unauthorized):** Przekierowanie użytkownika do strony logowania lub wyświetlenie odpowiedniego komunikatu.
+- **Błędy serwera (500 Internal Server Error):** Wyświetlanie ogólnego komunikatu o błędzie, np. "Wystąpił nieoczekiwany błąd. Spróbuj ponownie później."
+- **Błędy sieciowe (AJAX error):** Wyświetlanie ogólnego komunikatu o problemie z połączeniem, np. "Błąd połączenia z serwerem. Sprawdź swoje połączenie internetowe."
+- **Stan ładowania:** Użycie wskaźnika ładowania i/lub deaktywacja przycisku zapisu podczas komunikacji z API zapobiega frustracji użytkownika i podwójnym żądaniom.
+
+## 11. Kroki implementacji
+1.  **Backend:**
+    *   Zdefiniować i zaimplementować endpoint `PUT /api/users/me` w PHP.
+    *   Dodać nową funkcję w `commonDB/users.php` do aktualizacji danych użytkownika (np. `setUserProfile`), obsługującą aktualizację loginu, miasta bazowego i opcjonalnie hasła (wraz z jego hashowaniem). Funkcja powinna zawierać walidację (unikalność loginu, minimalna długość hasła).
+    *   Upewnić się, że endpoint `GET /api/users/me` działa poprawnie i zwraca wymagane dane.
+    *   Zabezpieczyć oba endpointy, aby wymagały uwierzytelnienia użytkownika.
+2.  **Frontend (Smarty):**
+    *   Utworzyć szablon Smarty `profile.tpl` w katalogu /templates.
+    *   Zaimplementować strukturę HTML formularza (`#profile-form`) z polami: login, miasto bazowe, nowe hasło, potwierdź nowe hasło, przyciskiem zapisu i miejscem na komunikaty.
+    *   Dołączyć plik `profile.js` do szablonu.
+    *   Dodać odpowiednie klasy CSS (np. Bootstrap) do stylizacji formularza i komunikatów.
+3.  **Frontend (jQuery - `profile.js`):**
+    *   Po załadowaniu dokumentu (`$(document).ready(...)`):
+        *   Wykonać żądanie AJAX `GET /api/users/me`.
+        *   W przypadku sukcesu, wypełnić pola `#login` i `#cityBase` otrzymanymi danymi.
+        *   W przypadku błędu, wyświetlić komunikat w `#form-messages`.
+    *   Dodać obsługę zdarzenia `submit` dla formularza `#profile-form`:
+        *   Zablokować domyślną akcję przesyłania formularza (`event.preventDefault()`).
+        *   Zaimplementować logikę walidacji po stronie klienta (sprawdzanie pustych pól, długości hasła, zgodności haseł).
+        *   Wyświetlić błędy walidacji przy polach lub wyczyścić poprzednie błędy.
+        *   Jeśli walidacja przejdzie:
+            *    Zebrać dane z formularza.
+            *    Opcjonalnie: Deaktywować przycisk zapisu / pokazać wskaźnik ładowania.
+            *    Wysłać żądanie AJAX `PUT /api/users/me` z zebranymi danymi.
+            *    W `success` callback: Wyświetlić komunikat sukcesu, wyczyścić pola hasła, aktywować przycisk.
+            *    W `error` callback: Wyświetlić odpowiedni komunikat błędu (zależnie od statusu odpowiedzi), aktywować przycisk.
+4.  **Routing aplikacji:**
+    *   Dodać regułę routingu w głównej aplikacji PHP, która dla ścieżki `/profile` będzie renderować szablon `profile.tpl` (upewniając się, że użytkownik jest zalogowany).
+5.  **Testowanie:**
+    *   Przetestować pobieranie danych.
+    *   Przetestować walidację po stronie klienta dla wszystkich pól i warunków.
+    *   Przetestować zapisywanie zmian (zmiana loginu, zmiana miasta, zmiana hasła, zmiana kilku pól naraz).
+    *   Przetestować obsługę błędów API (login zajęty, hasło za krótkie, błędy serwera, brak autoryzacji).
+    *   Przetestować responsywność widoku. 
+
+
+
+-------------------------------
+
+Implementacj widoku - zmiana modelu na zwykły (nie reasoningowy), np. claude-3.7-sonnet
+
+----
+
+Twoim zadaniem jest zaimplementowanie widoku frontendu w oparciu o podany plan implementacji i zasady implementacji. Twoim celem jest stworzenie szczegółowej i dokładnej implementacji, która jest zgodna z dostarczonym planem, poprawnie reprezentuje strukturę komponentów, integruje się z API i obsługuje wszystkie określone interakcje użytkownika.
+
+Najpierw przejrzyj plan implementacji:
+
+<implementation_plan>
+@user_me-view-implementation-plan.md
+</implementation_plan>
+
+Teraz przejrzyj zasady implementacji:
+
+<implementation_rules>
+@rules-php.mdc
+</implementation_rules>
+
+Wdrażaj plan zgodnie z następującym podejściem:
+
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+Dokładnie przeanalizuj plan wdrożenia i zasady. Zwróć szczególną uwagę na strukturę komponentów, wymagania dotyczące integracji API i interakcje użytkownika opisane w planie.
+
+Wykonaj następujące kroki, aby zaimplementować widok frontendu:
+
+1. Struktura komponentów:
+   - Zidentyfikuj wszystkie komponenty wymienione w planie wdrożenia.
+   - Utwórz hierarchiczną strukturę tych komponentów.
+   - Upewnij się, że obowiązki i relacje każdego komponentu są jasno zdefiniowane.
+
+2. Integracja API:
+   - Zidentyfikuj wszystkie endpointy API wymienione w planie.
+   - Wdróż niezbędne wywołania API dla każdego endpointa.
+   - Obsłuż odpowiedzi z API i odpowiednio aktualizacji stan komponentów.
+
+3. Interakcje użytkownika:
+   - Wylistuj wszystkie interakcje użytkownika określone w planie wdrożenia.
+   - Wdróż obsługi zdarzeń dla każdej interakcji.
+   - Upewnij się, że każda interakcja wyzwala odpowiednią akcję lub zmianę stanu.
+
+4. Zarządzanie stanem:
+   - Zidentyfikuj wymagany stan dla każdego komponentu.
+   - Zaimplementuj zarządzanie stanem przy użyciu odpowiedniej metody (stan lokalny, custom hook, stan współdzielony).
+   - Upewnij się, że zmiany stanu wyzwalają niezbędne ponowne renderowanie.
+
+5. Stylowanie i layout:
+   - Zastosuj określone stylowanie i layout, jak wspomniano w planie wdrożenia.
+   - Zapewnienie responsywności, jeśli wymaga tego plan.
+
+6. Obsługa błędów i przypadki brzegowe:
+   - Wdrożenie obsługi błędów dla wywołań API i interakcji użytkownika.
+   - Rozważ i obsłuż potencjalne edge case'y wymienione w planie.
+
+7. Optymalizacja wydajności:
+   - Wdrożenie wszelkich optymalizacji wydajności określonych w planie lub zasadach.
+   - Zapewnienie wydajnego renderowania i minimalnej liczby niepotrzebnych ponownych renderowań.
+
+8. Testowanie:
+   - Jeśli zostało to określone w planie, zaimplementuj testy dla komponentów i funkcji w test_ui.php.
+   - Dokładnie przetestuj wszystkie interakcje użytkownika i integracje API.
+
+W trakcie całego procesu implementacji należy ściśle przestrzegać dostarczonych zasad implementacji. Zasady te mają pierwszeństwo przed wszelkimi ogólnymi najlepszymi praktykami, które mogą być z nimi sprzeczne.
+
+Upewnij się, że twoja implementacja dokładnie odzwierciedla dostarczony plan implementacji i przestrzega wszystkich określonych zasad. Zwróć szczególną uwagę na strukturę komponentów, integrację API i obsługę interakcji użytkownika.
+
+----------------------------
+
+
+
+

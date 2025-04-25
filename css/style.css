@@ -1,0 +1,67 @@
+/**
+ * Główny plik CSS dla aplikacji 10x-city
+ */
+
+/* Ogólne style dla aplikacji */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* Style dla formularza profilu */
+#profile-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+#profile-form .is-admin {
+    background-color: #f8f9fa;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#admin-status {
+    font-weight: bold;
+}
+
+/* Stylowanie błędów */
+.invalid-feedback {
+    display: none;
+}
+
+.is-invalid + .invalid-feedback {
+    display: block;
+}
+
+/* Stylowanie powiadomień */
+.alert {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: 0.25rem;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+/* Stylowanie przycisków */
+.btn-spinner {
+    display: inline-block;
+    margin-right: 5px;
+} 

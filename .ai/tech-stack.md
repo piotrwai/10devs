@@ -1,6 +1,10 @@
 <tech-stack>
 ## Frontend:
 - HTML + CSS + jQuery + JavaScript
+- Bootstrap
+- Smarty
+- DataTables
+- jQuery Modal
 
 ## Backend
 - PHP 8

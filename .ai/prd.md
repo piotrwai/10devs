@@ -103,6 +103,14 @@ Opis: Jako system chcę rejestrować działania AI związane z prezentacją reko
 Kryteria akceptacji:  
 - System zapisuje logi zawierające datę, tożsamość użytkownika, wygenerowane propozycje oraz statusy (zaakceptowana, edytowana, odrzucona).
 
+US-009
+Tytuł: Przeglądanie i modyfikacja danych swojego profilu
+Opis: Jako turysta chcę przejrzeć wszystkie swoje dane w systemie oraz móc zmienić: nazwę/login użytkownika, hasło, miasto bazowe.
+Kryteria akceptacji:
+- Nazwa/login użytkownika musi być unikalny.
+- Miasto bazowe musi być podane.
+- Hasło musi być podane i mieć minimum 5 znaków.
+
 ## 6. Metryki sukcesu
 - Minimum 75% propozycji musi być zaakceptowanych lub edytowanych i zaakceptowanych.
 - Monitorowanie poziomu akceptacji: jeśli akceptacje spadają poniżej 60%, wywoływana jest funkcja uzupełnienia rekomendacji.

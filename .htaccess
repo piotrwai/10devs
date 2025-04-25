@@ -1,0 +1,35 @@
+RewriteEngine On
+
+# Bazowa ścieżka, jeśli aplikacja jest w podkatalogu (dostosuj według potrzeb)
+# RewriteBase /10devs/
+
+# Przekierowanie /profile do profile.php
+RewriteRule ^profile$ profile.php [L]
+
+# Przekierowanie /dashboard do dashboard.php
+RewriteRule ^dashboard$ dashboard.php [L]
+
+# Przekierowanie /search do search.php
+RewriteRule ^search$ search.php [L]
+
+# Przekierowanie /login do login.php
+RewriteRule ^login$ login.php [L]
+
+# Przekierowanie /logout do logout.php
+RewriteRule ^logout$ logout.php [L]
+
+# Przekierowanie /city/ID do city.php?id=ID
+RewriteRule ^city/([0-9]+)$ city.php?id=$1 [L]
+
+# Przekierowanie /admin/logs do admin/logs.php
+RewriteRule ^admin/logs$ admin/logs.php [L]
+
+# Obsługa zasobów statycznych (CSS, JS, obrazy)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} \.(css|js|jpg|jpeg|png|gif|ico)$
+RewriteRule ^(.*)$ $1 [L]
+
+# Przekierowanie wszystkich innych żądań do index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [L] 
