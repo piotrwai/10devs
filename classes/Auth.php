@@ -25,15 +25,27 @@ class Auth {
      * @return int|null ID użytkownika lub null w przypadku niepowodzenia
      */
     public function authenticateAndGetUserId() {
-        // Pobranie tokenu z nagłówka Authorization
-        $headers = getallheaders();
-        $authHeader = $headers['Authorization'] ?? '';
+        $token = '';
         
-        if (empty($authHeader) || !preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
-            return null;
+        // Najpierw sprawdź ciasteczko
+        if (isset($_COOKIE['jwtToken'])) {
+            $token = $_COOKIE['jwtToken'];
         }
         
-        $token = $matches[1];
+        // Jeśli nie ma w ciasteczku, sprawdź nagłówek Authorization
+        if (empty($token)) {
+            $headers = function_exists('getallheaders') ? getallheaders() : [];
+            $authHeader = isset($headers['Authorization']) ? $headers['Authorization'] : 
+                         (isset($_SERVER['HTTP_AUTHORIZATION']) ? $_SERVER['HTTP_AUTHORIZATION'] : '');
+            
+            if (!empty($authHeader) && preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {
+                $token = $matches[1];
+            }
+        }
+        
+        if (empty($token)) {
+            return null;
+        }
         
         try {
             // Walidacja i dekodowanie tokenu JWT
@@ -48,6 +60,7 @@ class Auth {
             
         } catch (Exception $e) {
             // Logowanie błędu można dodać tutaj
+            error_log("JWT Error: " . $e->getMessage());
             return null;
         }
     }
@@ -86,5 +99,35 @@ class Auth {
         }
         
         return $payload;
+    }
+
+    /**
+     * Generuje token JWT dla użytkownika
+     * 
+     * @param array $userData Dane użytkownika (usr_id, usr_login, usr_admin)
+     * @return string Wygenerowany token JWT
+     */
+    public function generateJwtToken($userData) {
+        $header = [
+            'typ' => 'JWT',
+            'alg' => 'HS256'
+        ];
+        
+        $payload = [
+            'sub' => $userData['usr_id'],
+            'login' => $userData['usr_login'],
+            'admin' => $userData['usr_admin'] ?? false,
+            'iat' => time(),
+            'exp' => time() + $this->expiration,
+            'iss' => $this->issuer
+        ];
+        
+        $base64UrlHeader = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode(json_encode($header)));
+        $base64UrlPayload = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode(json_encode($payload)));
+        
+        $signature = hash_hmac('sha256', $base64UrlHeader . "." . $base64UrlPayload, $this->secretKey, true);
+        $base64UrlSignature = str_replace(['+', '/', '='], ['-', '_', ''], base64_encode($signature));
+        
+        return $base64UrlHeader . "." . $base64UrlPayload . "." . $base64UrlSignature;
     }
 } 

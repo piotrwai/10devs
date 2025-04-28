@@ -19,6 +19,10 @@
     
     <!-- Własne style CSS -->
     <link href="/css/style.css" rel="stylesheet">
+
+    <!-- Skrypty pomocnicze -->
+    <script src="/js/cookie-utils.js"></script>
+    <script src="/js/auth.js"></script>
 </head>
 <body>
     <!-- Główna nawigacja -->
@@ -35,7 +39,7 @@
                         <a class="nav-link" href="/dashboard">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/search">Wyszukiwanie rekomendacji</a>
+                        <a class="nav-link" href="/cities/search">Wyszukiwanie rekomendacji</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link {if $smarty.server.REQUEST_URI == '/profile'}active{/if}" href="/profile">Profil</a>
@@ -49,9 +53,9 @@
                 <div class="d-flex">
                     {if isset($currentUser)}
                         <span class="navbar-text me-3">Witaj, {$currentUser.login}!</span>
-                        <a href="/logout" class="btn btn-outline-light">Wyloguj</a>
+                        <button id="logout-btn" class="btn btn-outline-light">Wyloguj</button>
                     {else}
-                        <a href="/login" class="btn btn-outline-light">Logowanie</a>
+                        <a href="/register" class="btn btn-outline-light">Zarejestruj się</a>
                     {/if}
                 </div>
             </div>

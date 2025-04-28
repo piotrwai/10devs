@@ -10,6 +10,16 @@ Turyści mają trudności ze znalezieniem i katalogowaniem informacji o ciekawyc
 - Rejestracja i logowanie:
   - Użytkownik rejestruje się podając login, hasło (szyfrowane w bazie danych) oraz miasto bazowe.
   - Uwierzytelnianie odbywa się przy użyciu loginu i hasła.
+  - Bez prawidłowego logowania można tylko dokonać rejestracji i logowania.
+- Bezpieczny dostęp:
+ - Użytkownik ma mieć możliwość rejestracji i logowania się do systemu w sposób zapewniający bezpieczeństwo moich danych.
+  - Kryteria akceptacji:
+  - Logowanie i rejestracja odbywają się na dedykowanych stronach.
+  - Logowanie wymaga podania nazwy użytkownika i hasła.
+  - Rejestracja wymaga podania nazwy użytkownika, miasta bazowego, hasła i potwierdzenia hasła.
+  - Użytkownik musi się zalogować by mieć dostęp do systemu.
+  - Użytkownik może się wylogować z systemu poprzez przycisk w prawym górnym rogu.
+  - Nie korzystamy z zewnętrznych serwisów logowania (np. Google, GitHub).
 - Wyszukiwanie atrakcji:
   - Po zalogowaniu użytkownik wprowadza nazwę miasta, które chce odwiedzić.
   - System prezentuje krótką charakterystykę miasta (do 150 znaków) oraz do 10 rekomendowanych propozycji atrakcji.
@@ -50,6 +60,7 @@ Kryteria akceptacji:
 - Użytkownik rejestruje się poprzez formularz rejestracyjny z polami: login, hasło i miasto bazowe.  
 - Hasło jest szyfrowane.  
 - Użytkownik może się zalogować, używając loginu i hasła.
+- Po prawidłowej rejestracji i prawidłowym logowaniu system przechodzi do funkcji wyszukiwania atrakcji.
 
 US-002  
 Tytuł: Wyszukiwanie atrakcji w docelowym mieście  

@@ -13,7 +13,7 @@ require_once '../../commonDB/cities.php';
 
 // Sprawdzenie czy żądanie jest metodą GET
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    Response::sendError(405, 'Metoda nie dozwolona. Oczekiwano GET.');
+    Response::error(405, 'Metoda nie dozwolona. Oczekiwano GET.');
     exit;
 }
 
@@ -23,7 +23,7 @@ try {
     $userId = $auth->authenticateAndGetUserId();
     
     if (!$userId) {
-        Response::sendError(401, 'Brak autoryzacji lub nieprawidłowy token');
+        Response::error(401, 'Brak autoryzacji lub nieprawidłowy token');
         exit;
     }
     
@@ -51,10 +51,10 @@ try {
         
         if (!$hasAnyCities) {
             // Użytkownik nie ma żadnych miast
-            Response::sendSuccess([], 'Nie wprowadziłeś żadnego miasta!');
+            Response::success([], 'Nie wprowadziłeś żadnego miasta!');
         } else {
             // Użytkownik ma miasta, ale nie znaleziono ich z aktualnych filtrów
-            Response::sendSuccess([], 'Brak miast. Zmień filtry.');
+            Response::success([], 'Brak miast. Zmień filtry.');
         }
         exit;
     }
@@ -71,13 +71,13 @@ try {
     }
     
     // Wysłanie odpowiedzi
-    Response::sendSuccess($formattedCities);
+    Response::success($formattedCities);
     
 } catch (Exception $e) {
     // Logowanie błędu
     ErrorLogger::logError('api_error', $e->getMessage(), $userId ?? null, $_SERVER['REQUEST_URI'] ?? null);
     
     // Wysłanie odpowiedzi z błędem
-    Response::sendError(500, 'Wystąpił błąd podczas przetwarzania żądania');
+    Response::error(500, 'Wystąpił błąd podczas przetwarzania żądania');
     exit;
 } 

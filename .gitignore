@@ -1,6 +1,7 @@
 .ai/czat_zalozenia_projektu.md
 .ai/koncepcja.md
 .ai/prd-10xdevs.md
+.ai/folders.txt
 
 # Pliki konfiguracyjne zawierające wrażliwe dane
 /config.php

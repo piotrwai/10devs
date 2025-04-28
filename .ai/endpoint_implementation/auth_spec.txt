@@ -1,0 +1,191 @@
+Plan implementacji - prompt dla modeli reasoningowych, np. o3-mini
+- prompt dla modeli reasoningowych, np. o3-mini
+- podpięte pliki: prd.md / api-plan.md / db.sql / db-plan.md / tech-stack.md / rules-php.mdc
+- typ modelu: Agent
+
+----------------------------------------------
+
+Jesteś doświadczonym full-stack web developerem specjalizującym się we wdrażaniu modułu rejestracji i logowania. Opracuj szczegółową architekturę tej funkcjonalności na podstawie wymagań z pliku @prd.md w tym zawartej w nim Historyjki użytkowników US-001 oraz stacku z @tech-stack.md i @db-plan.md i @db.sql.
+
+Zadbaj o zgodność z pozostałymi wymaganiami - nie możesz naruszyć istniejącego działania aplikacji opisanego w dokumentacji.
+
+Specyfikacja powinna zawierać następujące elementy:
+
+1. ARCHITEKTURA INTERFEJSU UŻYTKOWNIKA
+- Dokładny opis zmian w warstwie frontendu (stron, komponentów i layoutów w trybie auth i non-auth), w tym opis nowych elementów oraz tych do rozszerzenia o wymagania autentykacji
+- Dokładne rozdzielenie odpowiedzialności pomiędzy formularze i komponenty, biorąc pod uwagę ich integrację z backendem autentykacji oraz nawigacją i akcjami użytkownika
+- Opis przypadków walidacji i komunikatów błędów
+- Obsługę najważniejszych scenariuszy
+
+2. LOGIKA BACKENDOWA
+- Struktura endpointów API i modeli danych zgodnych z nowymi elementami interfejsu użytkownika
+- Mechanizm walidacji danych wejściowych
+- Obsługa wyjątków
+- Aktualizacja sposobu renderowania wybranych stron
+
+3. SYSTEM AUTENTYKACJI
+- Wykorzystanie bazy danych MySQL i JWT do realizacji funkcjonalności rejestracji, logowania, wylogowywania
+
+Przedstaw kluczowe wnioski w formie opisowej technicznej specyfikacji w języku polskim - bez docelowej implementacji, ale ze wskazaniem poszczególnych komponentów, modułów, serwisów i kontraktów. Po ukończeniu zadania, utwórz plik .ai/auth-spec.md i dodaj tam całą specyfikację.
+
+-----------------------
+
+Wrzuciłem mu poniższe do claude-3.7-sonnet bez reasoningu:
+---
+
+Porównaj @prd.md, @auth-spec.md i @api-plan.md  w poszukiwaniu sprzecznych i nadmiarowych założeń. Upewnij się, że każde User Story może być zrealizowane w oparciu o przygotowany plan. Jeśli zauważasz sprzeczności, @auth-spec.md  zgodnie z nową wiedzą. Odnieś się do istniejących plików projektu, poza `./smarty`, i zaimplementowanych już klas i funkcji. Postaraj się by były zgodne. W razie potrzeby możesz proponować modyfikacje plików projektu.
+
+--zmienił auth-spec.md
+---
+
+Pamiętaj i jeśli to konieczne wprowadź do @auth-spec.md reguły zawarte w @.htaccess 
+--zmienił auth-spec.md
+---
+
+-----------------------
+
+Twoim zadaniem jest implementacja elementów interfejsu użytkownika (stron i formularzy) dla procesu logowania i rejestracji. Specyfikacja znajduje się w: @auth-spec.md
+
+Pamiętaj o założeniach, wykonanych już szablonach w `./templates`, plikach './css` i `./js` które możesz brać za wzór, ale także modyfikować.
+
+Nie implementuj backendu ani modyfikacji stanu aplikacji - tymi elementami zajmiemy się w dalszej kolejności.
+
+---
+Wygenerował login.php/js/tpl, logout.php, register.php/js/tpl
+-----------------------
+
+Przeprowadź integrację z backendem na podstawie specyfikacji @auth-spec.md. Rozpocznij od przemyślenia najlepszych praktyk logowania z użyciem zakodowanych haseł w MySQL, JWT, AJAX.
+
+Przedstawiony plan powinien spełniać założenia wyszczególnione w sekcji user stories: @prd.md
+
+Przeprowadź integrację z backendem na podstawie specyfikacji @auth-spec.md. Rozpocznij od przemyślenia najlepszych praktyk logowania z użyciem zakodowanych haseł w MySQL, JWT, AJAX.
+
+Przedstawiony plan powinien spełniać założenia wyszczególnione w sekcji user stories: @prd.md
+
+Jeśli musisz przyjąć jakieś założenia lub masz jakiekolwiek pytania dotyczące planu implementacji, przedstaw je przed pisaniem kodu.
+
+Pamiętaj, aby przestrzegać najlepszych praktyk projektowania REST API, stosować się do wytycznych dotyczących stylu języka programowania i upewnić się, że kod jest czysty, czytelny i dobrze zorganizowany.
+
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+----
+
+Feedback do planu:
+Proponowane kroki implementacji wygląda dobrze. 
+Przekierowanie w .htaccess z /register na register.php już istnieje.
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+---
+
+Zaproponowane kroki implementacji są dobre. 
+Kontynuuj.
+Pamiętaj jednak że Twoim zadaniem jest realizować to co jest zapisane w historyjkach użytkowników w @prd.md i @api-plan.md.
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+---
+
+Struktura projektu znajduje się w @folders.txt . W projekcie uczestniczą wszystkie pliki z wskazanych w tym pliku katalogach.
+Przeanalizuj kod projektu (pomiń `/smarty/`, `/.ai`, `/.cursor`, `/.git/`) w kontekście czy w aktualnie dodanych plikach, realizujących zadania z @prd.md i @api-plan.md, są dodane poprawnie funkcje autoryzacji.
+Skup się na autoryzacji, ale przeanalizuj wszystkie powiązania i wskaż zbędne jeśli są.
+Wypisz swoje rekomendacje.
+
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+---
+
+Sprawdź wszystkie pliki projektu z drabinki @folders.txt czy mają prawidłowe wywołanie Smarty. Prawidłowe podpięcie jest w `login.php` w głównym katalogu projektu.
+
+
+
+
+
+
+---
+
+Na podstawie analizy dostarczonej specyfikacji i dokumentacji, oto 5 kluczowych pytań technicznych, które pomogą doprecyzować niejasne elementy integracji modułu rejestracji i logowania:
+
+1. Jakie szczegóły implementacyjne JWT preferujesz - czy token powinien wygasać (jeśli tak, to po jakim czasie), jakie dokładnie informacje powinny być przechowywane w payload oraz czy wymagane jest odświeżanie tokenu?
+
+2. Jak dokładnie powinna wyglądać obsługa błędów autentykacji w API - czy preferujesz szczegółowe komunikaty błędów na poziomie API, czy raczej ogólne komunikaty dla zachowania bezpieczeństwa (np. bez rozróżniania czy login nie istnieje czy hasło jest nieprawidłowe)?
+
+3. Czy należy zaimplementować dodatkowe zabezpieczenia przeciwko atakom brute-force, takie jak blokowanie konta po kilku nieudanych próbach logowania lub mechanizm rate-limiting?
+
+4. Jaka powinna być dokładna strukturka odpowiedzi z API dla endpointów `/api/users/login` i `/api/users/register` - jakie dokładnie pola powinny zostać zwrócone w przypadku sukcesu?
+
+5. Czy istnieją jakieś specyficzne wymagania dotyczące bezpieczeństwa hasła (poza minimalną długością 5 znaków) - np. wymagania dotyczące złożoności, algorytm hashowania (aktualnie w PHP zalecane jest PASSWORD_DEFAULT), czy stosowanie salt?
+
+Odpowiedzi na te pytania pozwolą mi precyzyjnie zaprojektować i zaimplementować integrację backendu zgodnie z Twoimi oczekiwaniami i najlepszymi praktykami bezpieczeństwa.
+
+---
+Feedback:
+1. Wygasanie tokenu po 60 minutach braku aktywności.
+Odświeżanie po każdej aktywności użytkownika.
+Nazwa użytkownika, miasto bazowe i inne rzeczy, które uznasz za stosowne.
+
+2. Ogólne komunikaty, bez rozróżnienia czy błąd dotyczy loginu czy hasła. Pozostałe błędy szczegółowo.
+
+3. Nie.
+
+4. Trzymaj się @api-plan.md 
+Jeśli uważasz, że coś powinno być dodane do odpowiedzi - dodaj to.
+
+5. PASSWORD_DEFAULT i salt zapisany w `./config.php`
+
+Czy masz jeszcze jakieś pytania? Jeśli nie ma takich, których nie możesz sam rozwiązać to zacznij implementację.
+
+--------------------
+Pogrzebał i problemy - trzeba dawać mu tylko część roboty i potem musi pokazać co ma zamiar dalej robić, bo robi bzdury.
+---
+
+Problemy:
+1. Nie ma pola users.username jest pole users.login - używaj go.
+2. Czy Twoje modyfikacje `./classes/Response.php` nie spowodują problemów w plikach z niego korzystających?
+3. Nie ma pola users.email - usuń odwołania i akcje go dotyczące.
+4. Nie ma pól firstName i lastName - posługuj się tylko polami zdefiniowanymi w @db.sql i @db-plan.md
+5. Usuwanie usera powinno usuwać wszystkie jego rekomendacje.
+6. Po co plik `./config/database.php`? Dane zawarte są w `./config.php`.
+
+Przeanalizuj wszystkie Twoje zmiany w kontekście @db-plan.md i @prd.md Trzymaj się ich ustaleń i założonej postaci bazy danych.
+Kieruj się też ustaleniami z @api-plan.md i @auth-spec.md
+
+--------------
+
+Feedback:
+1. Nie tworz testów.
+2. OK
+3. Najpierw sprawdź czy i jakie zmiany są potrzebne.
+4. OK
+5. Pomiń na razie CSP.
+
+Prowadź proces itegracji dalej, uwzględniają moje powyższe uwagi. Zatrzymaj się po zmianie w 5 plikach i przedstaw swoje dalsze zamiary. Pamiętaj o zgodności z załączonymi plikami.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

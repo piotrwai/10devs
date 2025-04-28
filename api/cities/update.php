@@ -13,7 +13,7 @@ require_once '../../commonDB/cities.php';
 
 // Sprawdzenie czy żądanie jest metodą PUT
 if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
-    Response::sendError(405, 'Metoda nie dozwolona. Oczekiwano PUT.');
+    Response::error(405, 'Metoda nie dozwolona. Oczekiwano PUT.');
     exit;
 }
 
@@ -25,7 +25,7 @@ $cityId = end($parts);
 
 // Sprawdzenie czy ID jest liczbą
 if (!is_numeric($cityId) || (int)$cityId <= 0) {
-    Response::sendError(400, 'Nieprawidłowe ID miasta');
+    Response::error(400, 'Nieprawidłowe ID miasta');
     exit;
 }
 
@@ -37,7 +37,7 @@ try {
     $userId = $auth->authenticateAndGetUserId();
     
     if (!$userId) {
-        Response::sendError(401, 'Brak autoryzacji lub nieprawidłowy token');
+        Response::error(401, 'Brak autoryzacji lub nieprawidłowy token');
         exit;
     }
     
@@ -46,7 +46,7 @@ try {
     
     // Sprawdzenie czy istnieje parametr 'visited'
     if (!isset($requestData['visited'])) {
-        Response::sendError(400, 'Brak wymaganego parametru: visited');
+        Response::error(400, 'Brak wymaganego parametru: visited');
         exit;
     }
     
@@ -57,7 +57,7 @@ try {
     $city = getCityById($cityId, $userId);
     
     if (!$city) {
-        Response::sendError(404, 'Miasto nie zostało znalezione');
+        Response::error(404, 'Miasto nie zostało znalezione');
         exit;
     }
     
@@ -65,7 +65,7 @@ try {
     $updateResult = updateCityVisitedStatus($cityId, $userId, $visited);
     
     if (!$updateResult) {
-        Response::sendError(500, 'Nie udało się zaktualizować statusu miasta');
+        Response::error(500, 'Nie udało się zaktualizować statusu miasta');
         exit;
     }
     
@@ -81,13 +81,13 @@ try {
     ];
     
     // Wysłanie odpowiedzi
-    Response::sendSuccess($response);
+    Response::success($response);
     
 } catch (Exception $e) {
     // Logowanie błędu
     ErrorLogger::logError('api_error', $e->getMessage(), $userId ?? null, $_SERVER['REQUEST_URI'] ?? null);
     
     // Wysłanie odpowiedzi z błędem
-    Response::sendError(500, 'Wystąpił błąd podczas przetwarzania żądania');
+    Response::error(500, 'Wystąpił błąd podczas przetwarzania żądania');
     exit;
 } 

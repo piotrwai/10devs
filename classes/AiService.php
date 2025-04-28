@@ -21,7 +21,7 @@ class AiService {
         
         // Pobranie danych konfiguracyjnych
         $this->apiKey = $config['openai']['api_key'];
-        $this->model = $config['openai']['model'] ?? 'gpt-4.1-mini';
+        $this->model = $config['openai']['model'] ?? 'gpt-4o-mini';
         $this->timeout = $config['openai']['timeout'] ?? 60;
         $this->maxTokens = $config['openai']['max_tokens'] ?? 1500;
         $this->apiEndpoint = 'https://api.openai.com/v1/chat/completions';

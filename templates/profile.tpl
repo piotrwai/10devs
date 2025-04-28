@@ -17,14 +17,14 @@
                         {* Pole: Login użytkownika *}
                         <div class="form-group mb-3">
                             <label for="login">Login:</label>
-                            <input type="text" class="form-control" id="login" name="login" required>
+                            <input type="text" class="form-control" id="login" name="login" value="{$currentUser.login|escape}" required>
                             <div class="invalid-feedback" id="login-error"></div>
                         </div>
                         
                         {* Pole: Miasto bazowe *}
                         <div class="form-group mb-3">
                             <label for="cityBase">Miasto bazowe:</label>
-                            <input type="text" class="form-control" id="cityBase" name="cityBase" required>
+                            <input type="text" class="form-control" id="cityBase" name="cityBase" value="{$currentUser.cityBase|escape}" required>
                             <div class="invalid-feedback" id="cityBase-error"></div>
                         </div>
                         
@@ -46,7 +46,7 @@
                         {* Informacja o statusie administratora (tylko informacyjnie) *}
                         <div class="form-group mb-3 is-admin">
                             <label>Status administratora:</label>
-                            <div id="admin-status">Ładowanie...</div>
+                            <div id="admin-status">{if $currentUser.isAdmin}Tak{else}Nie{/if}</div>
                         </div>
                         
                         {* Przycisk zapisania zmian *}

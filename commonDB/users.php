@@ -178,3 +178,121 @@ function setUserProfile($userId, $login, $cityBase, $password = null) {
         return ['error' => 'Wystąpił błąd podczas aktualizacji profilu', 'field' => 'general'];
     }
 } 
+
+/**
+ * Sprawdza czy podany login jest już zajęty
+ * 
+ * @param string $login Login do sprawdzenia
+ * @return bool True jeśli login jest zajęty, false w przeciwnym razie
+ */
+function isLoginTaken($login) {
+    try {
+        $db = getDbConnection();
+        
+        $query = "SELECT 1 FROM users WHERE usr_login = ?";
+        $stmt = mysqli_prepare($db, $query);
+        
+        if (!$stmt) {
+            throw new Exception('Błąd przygotowania zapytania: ' . mysqli_error($db));
+        }
+        
+        mysqli_stmt_bind_param($stmt, 's', $login);
+        
+        if (!mysqli_stmt_execute($stmt)) {
+            throw new Exception('Błąd wykonania zapytania: ' . mysqli_stmt_error($stmt));
+        }
+        
+        mysqli_stmt_store_result($stmt);
+        $exists = mysqli_stmt_num_rows($stmt) > 0;
+        mysqli_stmt_close($stmt);
+        
+        return $exists;
+        
+    } catch (Exception $e) {
+        ErrorLogger::logError('db_error', 'Błąd podczas sprawdzania unikalności loginu: ' . $e->getMessage());
+        return true; // W razie błędu zakładamy, że login jest zajęty (bezpieczniejsza opcja)
+    }
+}
+
+/**
+ * Tworzy nowego użytkownika w bazie danych
+ * 
+ * @param array $userData Dane użytkownika (login, password, cityBase)
+ * @return int|false ID utworzonego użytkownika lub false w przypadku błędu
+ */
+function setNewUser($userData) {
+    try {
+        $db = getDbConnection();
+        
+        $query = "INSERT INTO users (usr_login, usr_password, usr_city, usr_admin, usr_date_registration) 
+                  VALUES (?, ?, ?, 0, NOW())";
+        
+        $stmt = mysqli_prepare($db, $query);
+        
+        if (!$stmt) {
+            throw new Exception('Błąd przygotowania zapytania: ' . mysqli_error($db));
+        }
+        
+        mysqli_stmt_bind_param($stmt, 'sss', 
+            $userData['login'],
+            $userData['password'],
+            $userData['cityBase']
+        );
+        
+        if (!mysqli_stmt_execute($stmt)) {
+            throw new Exception('Błąd wykonania zapytania: ' . mysqli_stmt_error($stmt));
+        }
+        
+        $userId = mysqli_insert_id($db);
+        mysqli_stmt_close($stmt);
+        
+        if ($userId <= 0) {
+            throw new Exception('Nie udało się pobrać ID utworzonego użytkownika');
+        }
+        
+        return $userId;
+        
+    } catch (Exception $e) {
+        ErrorLogger::logError('db_error', 'Błąd podczas tworzenia nowego użytkownika: ' . $e->getMessage());
+        return false;
+    }
+} 
+
+/**
+ * Pobiera dane użytkownika na podstawie loginu
+ * 
+ * @param string $login Login użytkownika
+ * @return array|null Dane użytkownika lub null jeśli nie znaleziono
+ */
+function getUserByLogin($login) {
+    try {
+        $db = getDbConnection();
+        
+        $query = "SELECT usr_id, usr_login, usr_password, usr_city, usr_admin 
+                  FROM users 
+                  WHERE usr_login = ?";
+        
+        $stmt = mysqli_prepare($db, $query);
+        
+        if (!$stmt) {
+            throw new Exception('Błąd przygotowania zapytania: ' . mysqli_error($db));
+        }
+        
+        mysqli_stmt_bind_param($stmt, 's', $login);
+        
+        if (!mysqli_stmt_execute($stmt)) {
+            throw new Exception('Błąd wykonania zapytania: ' . mysqli_stmt_error($stmt));
+        }
+        
+        $result = mysqli_stmt_get_result($stmt);
+        $user = mysqli_fetch_assoc($result);
+        
+        mysqli_stmt_close($stmt);
+        
+        return $user;
+        
+    } catch (Exception $e) {
+        ErrorLogger::logError('db_error', 'Błąd podczas pobierania użytkownika po loginie: ' . $e->getMessage());
+        return null;
+    }
+} 

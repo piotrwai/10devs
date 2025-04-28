@@ -17,7 +17,7 @@ require_once '../../commonDB/aiLogs.php';
 
 // Sprawdzenie czy żądanie jest metodą POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    Response::sendError(405, 'Metoda nie dozwolona. Oczekiwano POST.');
+    Response::error(405, 'Metoda nie dozwolona. Oczekiwano POST.');
     exit;
 }
 
@@ -30,18 +30,18 @@ try {
     $userId = $auth->authenticateAndGetUserId();
     
     if (!$userId) {
-        Response::sendError(401, 'Brak autoryzacji lub nieprawidłowy token');
+        Response::error(401, 'Brak autoryzacji lub nieprawidłowy token');
         exit;
     }
     
     // Walidacja danych wejściowych
     if (!isset($requestData['cityId']) || !is_numeric($requestData['cityId'])) {
-        Response::sendError(400, 'ID miasta jest wymagane i musi być liczbą');
+        Response::error(400, 'ID miasta jest wymagane i musi być liczbą');
         exit;
     }
     
     if (!isset($requestData['recommendations']) || !is_array($requestData['recommendations']) || empty($requestData['recommendations'])) {
-        Response::sendError(400, 'Lista rekomendacji jest wymagana i nie może być pusta');
+        Response::error(400, 'Lista rekomendacji jest wymagana i nie może być pusta');
         exit;
     }
     
@@ -52,7 +52,7 @@ try {
     $city = getCityById($cityId, $userId);
     
     if (!$city) {
-        Response::sendError(404, 'Miasto o podanym ID nie zostało znalezione lub nie należy do tego użytkownika');
+        Response::error(404, 'Miasto o podanym ID nie zostało znalezione lub nie należy do tego użytkownika');
         exit;
     }
     
@@ -72,7 +72,7 @@ try {
     if ($validRecommendationsCount === 0) {
         error_log("Wszystkie " . count($recommendations) . " rekomendacji ma nieprawidłowy format");
         ErrorLogger::logError('validation_error', 'Wszystkie rekomendacje mają nieprawidłowy format', $userId, null, $cityId);
-        Response::sendError(400, 'Wszystkie rekomendacje mają nieprawidłowy format. Wymagane są pola title i description.');
+        Response::error(400, 'Wszystkie rekomendacje mają nieprawidłowy format. Wymagane są pola title i description.');
         exit;
     }
     
@@ -122,12 +122,12 @@ try {
     
     // Sprawdzenie czy udało się zapisać jakiekolwiek rekomendacje
     if (empty($savedRecommendations)) {
-        Response::sendError(500, 'Nie udało się zapisać żadnej rekomendacji');
+        Response::error(500, 'Nie udało się zapisać żadnej rekomendacji');
         exit;
     }
     
     // Wysłanie odpowiedzi z zapisanymi rekomendacjami
-    Response::sendSuccess([
+    Response::success([
         'message' => 'Rekomendacje zostały zapisane',
         'count' => count($savedRecommendations),
         'recommendations' => $savedRecommendations
@@ -138,6 +138,6 @@ try {
     ErrorLogger::logError('api_error', $e->getMessage(), $userId ?? null, $_SERVER['REQUEST_URI'] ?? null, json_encode($requestData ?? []));
     
     // Wysłanie odpowiedzi z błędem
-    Response::sendError(500, 'Wystąpił błąd podczas przetwarzania żądania');
+    Response::error(500, 'Wystąpił błąd podczas przetwarzania żądania');
     exit;
 } 

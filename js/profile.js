@@ -47,6 +47,10 @@ $(document).ready(function() {
     
     // Funkcja ładująca dane użytkownika
     function loadUserProfile() {
+        // Pobierz aktualne wartości
+        const currentLogin = loginInput.val();
+        const currentCityBase = cityBaseInput.val();
+        
         $.ajax({
             url: '/api/users/me',
             method: 'GET',
@@ -56,17 +60,28 @@ $(document).ready(function() {
             },
             success: function(response) {
                 // Sprawdź czy odpowiedź ma prawidłową strukturę
-                const userData = response.success && response.data ? response.data : response;
+                if (!response || response.status !== 'success' || !response.data) {
+                    console.error('Nieprawidłowa odpowiedź z serwera:', response);
+                    showErrorMessage('Nieprawidłowy format danych z serwera');
+                    return;
+                }
                 
+                const userData = response.data;
                 console.log('Pobrane dane użytkownika:', userData);
                 
-                // Wypełnij pola formularza danymi
-                loginInput.val(userData.login);
-                cityBaseInput.val(userData.cityBase);
+                // Aktualizuj pola tylko jeśli dane się zmieniły
+                if (userData.login && userData.login !== currentLogin) {
+                    loginInput.val(userData.login);
+                }
+                if (userData.cityBase && userData.cityBase !== currentCityBase) {
+                    cityBaseInput.val(userData.cityBase);
+                }
                 
-                // Wyświetl status administratora
-                const adminStatus = userData.isAdmin ? 'Tak' : 'Nie';
-                adminStatusElem.text(adminStatus);
+                // Aktualizuj status administratora tylko jeśli się zmienił
+                const newAdminStatus = userData.isAdmin ? 'Tak' : 'Nie';
+                if (adminStatusElem.text() !== newAdminStatus) {
+                    adminStatusElem.text(newAdminStatus);
+                }
             },
             error: function(xhr) {
                 let errorMessage = 'Wystąpił błąd podczas pobierania danych profilu.';
@@ -158,7 +173,7 @@ $(document).ready(function() {
         // Wyślij żądanie AJAX
         $.ajax({
             url: '/api/users/update',
-            method: 'POST', // Używamy POST zamiast PUT dla lepszej kompatybilności
+            method: 'POST',
             dataType: 'json',
             contentType: 'application/json',
             data: JSON.stringify(userData),
@@ -173,8 +188,8 @@ $(document).ready(function() {
                 passwordInput.val('');
                 confirmPasswordInput.val('');
                 
-                // Odśwież status administratora (na wszelki wypadek)
-                const adminStatus = response.isAdmin ? 'Tak' : 'Nie';
+                // Odśwież status administratora
+                const adminStatus = response.data.isAdmin ? 'Tak' : 'Nie';
                 adminStatusElem.text(adminStatus);
             },
             error: function(xhr) {

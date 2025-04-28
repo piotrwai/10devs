@@ -15,11 +15,16 @@ $(document).ready(function() {
     
     // Wspólna obsługa błędów AJAX
     $(document).ajaxError(function(event, jqXHR, settings, thrownError) {
+        // Ignoruj obsługę błędów dla formularza logowania
+        if (settings.url === '/api/users/login') {
+            return;
+        }
+        
         // Ogólna obsługa błędów HTTP
         if (jqXHR.status === 401) {
             // Nieuprawniony dostęp - przekierowanie do strony logowania
             console.error('Nieuprawniony dostęp - przekierowanie do strony logowania:', settings.url);
-            window.location.href = '/login';
+            window.location.href = '/login?error=auth';
         } else if (jqXHR.status === 403) {
             // Zabroniony dostęp
             console.error('Zabroniony dostęp do zasobu:', settings.url);

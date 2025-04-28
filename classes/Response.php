@@ -1,69 +1,40 @@
 <?php
-// Klasa obsługująca formatowanie i wysyłanie odpowiedzi API
-
+/**
+ * Klasa pomocnicza do generowania odpowiedzi API
+ */
 class Response {
     /**
-     * Wysyła odpowiedź sukcesu (HTTP 200) z danymi w formacie JSON
+     * Generuje odpowiedź błędu
      * 
-     * @param mixed $data Dane do wysłania w odpowiedzi
-     * @param string|null $message Opcjonalny komunikat do wysłania wraz z danymi
-     * @param int $statusCode Kod statusu HTTP (domyślnie 200)
-     * @return void
-     */
-    public static function sendSuccess($data, $message = null, $statusCode = 200) {
-        $response = [
-            'success' => true,
-            'data' => $data
-        ];
-        
-        if ($message !== null) {
-            $response['message'] = $message;
-        }
-        
-        self::sendResponse($statusCode, $response);
-    }
-    
-    /**
-     * Wysyła odpowiedź błędu z kodem HTTP i komunikatem
-     * 
-     * @param int $statusCode Kod statusu HTTP błędu
+     * @param int $code Kod HTTP odpowiedzi
      * @param string $message Komunikat błędu
-     * @param array $details Dodatkowe szczegóły błędu (opcjonalne)
-     * @return void
+     * @param array $data Dodatkowe dane do zwrócenia
      */
-    public static function sendError($statusCode, $message, $details = null) {
-        $response = [
-            'success' => false,
-            'error' => [
-                'code' => $statusCode,
-                'message' => $message
-            ]
-        ];
-        
-        if ($details !== null) {
-            $response['error']['details'] = $details;
-        }
-        
-        self::sendResponse($statusCode, $response);
+    public static function error($code, $message, $data = []) {
+        http_response_code($code);
+        echo json_encode([
+            'status' => 'error',
+            'message' => $message,
+            'errors' => isset($data['errors']) ? $data['errors'] : null,
+            'data' => $data
+        ]);
+        exit();
     }
-    
+
     /**
-     * Wysyła odpowiedź HTTP w formacie JSON
+     * Generuje odpowiedź sukcesu
      * 
-     * @param int $statusCode Kod statusu HTTP
-     * @param mixed $data Dane do wysłania w formacie JSON
-     * @return void
+     * @param int $code Kod HTTP odpowiedzi
+     * @param string $message Komunikat sukcesu
+     * @param array $data Dane do zwrócenia
      */
-    private static function sendResponse($statusCode, $data) {
-        // Ustawienie nagłówków HTTP
-        header('Content-Type: application/json; charset=utf-8');
-        http_response_code($statusCode);
-        
-        // Konwersja danych do formatu JSON
-        $jsonData = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-        
-        // Wysłanie odpowiedzi
-        echo $jsonData;
-        exit;
+    public static function success($code, $message, $data = []) {
+        http_response_code($code);
+        echo json_encode([
+            'status' => 'success',
+            'message' => $message,
+            'data' => $data
+        ]);
+        exit();
     }
 } 

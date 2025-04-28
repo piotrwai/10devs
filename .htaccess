@@ -18,11 +18,17 @@ RewriteRule ^login$ login.php [L]
 # Przekierowanie /logout do logout.php
 RewriteRule ^logout$ logout.php [L]
 
+# Przekierowanie /register do register.php
+RewriteRule ^register$ register.php [L]
+
 # Przekierowanie /city/ID do city.php?id=ID
 RewriteRule ^city/([0-9]+)$ city.php?id=$1 [L]
 
 # Przekierowanie /admin/logs do admin/logs.php
 RewriteRule ^admin/logs$ admin/logs.php [L]
+
+# Przekierowanie /cities/search do cities/search.php
+RewriteRule ^cities/search$ cities/search.php [L]
 
 # Obsługa zasobów statycznych (CSS, JS, obrazy)
 RewriteCond %{REQUEST_FILENAME} !-f

@@ -14,7 +14,7 @@ require_once '../../commonDB/errorLogs.php';
 
 // Sprawdzenie czy żądanie jest metodą POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    Response::sendError(405, 'Metoda nie dozwolona. Oczekiwano POST.');
+    Response::error(405, 'Metoda nie dozwolona. Oczekiwano POST.');
     exit;
 }
 
@@ -29,35 +29,56 @@ try {
     //$userId = 1;
     
     if (!$userId) {
-        Response::sendError(401, 'Brak autoryzacji lub nieprawidłowy token');
+        Response::error(401, 'Brak autoryzacji lub nieprawidłowy token');
         exit;
     }
     
     // Walidacja danych wejściowych
-    if (!isset($requestData['cityName']) || empty(trim($requestData['cityName']))) {
-        Response::sendError(400, 'Nazwa miasta jest wymagana');
-        exit;
-    }
-    
-    $cityName = trim($requestData['cityName']);
-    
-    // Sprawdzenie długości nazwy miasta (max 150 znaków)
-    if (mb_strlen($cityName) > 150) {
-        Response::sendError(400, 'Nazwa miasta nie może przekraczać 150 znaków');
-        exit;
-    }
-    
-    // Sprawdzenie czy miasto już istnieje w bazie dla tego użytkownika
-    $cityData = getCityByNameAndUserId($cityName, $userId);
-    $cityId = null;
-    $cityDesc = null;
-    
-    if ($cityData) {
-        $cityId = $cityData['cit_id'];
-        $cityDesc = $cityData['cit_desc'];
+    if (isset($requestData['supplement']) && $requestData['supplement'] === true) {
+        // Tryb uzupełniania rekomendacji
+        if (!isset($requestData['cityId']) || !is_numeric($requestData['cityId'])) {
+            Response::error(400, 'ID miasta jest wymagane dla uzupełnienia rekomendacji');
+            exit;
+        }
         
-        // Diagnostyka - miasto znalezione
-        error_log("Miasto '$cityName' znalezione w bazie, ID: $cityId, opis: " . ($cityDesc ? "istnieje" : "brak"));
+        $cityId = (int)$requestData['cityId'];
+        
+        // Sprawdzenie czy miasto należy do użytkownika
+        $cityData = getCityById($cityId, $userId);
+        if (!$cityData) {
+            Response::error(404, 'Miasto nie zostało znalezione');
+            exit;
+        }
+        
+        $cityName = $cityData['cit_name'];
+        $cityDesc = $cityData['cit_desc'];
+    } else {
+        // Standardowe wyszukiwanie
+        if (!isset($requestData['cityName']) || empty(trim($requestData['cityName']))) {
+            Response::error(400, 'Nazwa miasta jest wymagana');
+            exit;
+        }
+        
+        $cityName = trim($requestData['cityName']);
+        
+        // Sprawdzenie długości nazwy miasta (max 150 znaków)
+        if (mb_strlen($cityName) > 150) {
+            Response::error(400, 'Nazwa miasta nie może przekraczać 150 znaków');
+            exit;
+        }
+        
+        // Sprawdzenie czy miasto już istnieje w bazie dla tego użytkownika
+        $cityData = getCityByNameAndUserId($cityName, $userId);
+        $cityId = null;
+        $cityDesc = null;
+        
+        if ($cityData) {
+            $cityId = $cityData['cit_id'];
+            $cityDesc = $cityData['cit_desc'];
+            
+            // Diagnostyka - miasto znalezione
+            error_log("Miasto '$cityName' znalezione w bazie, ID: $cityId, opis: " . ($cityDesc ? "istnieje" : "brak"));
+        }
     }
     
     // Ustawienie limitu czasu wykonania skryptu
@@ -75,7 +96,7 @@ try {
         error_log("Generowanie rekomendacji nie powiodło się lub zwrócono puste rekomendacje");
         ErrorLogger::logError('ai_error', 'Nie udało się wygenerować rekomendacji dla miasta: ' . $cityName, $userId);
         
-        Response::sendError(500, 'Nie udało się wygenerować rekomendacji dla miasta. Spróbuj ponownie później.');
+        Response::error(500, 'Nie udało się wygenerować rekomendacji dla miasta. Spróbuj ponownie później.');
         exit;
     }
     
@@ -100,7 +121,7 @@ try {
             } else {
                 error_log("BŁĄD weryfikacji: miasto o ID $cityId NIE istnieje w bazie mimo dodania!");
                 // Zwracamy błąd, ponieważ nie udało się zweryfikować dodania miasta
-                Response::sendError(500, 'Wystąpił błąd podczas dodawania miasta. Spróbuj ponownie później.');
+                Response::error(500, 'Wystąpił błąd podczas dodawania miasta. Spróbuj ponownie później.');
                 exit;
             }
         } else {
@@ -111,7 +132,7 @@ try {
             ErrorLogger::logError('db_error', 'Nie udało się dodać miasta: ' . $cityName, $userId);
             
             // Zwracamy błąd
-            Response::sendError(500, 'Wystąpił błąd podczas dodawania miasta. Spróbuj ponownie później.');
+            Response::error(500, 'Wystąpił błąd podczas dodawania miasta. Spróbuj ponownie później.');
             exit;
         }
     } else if (($cityDesc === null || empty(trim($cityDesc))) && !empty($aiResult['city']['summary'])) {
@@ -129,13 +150,13 @@ try {
     error_log("Zwracam odpowiedź z " . count($aiResult['recommendations']) . " rekomendacjami dla miasta o ID: $cityId");
     
     // Wysłanie odpowiedzi
-    Response::sendSuccess($response);
+    Response::success($response);
     
 } catch (Exception $e) {
     // Logowanie błędu
     ErrorLogger::logError('api_error', $e->getMessage(), $userId ?? null, $_SERVER['REQUEST_URI'] ?? null, json_encode($requestData ?? []));
     
     // Wysłanie odpowiedzi z błędem
-    Response::sendError(500, 'Wystąpił błąd podczas przetwarzania żądania');
+    Response::error(500, 'Wystąpił błąd podczas przetwarzania żądania');
     exit;
 } 

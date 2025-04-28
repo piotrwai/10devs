@@ -341,7 +341,7 @@ Walidacja odbywa się dwuetapowo: po stronie klienta (w `profile.js`) i po stron
 
 -------------------------------
 
-Implementacj widoku - zmiana modelu na zwykły (nie reasoningowy), np. claude-3.7-sonnet
+Implementacja widoku - zmiana modelu na zwykły (nie reasoningowy), np. claude-3.7-sonnet
 
 ----
 
