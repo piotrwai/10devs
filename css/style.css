@@ -65,3 +65,10 @@ main {
     display: inline-block;
     margin-right: 5px;
 } 
+
+
+/* Modyfikacje PW */
+.btn-close {
+    background-position: top;
+    background-size: 0.9em;
+}

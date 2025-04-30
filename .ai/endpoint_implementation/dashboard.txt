@@ -1,0 +1,897 @@
+Plan implementacji - prompt dla modeli reasoningowych, np. gemini-2.5-pro
+- prompt dla modeli reasoningowych, np. gemini-2.5-pro
+- podpięte pliki: api-plan.md / db.sql / db-plan.md / tech-stack.md / rules-php.mdc
+- typ modelu: Agent
+
+----------------------------------------------
+
+Jako starszy programista frontendu Twoim zadaniem jest stworzenie szczegółowego planu wdrożenia nowego widoku w aplikacji internetowej. Plan ten powinien być kompleksowy i wystarczająco jasny dla innego programisty frontendowego, aby mógł poprawnie i wydajnie wdrożyć widok.
+
+Najpierw przejrzyj następujące informacje:
+
+1. Product Requirements Document (PRD):
+<prd>
+@prd.md
+</prd>
+
+2. Opis widoku:
+<view_description>
+### 2.2. Dashboard miast użytkownika
+- **Ścieżka widoku:** /dashboard
+- **Główny cel:** Prezentacja zapisanych miast użytkownika
+- **Kluczowe informacje:** Lista miast, liczba rekomendacji, przyciski do przejścia do szczegółów miasta oraz usunięcia miasta z potwierdzeniem
+- **Kluczowe komponenty:** Listy, przyciski, alerty (Tak/Nie), przycisk dodania nowego miasta
+- **UX, dostępność, bezpieczeństwo:** Intuicyjny interfejs umożliwiający szybki dostęp; responsywny design; operacje krytyczne potwierdzane alertami
+</view_description>
+
+3. User Stories:
+<user_stories>
+US-005  
+Tytuł: Zarządzanie listą miast i atrakcji  
+Opis: Jako turysta chcę mieć listę miast z liczbą zapisanych atrakcji, aby móc szybko odnaleźć i zarządzać moimi propozycjami.  
+Kryteria akceptacji:  
+- System wyświetla listę miast z przypisaną liczbą propozycji.  
+- Po wybraniu miasta użytkownik widzi szczegółową listę atrakcji z opcjami edycji i usuwania, gdzie usuwanie wymaga potwierdzenia.
+
+US-006  
+Tytuł: Oznaczanie miasta jako odwiedzone  
+Opis: Jako turysta chcę móc oznaczyć miasto jako "Odwiedzone", aby móc śledzić miejsca, które już odwiedziłem.  
+Kryteria akceptacji:  
+- Użytkownik ma możliwość oznaczenia miasta jako "Odwiedzone".  
+- Status odwiedzenia jest widoczny w systemie i na liście miast.
+
+US-003  
+Tytuł: Przeglądanie i edycja rekomendacji  
+Opis: Jako turysta chcę przeglądać, edytować, akceptować lub odrzucać propozycje atrakcji w danym mieście, aby dostosować je do moich potrzeb.  
+Kryteria akceptacji:  
+- Użytkownik widzi listę propozycji z tytułem i rozwinięciem.  
+- Użytkownik może edytować propozycje; zmiany zapisują się po kliknięciu przycisku "zapisz".  
+- Użytkownik może oznaczyć propozycję jako zaakceptowaną lub odrzuconą.
+
+US-004  
+Tytuł: Dodawanie nowych propozycji  
+Opis: Jako turysta chcę móc ręcznie dodawać propozycje atrakcji, aby uzupełnić listę rekomendacji.  
+Kryteria akceptacji:  
+- Użytkownik ma dostęp do formularza umożliwiającego dodanie nowej pozycji.  
+- System weryfikuje, że dodana pozycja nie jest duplikatem już istniejących propozycji.  
+- Nowa propozycja pojawia się na liście atrakcji.
+</user_stories>
+
+4. Endpoint Description:
+<endpoint_description>
+#### GET /api/cities
+- **Description**: List all cities for the authenticated user along with the count of recommendations.
+- **Query Parameters**:
+  - `page` (optional): Page number for pagination.
+  - `per_page` (optional): Number of cities per page.
+  - `visited` (optional): Boolean filter to show only visited/unvisited cities.
+- **Response (200 OK)**:
+  ```json
+  [
+    {
+      "id": number,
+      "name": "string",             // corresponds to cit_name
+      "recommendationCount": number,
+      "visited": boolean
+    },
+    ...
+  ]
+  ```
+
+#### GET /api/cities/{cityId}
+- **Description**: Get detailed information about a city, including a short summary (up to 150 characters) and its recommendations.
+- **Response**:
+  - **Success (200 OK)**:
+    ```json
+    {
+      "id": number,
+      "name": "string",
+      "summary": "string",          // derived or provided summary
+      "recommendations": [ { ... } ]  // list of recommendation objects
+    }
+    ```
+  - **Error (404 Not Found)**: If the cityId does not exist.
+
+#### PUT /api/cities/{cityId}
+- **Description**: Update city information, such as marking it as visited.
+- **Request Payload**:
+  ```json
+  {
+    "visited": boolean
+  }
+  ```
+- **Response**:
+  - **Success (200 OK)**: Returns the updated city details.
+  - **Error (404 Not Found)**: If the cityId does not exist.
+
+
+#### GET /api/cities/{cityId}/recommendations
+- **Description**: Retrieve a paginated list of recommendations for a given city. If no recommendations are available, an empty list is returned.
+- **Query Parameters**:
+  - `page` (optional): Page number.
+  - `per_page` (optional, default up to 10): Number of recommendations per page.
+- **Response (200 OK)**:
+  ```json
+  [
+    {
+      "id": number,
+      "title": "string",             // up to 150 characters
+      "description": "string",
+      "model": "string",             // e.g., 'manual' or AI model identifier
+      "dateCreated": "timestamp",
+      "dateModified": "timestamp",
+      "status": "string"             // e.g., 'accepted', 'edited', 'rejected'
+    },
+    ...
+  ]
+  ```
+
+#### GET /api/recommendations/{id}
+- **Description**: Retrieve details of a specific recommendation.
+- **Response (200 OK)**:
+  ```json
+  {
+    "id": number,
+    "cityId": number,
+    "title": "string",
+    "description": "string",
+    "model": "string",
+    "dateCreated": "timestamp",
+    "dateModified": "timestamp",
+    "status": "string"
+  }
+  ```
+  - **Error (404 Not Found)**: If the id does not exist.
+
+#### POST /api/recommendations
+- **Description**: Create a new recommendation manually with duplicate checks (unique title per user and city).
+- **Request Payload**:
+  ```json
+  {
+    "cityId": number,
+    "title": "string",
+    "description": "string",
+    "model": "manual"
+  }
+  ```
+- **Response**:
+  - **Success (201 Created)**: Returns the created recommendation.
+  - **Error (400 Bad Request)**: Validation errors.
+  - **Error (409 Conflict)**: Duplicate recommendation detected.
+
+#### PUT /api/recommendations/{id}
+- **Description**: Update an existing recommendation (edit, accept, or reject). Also allows marking a recommendation as visited.
+- **Request Payload** (all fields optional):
+  ```json
+  {
+    "title": "string",
+    "description": "string",
+    "status": "string",     // e.g., 'accepted', 'edited', 'rejected'
+    "done": boolean         // whether the recommendation has been visited by the user
+  }
+  ```
+- **Response (200 OK)**: Returns the updated recommendation.
+- **Note**: Changes are saved immediately upon updating.
+
+#### PUT /api/recommendations/update-done
+- **Description**: Mark multiple recommendations as visited or not visited.
+- **Request Payload**:
+  ```json
+  {
+    "recommendationIds": [number],  // array of recommendation IDs to update
+    "done": boolean                 // whether the recommendations have been visited
+  }
+  ```
+- **Response (200 OK)**:
+  ```json
+  {
+    "message": "Recommendations updated successfully.",
+    "updatedCount": number
+  }
+  ```
+
+#### DELETE /api/recommendations/{id}
+- **Description**: Delete a recommendation. Clients must confirm deletion before calling this endpoint.
+- **Response (204 No Content)**: No content on success.
+- **Error (404 Not Found)**: If the id does not exist.
+
+Jeśli to konieczne stwórz nowe endpoint-y dla edycji użytkownika i dodaj ja do pliku api-plan.php
+</endpoint_description>
+
+5. Endpoint Implementation:
+<endpoint_implementation>
+Wykorzystaj potrzebne Ci i zdefiniowane endpointy z katalogu /api.  W razie potrzeby proponuj nowe.
+</endpoint_implementation>
+
+6. Tech Stack:
+<tech_stack>
+@tech-stack.md
+</tech_stack>
+
+Przed utworzeniem ostatecznego planu wdrożenia przeprowadź analizę i planowanie wewnątrz tagów <implementation_breakdown> w swoim bloku myślenia. Ta sekcja może być dość długa, ponieważ ważne jest, aby być dokładnym.
+
+W swoim podziale implementacji wykonaj następujące kroki:
+1. Dla każdej sekcji wejściowej (PRD, Opis widoku, User Stories, Endpoint Description, Endpoint Implementation, Tech Stack):
+ - Podsumuj kluczowe punkty
+ - Wymień wszelkie wymagania lub ograniczenia
+ - Zwróć uwagę na wszelkie potencjalne wyzwania lub ważne kwestie
+2. Wyodrębnienie i wypisanie kluczowych wymagań z PRD
+3. Wypisanie wszystkich potrzebnych głównych komponentów, wraz z krótkim opisem ich opisu, potrzebnych typów, obsługiwanych zdarzeń i warunków walidacji
+4. Stworzenie wysokopoziomowego diagramu drzewa komponentów
+6. Zidentyfikuj potencjalne zmienne stanu i niestandardowe hooki, wyjaśniając ich cel i sposób ich użycia
+7. Wymień wymagane wywołania API i odpowiadające im akcje frontendowe
+8. Zmapuj każdej historii użytkownika do konkretnych szczegółów implementacji, komponentów lub funkcji
+9. Wymień interakcje użytkownika i ich oczekiwane wyniki
+10. Wymień warunki wymagane przez API i jak je weryfikować na poziomie komponentów
+11. Zidentyfikuj potencjalne scenariusze błędów i zasugeruj, jak sobie z nimi poradzić
+12. Wymień potencjalne wyzwania związane z wdrożeniem tego widoku i zasugeruj możliwe rozwiązania
+
+Po przeprowadzeniu analizy dostarcz plan wdrożenia w formacie Markdown z następującymi sekcjami:
+
+1. Przegląd: Krótkie podsumowanie widoku i jego celu.
+2. Routing widoku: Określenie ścieżki, na której widok powinien być dostępny.
+3. Struktura komponentów: Zarys głównych komponentów i ich hierarchii.
+4. Szczegóły komponentu: Dla każdego komponentu należy opisać:
+ - Opis komponentu, jego przeznaczenie i z czego się składa
+ - Główne elementy HTML i komponenty dzieci, które budują komponent
+ - Obsługiwane zdarzenia
+ - Warunki walidacji (szczegółowe warunki, zgodnie z API)
+ - Propsy, które komponent przyjmuje od rodzica (interfejs komponentu)
+6. Zarządzanie stanem: Szczegółowy opis sposobu zarządzania stanem w widoku, określenie, czy wymagany jest customowy hook.
+7. Integracja API: Wyjaśnienie sposobu integracji z dostarczonym punktem końcowym. Precyzyjnie wskazuje typy żądania i odpowiedzi.
+8. Interakcje użytkownika: Szczegółowy opis interakcji użytkownika i sposobu ich obsługi.
+9. Warunki i walidacja: Opisz jakie warunki są weryfikowane przez interfejs, których komponentów dotyczą i jak wpływają one na stan interfejsu
+10. Obsługa błędów: Opis sposobu obsługi potencjalnych błędów lub przypadków brzegowych.
+11. Kroki implementacji: Przewodnik krok po kroku dotyczący implementacji widoku.
+
+Upewnij się, że Twój plan jest zgodny z PRD, historyjkami użytkownika i uwzględnia dostarczony stack technologiczny.
+
+Ostateczne wyniki powinny być w języku polskim i zapisane w pliku o nazwie .ai/dashboard-view-implementation-plan.md. Nie uwzględniaj żadnej analizy i planowania w końcowym wyniku.
+
+Oto przykład tego, jak powinien wyglądać plik wyjściowy (treść jest do zastąpienia):
+
+```markdown
+# Plan implementacji widoku [Nazwa widoku]
+
+## 1. Przegląd
+[Krótki opis widoku i jego celu]
+
+## 2. Routing widoku
+[Ścieżka, na której widok powinien być dostępny]
+
+## 3. Struktura komponentów
+[Zarys głównych komponentów i ich hierarchii]
+
+## 4. Szczegóły komponentów
+### [Nazwa komponentu 1]
+- Opis komponentu [opis]
+- Główne elementy: [opis]
+- Obsługiwane interakcje: [lista]
+- Obsługiwana walidacja: [lista, szczegółowa]
+- Propsy: [lista]
+
+### [Nazwa komponentu 2]
+[...]
+
+## 6. Zarządzanie stanem
+[Opis zarządzania stanem w widoku]
+
+## 7. Integracja API
+[Wyjaśnienie integracji z dostarczonym endpointem, wskazanie typów żądania i odpowiedzi]
+
+## 8. Interakcje użytkownika
+[Szczegółowy opis interakcji użytkownika]
+
+## 9. Warunki i walidacja
+[Szczegółowy opis warunków i ich walidacji]
+
+## 10. Obsługa błędów
+[Opis obsługi potencjalnych błędów]
+
+## 11. Kroki implementacji
+1. [Krok 1]
+2. [Krok 2]
+3. [...]
+```
+
+Rozpocznij analizę i planowanie już teraz. Twój ostateczny wynik powinien składać się wyłącznie z planu wdrożenia w języku polskim w formacie markdown, który zapiszesz w pliku .ai/dashboard-view-implementation-plan.md i nie powinien powielać ani powtarzać żadnej pracy wykonanej w podziale implementacji.
+
+------------------------
+
+Efekt, po moich zmianach
+---
+
+# Plan implementacji widoku Dashboard Miast Użytkownika
+
+## 1. Przegląd
+Widok Dashboard (`/dashboard`) jest głównym ekranem po zalogowaniu użytkownika (chyba że nie ma żadnych miast, wtedy przekierowanie na `/cities/search`). Prezentuje listę zapisanych przez użytkownika miast wraz z liczbą rekomendacji dla każdego z nich. Umożliwia nawigację do szczegółowego widoku miasta, usunięcie miasta (po potwierdzeniu) oraz przejście do widoku wyszukiwania w celu dodania nowego miasta. Widok wyświetla również status "Odwiedzone" dla odpowiednich miast. Implementuje filtrowanie po statusie "Odwiedzone" oraz paginację po stronie serwera.
+
+## 2. Routing widoku
+Widok powinien być dostępny pod ścieżką `/dashboard`. Dostęp do tej ścieżki wymaga autoryzacji użytkownika (posiadania ważnego tokena JWT).
+
+## 3. Struktura komponentów
+Struktura oparta będzie na szablonie Smarty (`.tpl`), stylach Bootstrap i logice obsługiwanej przez jQuery.
+
+```
+dashboard.tpl
+├── Nagłówek (np. <h1>Moje Miasta</h1>)
+├── Przycisk "Dodaj Nowe Miasto" (link/przycisk do /cities/search)
+├── Filtry (select do filtrowania wg statusu "Wszystkie/Nieodwiedzone/Odwiedzone")
+└── Lista Miast (implementowana jako standardowa tabela HTML `<table>`, domyślne sortowanie po stronie serwera)
+│   └── Wiersze Miast (`<tr>`) - generowane dynamicznie (przez Smarty lub jQuery)
+│       ├── Komórka Nazwy Miasta (`<td>`) - zawiera link do `/city/{id}`
+│       ├── Komórka Liczby Rekomendacji (`<td>`)
+│       ├── Komórka Statusu "Odwiedzone" (`<td>`) - wskaźnik wizualny
+│       └── Komórka Akcji (`<td>`)
+│           ├── Przycisk "Usuń" (`<button class="btn btn-danger btn-sm delete-city-btn">`) - wywołuje modal potwierdzający
+│           └── Przycisk "Rekomendacje" (`<a href="/city/{id}/recommendations" class="btn btn-info btn-sm">`) - przejście do widoku rekomendacji dla miasta
+└── Kontrolki Paginacji (np. Przyciski "Poprzednia", "Następna", wskaźnik strony)
+
+(Poza główną strukturą, inicjalizowany przez JS)
+└── Modal Potwierdzenia Usunięcia (np. Bootstrap Modal lub jQuery Modal)
+    ├── Tekst potwierdzenia
+    ├── Przycisk "Potwierdź"
+    └── Przycisk "Anuluj"
+```
+
+## 4. Szczegóły komponentów
+
+### `DashboardView` (Główny szablon `dashboard.tpl` i powiązany JS)
+-   **Opis komponentu:** Główny kontener strony `/dashboard`. Odpowiada za ogólny układ, wyświetlenie tytułu, przycisku dodawania miasta, filtrów, listy miast oraz kontrolek paginacji. Inicjalizuje pobieranie danych i obsługę zdarzeń.
+-   **Główne elementy:** Kontener Bootstrap (`div.container`), nagłówek (`h1`), przycisk (`a.btn` lub `button.btn`), filtr (`select`), tabela (`table.table`), kontrolki paginacji (`div.pagination-controls`).
+-   **Obsługiwane interakcje:** Inicjalizacja pobrania danych przy ładowaniu strony.
+-   **Obsługiwana walidacja:** Brak bezpośredniej walidacji; polega na danych z API.
+-   **Props:** Dane miast przekazywane z backendu (PHP) do Smarty lub ładowane przez Ajax. Informacje o paginacji (aktualna strona, łączna liczba stron/elementów).
+
+### `CityList` (Tabela HTML)
+-   **Opis komponentu:** Tabela (`<table class="table table-striped table-bordered">`) wyświetlająca listę miast użytkownika dla bieżącej strony.
+-   **Główne elementy:** `<thead>` z nagłówkami kolumn (Nazwa, Rekomendacje, Status, Akcje), `<tbody>` wypełniany dynamicznie danymi miast. Nagłówki mogą mieć event listenery do sortowania (jeśli implementowane po stronie klienta, inaczej sortowanie serwerowe).
+-   **Obsługiwane interakcje:** Kliknięcie przycisku "Usuń" w wierszu (delegacja zdarzeń), kliknięcie linku "Rekomendacje".
+-   **Obsługiwana walidacja:** Brak.
+-   **Props:** Tablica obiektów miast z API (`[{id, name, recommendationCount, visited}, ...]`).
+
+### `CityListItem` (Wiersz tabeli `<tr>`)
+-   **Opis komponentu:** Reprezentuje pojedynczy wiersz w tabeli `CityList`, wyświetlając dane jednego miasta i przyciski akcji.
+-   **Główne elementy:** Komórki tabeli (`<td>`). Jedna zawiera link (`<a>`) z nazwą miasta do `/city/{id}`, inne wyświetlają `recommendationCount` i status `visited`. Ostatnia zawiera przyciski "Usuń" i "Rekomendacje". Atrybut `data-city-id` na wierszu `<tr>` lub przycisku "Usuń" przechowuje ID miasta.
+-   **Obsługiwane interakcje:** Kliknięcie nazwy miasta (nawigacja), kliknięcie przycisku "Usuń" (wywołuje modal), kliknięcie przycisku "Rekomendacje" (nawigacja).
+-   **Obsługiwana walidacja:** Brak.
+-   **Props:** Obiekt `city` (`{id, name, recommendationCount, visited}`).
+
+### `AddCityButton`
+-   **Opis komponentu:** Przycisk (`<a href="/cities/search" class="btn btn-primary">`) lub (`<button>`), który przekierowuje użytkownika do widoku wyszukiwania (`/cities/search`), aby mógł znaleźć i dodać nowe miasto.
+-   **Główne elementy:** Element `<a>` lub `<button>` z odpowiednimi klasami Bootstrap.
+-   **Obsługiwane interakcje:** Kliknięcie przycisku.
+-   **Obsługiwana walidacja:** Brak.
+-   **Props:** Brak.
+
+### `DeleteConfirmationModal` (Bootstrap Modal / jQuery Modal)
+-   **Opis komponentu:** Modal dialogowy wyświetlany po kliknięciu przycisku "Usuń" przy mieście. Prosi użytkownika o potwierdzenie operacji usunięcia. Przechowuje `cityId` miasta do usunięcia (np. w `data` atrybucie modala).
+-   **Główne elementy:** Tytuł modala, tekst potwierdzenia (np. "Czy na pewno chcesz usunąć miasto [Nazwa Miasta]?"), przycisk "Potwierdź" (`button.btn-danger`), przycisk "Anuluj" (`button.btn-secondary`).
+-   **Obsługiwane interakcje:** Kliknięcie "Potwierdź" (wywołuje API DELETE), kliknięcie "Anuluj" (zamyka modal).
+-   **Obsługiwana walidacja:** Brak.
+-   **Props:** `cityId`, `cityName` (do wyświetlenia w komunikacie).
+
+### `PaginationControls`
+-   **Opis komponentu:** Zestaw przycisków i informacji umożliwiających nawigację między stronami listy miast.
+-   **Główne elementy:** Przyciski "Poprzednia", "Następna", wskaźnik obecnej strony (np. "Strona X z Y"). Przyciski mogą być wyłączone (`disabled`), jeśli nie ma poprzedniej/następnej strony.
+-   **Obsługiwane interakcje:** Kliknięcie przycisku "Poprzednia" lub "Następna" (wywołuje przeładowanie danych dla nowej strony).
+-   **Obsługiwana walidacja:** Logika włączania/wyłączania przycisków na podstawie bieżącej strony i całkowitej liczby stron.
+-   **Props:** `currentPage`, `totalPages` (lub `totalItems` i `perPage`).
+
+### `VisitedFilter`
+-   **Opis komponentu:** Element `select` pozwalający użytkownikowi filtrować listę miast według statusu odwiedzenia.
+-   **Główne elementy:** `<select>` z opcjami: "Wszystkie", "Nieodwiedzone", "Odwiedzone".
+-   **Obsługiwane interakcje:** Zmiana wybranej opcji (`change` event) - wywołuje przeładowanie danych z odpowiednim parametrem `visited`.
+-   **Obsługiwana walidacja:** Brak.
+-   **Props:** Aktualnie wybrany filtr (do ustawienia wartości początkowej).
+
+## 6. Zarządzanie stanem
+Ze względu na użycie jQuery i Smarty, zarządzanie stanem będzie proste i oparte głównie na DOM oraz zmiennych JavaScript:
+-   Lista miast dla bieżącej strony będzie przechowywana w zmiennej JavaScript po pobraniu z API (jeśli ładowana przez Ajax) lub bezpośrednio renderowana przez Smarty.
+-   Aktualna strona (`currentPage`), wybrany filtr (`currentFilter`) i ewentualnie liczba elementów na stronę (`perPage`) będą przechowywane w zmiennych JavaScript.
+-   ID miasta do usunięcia będzie tymczasowo przechowywane (np. w `data` atrybucie modala lub zmiennej JS) podczas procesu potwierdzania usunięcia.
+-   Nie przewiduje się potrzeby tworzenia customowych hooków ani złożonych mechanizmów zarządzania stanem.
+
+## 7. Integracja API
+
+-   **Pobieranie listy miast:**
+    -   Endpoint: `GET /api/cities`
+    -   Typ żądania: `GET`
+    -   Parametry:
+        -   `page` (wymagane dla paginacji, np. `1`): Numer strony.
+        -   `per_page` (opcjonalne, np. `10`): Liczba miast na stronę. Backend powinien mieć domyślną wartość.
+        -   `visited` (opcjonalne): `true` (odwiedzone), `false` (nieodwiedzone), brak parametru (wszystkie).
+    -   Typ odpowiedzi (Success 200 OK): `application/json` - obiekt zawierający listę miast dla strony i informacje o paginacji, np.:
+        ```json
+        {
+          "data": [
+            { "id": number, "name": string, "recommendationCount": number, "visited": boolean },
+            ...
+          ],
+          "pagination": {
+            "currentPage": number,
+            "totalPages": number,
+            "totalItems": number,
+            "perPage": number
+          }
+        }
+        ```
+    -   Wywołanie: Przy ładowaniu strony (`$(document).ready()`), po zmianie strony lub zmianie filtra, za pomocą `$.ajax()` lub `fetch()`. Dane z `data` zostaną użyte do wypełnienia tabeli (`<tbody>`). Dane z `pagination` do aktualizacji kontrolek paginacji. Wymaga nagłówka `Authorization: Bearer <token>`.
+-   **Usuwanie miasta:**
+    -   Endpoint: `DELETE /api/cities/{cityId}` (**Uwaga:** Ten endpoint musi zostać dodany do API Planu i zaimplementowany w backendzie).
+    -   Typ żądania: `DELETE`
+    -   Parametry: `cityId` w ścieżce URL.
+    -   Typ odpowiedzi (Success 204 No Content): Brak zawartości.
+    -   Typ odpowiedzi (Error 404 Not Found): Miasto nie istnieje.
+    -   Wywołanie: Po kliknięciu "Potwierdź" w modalu, używając `$.ajax()` lub `fetch()`. Wymaga nagłówka `Authorization: Bearer <token>`. Po sukcesie, wiersz miasta zostanie usunięty z tabeli (np. przez bezpośrednią manipulację DOM).
+
+## 8. Interakcje użytkownika
+-   **Ładowanie widoku:** Użytkownik przechodzi na `/dashboard`. Skrypt JS wysyła żądanie `GET /api/cities` (dla strony 1, bez filtra `visited`). Po otrzymaniu odpowiedzi, lista miast jest renderowana w tabeli, aktualizowane są kontrolki paginacji.
+-   **Kliknięcie nazwy miasta:** Użytkownik klika link z nazwą miasta. Następuje przekierowanie na stronę `/city/{id}` danego miasta.
+-   **Kliknięcie przycisku "Rekomendacje":** Użytkownik klika przycisk. Następuje przekierowanie na stronę `/city/{id}`.
+-   **Kliknięcie "Dodaj Nowe Miasto":** Użytkownik klika przycisk. Następuje przekierowanie na stronę `/cities/search`.
+-   **Zmiana filtra "Odwiedzone":** Użytkownik wybiera nową opcję w `select`. Skrypt JS odczytuje nową wartość filtra, ustawia `currentPage` na 1 i wysyła nowe żądanie `GET /api/cities` z odpowiednim parametrem `visited` i `page=1`. Tabela i paginacja są aktualizowane.
+-   **Zmiana strony (Paginacja):** Użytkownik klika przycisk "Następna" lub "Poprzednia". Skrypt JS aktualizuje `currentPage` i wysyła nowe żądanie `GET /api/cities` z nowym numerem strony i bieżącym filtrem `visited`. Tabela i paginacja są aktualizowane.
+-   **Kliknięcie przycisku "Usuń":**
+    1.  Skrypt JS odczytuje `data-city-id` i `data-city-name` z klikniętego przycisku lub jego wiersza nadrzędnego.
+    2.  Wyświetlany jest `DeleteConfirmationModal`, przekazując `cityId` i `cityName`.
+-   **Kliknięcie "Anuluj" w modalu:** Modal jest zamykany, brak dalszych akcji.
+-   **Kliknięcie "Potwierdź" w modalu:**
+    1.  Skrypt JS wysyła żądanie `DELETE /api/cities/{cityId}` używając zapisanego `cityId`.
+    3.  Po otrzymaniu odpowiedzi 204: Modal jest zamykany, **dane dla bieżącej strony są ponownie ładowane** (wysyłane jest żądanie `GET /api/cities` z `currentPage` i `currentFilter`), aby odświeżyć listę i paginację, wyświetlany jest komunikat o sukcesie (np. toast/alert).
+    4.  Po otrzymaniu błędu (np. 404, 500): Modal jest zamykany, wyświetlany jest komunikat o błędzie.
+-   **Sortowanie (jeśli implementowane po stronie klienta):** Użytkownik klika nagłówek kolumny. Skrypt JS sortuje istniejące wiersze w `<tbody>` i aktualizuje widok tabeli.
+
+## 9. Warunki i walidacja
+-   **Dostęp:** Widok dostępny tylko dla zalogowanych użytkowników (backend powinien weryfikować token JWT przy każdym żądaniu API). Jeśli użytkownik nie jest zalogowany, powinien zostać przekierowany na stronę logowania.
+-   **Usuwanie:** Operacja usunięcia miasta wymaga potwierdzenia przez użytkownika w modalu, aby zapobiec przypadkowemu usunięciu danych.
+-   **Dane wejściowe API:** Nie ma bezpośrednich pól formularzy w tym widoku. Walidacja dotyczy głównie poprawności `cityId` przekazywanego do API (co jest zapewnione przez pobranie go z listy istniejących miast).
+-   **Paginacja:** Przyciski paginacji ("Poprzednia", "Następna") powinny być wyłączone (`disabled`), jeśli użytkownik jest odpowiednio na pierwszej lub ostatniej stronie.
+
+## 10. Obsługa błędów
+-   **Błąd ładowania listy miast (`GET /api/cities`):** Jeśli żądanie API zawiedzie (np. błąd serwera 500, brak autoryzacji 401/403), zamiast tabeli należy wyświetlić komunikat błędu, np. "Wystąpił błąd podczas ładowania listy miast. Prosimy spróbować ponownie później." W przypadku błędu 401/403, przekierować użytkownika do strony logowania.
+-   **Błąd usuwania miasta (`DELETE /api/cities/{cityId}`):** Jeśli żądanie API zawiedzie (np. 404 - miasto nie znalezione, 500 - błąd serwera), należy wyświetlić stosowny komunikat błędu użytkownikowi i nie usuwać wiersza z tabeli. Np. "Nie udało się usunąć miasta. Spróbuj ponownie."
+-   **Pusta lista miast (dla strony/filtra):** Jeśli API zwróci pustą tablicę `data` (np. dla danego filtra lub strony nie ma miast), należy wyczyścić `<tbody>` tabeli i wyświetlić komunikat informacyjny, np. "Nie znaleziono miast spełniających kryteria." lub "Nie masz jeszcze żadnych zapisanych miast. Kliknij 'Dodaj Nowe Miasto', aby rozpocząć!" (jeśli ogólnie brak miast). Należy również odpowiednio zaktualizować/ukryć kontrolki paginacji.
+-   **Komunikaty:** Wszystkie komunikaty dla użytkownika (błędy, sukcesy, potwierdzenia) powinny być w języku polskim i wyświetlane w sposób nieinwazyjny (np. Bootstrap Alerts, Toastr.js).
+
+## 11. Kroki implementacji
+1.  **Utworzenie szablonu Smarty (`dashboard.tpl`):**
+    -   Zdefiniuj podstawową strukturę HTML strony z użyciem kontenerów Bootstrap.
+    -   Dodaj nagłówek `<h1>Moje Miasta</h1>`.
+    -   Dodaj przycisk/link "Dodaj Nowe Miasto" (`<a href="/cities/search" class="btn btn-primary">Dodaj Nowe Miasto</a>`).
+    -   Dodaj element `select` dla filtra `VisitedFilter`.
+    -   Dodaj pustą strukturę tabeli HTML (`<table id="citiesTable" class="table table-striped table-bordered" style="width:100%">`) z `<thead>` zawierającym odpowiednie nagłówki (Nazwa, Rekomendacje, Status, Akcje) i pustym `<tbody>`.
+    -   Dodaj kontener dla kontrolek paginacji (`<div id="paginationControls">`).
+    -   Dodaj strukturę HTML dla modala potwierdzenia usunięcia (np. Bootstrap Modal) z ID (np. `deleteCityModal`), miejscem na nazwę miasta, oraz przyciskami "Potwierdź" i "Anuluj".
+2.  **Backend (PHP - Kontroler/Logika):**
+    -   Zapewnij routing dla ścieżki `/dashboard`.
+    -   Implementuj logikę sprawdzającą autoryzację użytkownika.
+    -   *Opcja 2 (Renderowanie po stronie klienta):* Przygotuj pustą stronę (szablon) i pozwól JS załadować dane.
+3.  **Frontend (JavaScript - `dashboard.js`):**
+    -   Zdefiniuj zmienne stanu: `let currentPage = 1;`, `let currentVisitedFilter = null;` (`null` dla 'Wszystkie', `true` dla 'Odwiedzone', `false` dla 'Nieodwiedzone'), `let perPage = 10;` (lub pobierz z konfiguracji).
+    -   Utwórz funkcję `loadCities(page, visitedFilter)`:
+        -   Wykonuje żądanie Ajax (`$.ajax`) do `GET /api/cities` z parametrami `page`, `per_page` (zmienna globalna lub stała) i `visited` (jeśli `visitedFilter !== null`).
+        -   W callbacku sukcesu:
+            -   Odczytaj `data` i `pagination` z odpowiedzi.
+            -   Wyczyść `<tbody>` tabeli `#citiesTable`.
+            -   Jeśli `data` jest pusta, pokaż komunikat "Brak miast...".
+            -   Dla każdego miasta w `data`, dodaj wiersz (`<tr>`) do `<tbody>`, wypełniając komórki (`<td>`) danymi (`name` jako link do `/city/{id}`, `recommendationCount`, `visited`, przyciski "Usuń" z `data-city-id`, `data-city-name` i "Rekomendacje" jako link do `/city/{id}/recommendations`).
+            -   Zaktualizuj `currentPage` (na podstawie odpowiedzi `pagination.currentPage`).
+            -   Wywołaj funkcję `updatePaginationControls(pagination.currentPage, pagination.totalPages)`.
+        -   W callbacku błędu: Pokaż komunikat o błędzie ładowania.
+    -   Utwórz funkcję `updatePaginationControls(currentPage, totalPages)`:
+        -   Wyczyść kontener `#paginationControls`.
+        -   Dodaj HTML dla przycisków "Poprzednia", "Następna" i wskaźnika strony (np. "Strona X z Y").
+        -   Wyłącz przycisk "Poprzednia", jeśli `currentPage <= 1`.
+        -   Wyłącz przycisk "Następna", jeśli `currentPage >= totalPages`.
+        -   Dodaj event listenery do przycisków paginacji, które wywołują `loadCities()` z odpowiednio `currentPage - 1` lub `currentPage + 1` i `currentVisitedFilter`.
+    -   Użyj `$(document).ready()` do inicjalizacji:
+        -   Wywołaj `loadCities(currentPage, currentVisitedFilter)` po raz pierwszy.
+        -   Dodaj event listener `change` do filtra `#visitedFilter`:
+            -   Odczytaj nową wartość filtra.
+            -   Zaktualizuj `currentVisitedFilter`.
+            -   Wywołaj `loadCities(1, currentVisitedFilter)` (resetuj do strony 1 po zmianie filtra).
+    -   **Obsługa kliknięcia "Usuń":** Użyj delegacji zdarzeń jQuery do obsługi kliknięć na przyciskach `.delete-city-btn` wewnątrz tabeli.
+        ```javascript
+        $('#citiesTable tbody').on('click', '.delete-city-btn', function() {
+            const cityId = $(this).data('city-id');
+            const cityName = $(this).data('city-name'); // Pobierz nazwę miasta
+            // Wypełnij i pokaż modal #deleteCityModal
+            $('#deleteCityModal').data('city-id', cityId); // Zapisz ID w modalu
+            $('#deleteCityModal .city-name-placeholder').text(cityName); // Wstaw nazwę miasta
+            $('#deleteCityModal').modal('show');
+        });
+        ```
+    -   **Obsługa potwierdzenia usunięcia:** Dodaj obsługę kliknięcia przycisku "Potwierdź" w modalu.
+        ```javascript
+        $('#confirmDeleteBtn').on('click', function() {
+            const cityId = $('#deleteCityModal').data('city-id');
+            // Pokaż wskaźnik ładowania
+            $(this).prop('disabled', true).text('Usuwanie...');
+
+            $.ajax({
+                url: `/api/cities/${cityId}`, // Użyj poprawnego endpointu
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + your_jwt_token }, // Dodaj token JWT
+                success: function() {
+                    $('#deleteCityModal').modal('hide');
+                    // Przeładuj bieżącą stronę
+                    loadCities(currentPage, currentVisitedFilter);
+                    // Pokaż komunikat sukcesu
+                    showSuccessMessage('Miasto zostało pomyślnie usunięte.');
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    // Pokaż komunikat błędu
+                    showErrorMessage('Nie udało się usunąć miasta. Spróbuj ponownie.');
+                    console.error("Delete error:", textStatus, errorThrown);
+                },
+                complete: function() {
+                    // Przywróć przycisk w modalu
+                    $('#confirmDeleteBtn').prop('disabled', false).text('Potwierdź');
+                }
+            });
+        });
+        ```
+    -   **Implementacja funkcji pomocniczych:** `showSuccessMessage`, `showErrorMessage` (np. używając Bootstrap Alerts).
+    -   **Obsługa tokena JWT:** Upewnij się, że token JWT jest poprawnie pobierany (np. z `localStorage` lub `sessionStorage`) i dołączany do wszystkich żądań Ajax w nagłówku `Authorization`.
+4.  **Styling (CSS/SCSS):**
+    -   Dodaj ewentualne niestandardowe style CSS do poprawy wyglądu tabeli, przycisków, filtra, kontrolek paginacji lub modala, jeśli standardowe style Bootstrap są niewystarczające.
+    -   Zdefiniuj styl dla wskaźnika statusu "Odwiedzone" (np. kolor tekstu, ikona).
+5.  **Testowanie:**
+    -   Przetestuj ładowanie listy miast (również pustej).
+    -   Przetestuj działanie paginacji (przyciski, wskaźnik strony, wyłączanie przycisków).
+    -   Przetestuj działanie filtrowania (zmiana opcji, aktualizacja listy, reset paginacji do strony 1).
+    -   Przetestuj proces usuwania miasta (wyświetlanie modala, potwierdzenie, anulowanie, odświeżenie listy po sukcesie, obsługa błędów API).
+    -   Sprawdź responsywność widoku na różnych rozmiarach ekranu.
+    -   Przetestuj nawigację do widoku szczegółów miasta, widoku rekomendacji i do widoku dodawania miasta.
+    -   Sprawdź poprawność wyświetlania statusu "Odwiedzone".
+
+
+
+-------------------------------------------------
+
+Implementacja widoku - zmiana modelu na zwykły (nie reasoningowy), np. claude-3.7-sonnet
+
+----
+
+Twoim zadaniem jest zaimplementowanie widoku frontendu w oparciu o podany plan implementacji i zasady implementacji. Twoim celem jest stworzenie szczegółowej i dokładnej implementacji, która jest zgodna z dostarczonym planem, poprawnie reprezentuje strukturę komponentów, integruje się z API i obsługuje wszystkie określone interakcje użytkownika.
+
+Najpierw przejrzyj plan implementacji:
+
+<implementation_plan>
+@dashboard-view-implementation-plan.md
+</implementation_plan>
+
+Teraz przejrzyj zasady implementacji:
+
+<implementation_rules>
+@rules-php.mdc
+</implementation_rules>
+
+Wdrażaj plan zgodnie z następującym podejściem:
+
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+Dokładnie przeanalizuj plan wdrożenia i zasady. Zwróć szczególną uwagę na strukturę komponentów, wymagania dotyczące integracji API i interakcje użytkownika opisane w planie.
+
+Wykonaj następujące kroki, aby zaimplementować widok frontendu:
+
+1. Struktura komponentów:
+   - Zidentyfikuj wszystkie komponenty wymienione w planie wdrożenia.
+   - Utwórz hierarchiczną strukturę tych komponentów.
+   - Upewnij się, że obowiązki i relacje każdego komponentu są jasno zdefiniowane.
+
+2. Integracja API:
+   - Zidentyfikuj wszystkie endpointy API wymienione w planie i istniejące w katalogu `/api`.
+   - Wdróż niezbędne wywołania API dla każdego endpointa.
+   - Obsłuż odpowiedzi z API i odpowiednio aktualizacji stan komponentów.
+   - Pamiętaj o prawidłowym wdrożeniu autentykacji.
+
+3. Interakcje użytkownika:
+   - Wylistuj wszystkie interakcje użytkownika określone w planie wdrożenia.
+   - Wdróż obsługi zdarzeń dla każdej interakcji.
+   - Upewnij się, że każda interakcja wyzwala odpowiednią akcję lub zmianę stanu.
+
+4. Zarządzanie stanem:
+   - Zidentyfikuj wymagany stan dla każdego komponentu.
+   - Zaimplementuj zarządzanie stanem przy użyciu odpowiedniej metody (stan lokalny, custom hook, stan współdzielony).
+   - Upewnij się, że zmiany stanu wyzwalają niezbędne ponowne renderowanie.
+
+5. Stylowanie i layout:
+   - Zastosuj określone stylowanie i layout, jak wspomniano w planie wdrożenia.
+   - Zapewnienie responsywności, jeśli wymaga tego plan.
+   - CSS znajduje się w katalogu `/css`.
+
+6. Obsługa błędów i przypadki brzegowe:
+   - Wdrożenie obsługi błędów dla wywołań API i interakcji użytkownika.
+   - Rozważ i obsłuż potencjalne edge case'y wymienione w planie.
+
+7. Optymalizacja wydajności:
+   - Wdrożenie wszelkich optymalizacji wydajności określonych w planie lub zasadach.
+   - Zapewnienie wydajnego renderowania i minimalnej liczby niepotrzebnych ponownych renderowań.
+
+8. Testowanie:
+   - Dokładnie przetestuj wszystkie interakcje użytkownika i integracje API.
+
+W trakcie całego procesu implementacji należy ściśle przestrzegać dostarczonych zasad implementacji. Zasady te mają pierwszeństwo przed wszelkimi ogólnymi najlepszymi praktykami, które mogą być z nimi sprzeczne.
+
+Upewnij się, że twoja implementacja dokładnie odzwierciedla dostarczony plan implementacji i przestrzega wszystkich określonych zasad. Zwróć szczególną uwagę na strukturę komponentów, integrację API i obsługę interakcji użytkownika.
+
+--------------------------------------
+
+
+DRUGIE PODEJŚCIE BO SOBIE NIE RADZI.
+
+# Plan implementacji widoku Dashboard Miast Użytkownika
+
+## 1. Przegląd
+Widok Dashboard (`/dashboard`) jest głównym ekranem po zalogowaniu użytkownika (chyba że nie ma żadnych miast, wtedy przekierowanie na `/cities/search`). Prezentuje listę zapisanych przez użytkownika miast wraz z liczbą rekomendacji dla każdego z nich. Umożliwia nawigację do szczegółowego widoku miasta, usunięcie miasta (po potwierdzeniu) oraz przejście do widoku wyszukiwania w celu dodania nowego miasta. Widok wyświetla również status "Odwiedzone" dla odpowiednich miast. Implementuje filtrowanie po statusie "Odwiedzone" oraz paginację po stronie serwera.
+
+## 2. Routing widoku
+Widok powinien być dostępny pod ścieżką `/dashboard`. Dostęp do tej ścieżki wymaga autoryzacji użytkownika (posiadania ważnego tokena JWT).
+
+## 3. Struktura komponentów
+Struktura oparta będzie na szablonie Smarty (`.tpl`), stylach Bootstrap i logice obsługiwanej przez jQuery.
+
+```
+dashboard.tpl
+├── Nagłówek (np. <h1>Moje Miasta</h1>)
+├── Przycisk "Dodaj Nowe Miasto" (link/przycisk do /cities/search)
+├── Filtry (select do filtrowania wg statusu "Wszystkie/Nieodwiedzone/Odwiedzone")
+└── Lista Miast (implementowana jako standardowa tabela HTML `<table>`, domyślne sortowanie po stronie serwera)
+│   └── Wiersze Miast (`<tr>`) - generowane dynamicznie (przez Smarty lub jQuery)
+│       ├── Komórka Nazwy Miasta (`<td>`) - zawiera link do `/city/{id}`
+│       ├── Komórka Liczby Rekomendacji (`<td>`)
+│       ├── Komórka Statusu "Odwiedzone" (`<td>`) - wskaźnik wizualny
+│       └── Komórka Akcji (`<td>`)
+│           ├── Przycisk "Usuń" (`<button class="btn btn-danger btn-sm delete-city-btn">`) - wywołuje modal potwierdzający
+│           └── Przycisk "Rekomendacje" (`<a href="/city/{id}/recommendations" class="btn btn-info btn-sm">`) - przejście do widoku rekomendacji dla miasta
+└── Kontrolki Paginacji (np. Przyciski "Poprzednia", "Następna", wskaźnik strony)
+
+(Poza główną strukturą, inicjalizowany przez JS)
+└── Modal Potwierdzenia Usunięcia (np. Bootstrap Modal lub jQuery Modal)
+    ├── Tekst potwierdzenia
+    ├── Przycisk "Potwierdź"
+    └── Przycisk "Anuluj"
+```
+
+## 4. Szczegóły komponentów
+
+### `DashboardView` (Główny szablon `dashboard.tpl` i powiązany JS)
+-   **Opis komponentu:** Główny kontener strony `/dashboard`. Odpowiada za ogólny układ, wyświetlenie tytułu, przycisku dodawania miasta, filtrów, listy miast oraz kontrolek paginacji. Inicjalizuje pobieranie danych i obsługę zdarzeń.
+-   **Główne elementy:** Kontener Bootstrap (`div.container`), nagłówek (`h1`), przycisk (`a.btn` lub `button.btn`), filtr (`select`), tabela (`table.table`), kontrolki paginacji (`div.pagination-controls`).
+-   **Obsługiwane interakcje:** Inicjalizacja pobrania danych przy ładowaniu strony.
+-   **Obsługiwana walidacja:** Brak bezpośredniej walidacji; polega na danych z API.
+-   **Props:** Dane miast przekazywane z backendu (PHP) do Smarty lub ładowane przez Ajax. Informacje o paginacji (aktualna strona, łączna liczba stron/elementów).
+
+### `CityList` (Tabela HTML)
+-   **Opis komponentu:** Tabela (`<table class="table table-striped table-bordered">`) wyświetlająca listę miast użytkownika dla bieżącej strony.
+-   **Główne elementy:** `<thead>` z nagłówkami kolumn (Nazwa, Rekomendacje, Status, Akcje), `<tbody>` wypełniany dynamicznie danymi miast. Nagłówki mogą mieć event listenery do sortowania (jeśli implementowane po stronie klienta, inaczej sortowanie serwerowe).
+-   **Obsługiwane interakcje:** Kliknięcie przycisku "Usuń" w wierszu (delegacja zdarzeń), kliknięcie linku "Rekomendacje".
+-   **Obsługiwana walidacja:** Brak.
+-   **Props:** Tablica obiektów miast z API (`[{id, name, recommendationCount, visited}, ...]`).
+
+### `CityListItem` (Wiersz tabeli `<tr>`)
+-   **Opis komponentu:** Reprezentuje pojedynczy wiersz w tabeli `CityList`, wyświetlając dane jednego miasta i przyciski akcji.
+-   **Główne elementy:** Komórki tabeli (`<td>`). Jedna zawiera link (`<a>`) z nazwą miasta do `/city/{id}`, inne wyświetlają `recommendationCount` i status `visited`. Ostatnia zawiera przyciski "Usuń" i "Rekomendacje". Atrybut `data-city-id` na wierszu `<tr>` lub przycisku "Usuń" przechowuje ID miasta.
+-   **Obsługiwane interakcje:** Kliknięcie nazwy miasta (nawigacja), kliknięcie przycisku "Usuń" (wywołuje modal), kliknięcie przycisku "Rekomendacje" (nawigacja).
+-   **Obsługiwana walidacja:** Brak.
+-   **Props:** Obiekt `city` (`{id, name, recommendationCount, visited}`).
+
+### `AddCityButton`
+-   **Opis komponentu:** Przycisk (`<a href="/cities/search" class="btn btn-primary">`) lub (`<button>`), który przekierowuje użytkownika do widoku wyszukiwania (`/cities/search`), aby mógł znaleźć i dodać nowe miasto.
+-   **Główne elementy:** Element `<a>` lub `<button>` z odpowiednimi klasami Bootstrap.
+-   **Obsługiwane interakcje:** Kliknięcie przycisku.
+-   **Obsługiwana walidacja:** Brak.
+-   **Props:** Brak.
+
+### `DeleteConfirmationModal` (Bootstrap Modal / jQuery Modal)
+-   **Opis komponentu:** Modal dialogowy wyświetlany po kliknięciu przycisku "Usuń" przy mieście. Prosi użytkownika o potwierdzenie operacji usunięcia. Przechowuje `cityId` miasta do usunięcia (np. w `data` atrybucie modala).
+-   **Główne elementy:** Tytuł modala, tekst potwierdzenia (np. "Czy na pewno chcesz usunąć miasto [Nazwa Miasta]?"), przycisk "Potwierdź" (`button.btn-danger`), przycisk "Anuluj" (`button.btn-secondary`).
+-   **Obsługiwane interakcje:** Kliknięcie "Potwierdź" (wywołuje API DELETE), kliknięcie "Anuluj" (zamyka modal).
+-   **Obsługiwana walidacja:** Brak.
+-   **Props:** `cityId`, `cityName` (do wyświetlenia w komunikacie).
+
+### `PaginationControls`
+-   **Opis komponentu:** Zestaw przycisków i informacji umożliwiających nawigację między stronami listy miast.
+-   **Główne elementy:** Przyciski "Poprzednia", "Następna", wskaźnik obecnej strony (np. "Strona X z Y"). Przyciski mogą być wyłączone (`disabled`), jeśli nie ma poprzedniej/następnej strony.
+-   **Obsługiwane interakcje:** Kliknięcie przycisku "Poprzednia" lub "Następna" (wywołuje przeładowanie danych dla nowej strony).
+-   **Obsługiwana walidacja:** Logika włączania/wyłączania przycisków na podstawie bieżącej strony i całkowitej liczby stron.
+-   **Props:** `currentPage`, `totalPages` (lub `totalItems` i `perPage`).
+
+### `VisitedFilter`
+-   **Opis komponentu:** Element `select` pozwalający użytkownikowi filtrować listę miast według statusu odwiedzenia.
+-   **Główne elementy:** `<select>` z opcjami: "Wszystkie", "Nieodwiedzone", "Odwiedzone".
+-   **Obsługiwane interakcje:** Zmiana wybranej opcji (`change` event) - wywołuje przeładowanie danych z odpowiednim parametrem `visited`.
+-   **Obsługiwana walidacja:** Brak.
+-   **Props:** Aktualnie wybrany filtr (do ustawienia wartości początkowej).
+
+## 6. Zarządzanie stanem
+Ze względu na użycie jQuery i Smarty, zarządzanie stanem będzie proste i oparte głównie na DOM oraz zmiennych JavaScript:
+-   Lista miast dla bieżącej strony będzie przechowywana w zmiennej JavaScript po pobraniu z API (jeśli ładowana przez Ajax) lub bezpośrednio renderowana przez Smarty.
+-   Aktualna strona (`currentPage`), wybrany filtr (`currentFilter`) i ewentualnie liczba elementów na stronę (`perPage`) będą przechowywane w zmiennych JavaScript.
+-   ID miasta do usunięcia będzie tymczasowo przechowywane (np. w `data` atrybucie modala lub zmiennej JS) podczas procesu potwierdzania usunięcia.
+-   Nie przewiduje się potrzeby tworzenia customowych hooków ani złożonych mechanizmów zarządzania stanem.
+
+## 7. Integracja API
+
+-   **Pobieranie listy miast:**
+    -   Endpoint: `GET /api/cities`
+    -   Typ żądania: `GET`
+    -   Parametry:
+        -   `page` (wymagane dla paginacji, np. `1`): Numer strony.
+        -   `per_page` (opcjonalne, np. `10`): Liczba miast na stronę. Backend powinien mieć domyślną wartość.
+        -   `visited` (opcjonalne): `true` (odwiedzone), `false` (nieodwiedzone), brak parametru (wszystkie).
+    -   Typ odpowiedzi (Success 200 OK): `application/json` - obiekt zawierający listę miast dla strony i informacje o paginacji, np.:
+        ```json
+        {
+          "data": [
+            { "id": number, "name": string, "recommendationCount": number, "visited": boolean },
+            ...
+          ],
+          "pagination": {
+            "currentPage": number,
+            "totalPages": number,
+            "totalItems": number,
+            "perPage": number
+          }
+        }
+        ```
+    -   Wywołanie: Przy ładowaniu strony (`$(document).ready()`), po zmianie strony lub zmianie filtra, za pomocą `$.ajax()` lub `fetch()`. Dane z `data` zostaną użyte do wypełnienia tabeli (`<tbody>`). Dane z `pagination` do aktualizacji kontrolek paginacji. Wymaga nagłówka `Authorization: Bearer <token>`.
+-   **Usuwanie miasta:**
+    -   Endpoint: `DELETE /api/cities/{cityId}` (**Uwaga:** Ten endpoint musi zostać dodany do API Planu i zaimplementowany w backendzie).
+    -   Typ żądania: `DELETE`
+    -   Parametry: `cityId` w ścieżce URL.
+    -   Typ odpowiedzi (Success 204 No Content): Brak zawartości.
+    -   Typ odpowiedzi (Error 404 Not Found): Miasto nie istnieje.
+    -   Wywołanie: Po kliknięciu "Potwierdź" w modalu, używając `$.ajax()` lub `fetch()`. Wymaga nagłówka `Authorization: Bearer <token>`. Po sukcesie, wiersz miasta zostanie usunięty z tabeli (np. przez bezpośrednią manipulację DOM).
+
+## 8. Interakcje użytkownika
+-   **Ładowanie widoku:** Użytkownik przechodzi na `/dashboard`. Skrypt JS wysyła żądanie `GET /api/cities` (dla strony 1, bez filtra `visited`). Po otrzymaniu odpowiedzi, lista miast jest renderowana w tabeli, aktualizowane są kontrolki paginacji.
+-   **Kliknięcie nazwy miasta:** Użytkownik klika link z nazwą miasta. Następuje przekierowanie na stronę `/city/{id}` danego miasta.
+-   **Kliknięcie przycisku "Rekomendacje":** Użytkownik klika przycisk. Następuje przekierowanie na stronę `/city/{id}`.
+-   **Kliknięcie "Dodaj Nowe Miasto":** Użytkownik klika przycisk. Następuje przekierowanie na stronę `/cities/search`.
+-   **Zmiana filtra "Odwiedzone":** Użytkownik wybiera nową opcję w `select`. Skrypt JS odczytuje nową wartość filtra, ustawia `currentPage` na 1 i wysyła nowe żądanie `GET /api/cities` z odpowiednim parametrem `visited` i `page=1`. Tabela i paginacja są aktualizowane.
+-   **Zmiana strony (Paginacja):** Użytkownik klika przycisk "Następna" lub "Poprzednia". Skrypt JS aktualizuje `currentPage` i wysyła nowe żądanie `GET /api/cities` z nowym numerem strony i bieżącym filtrem `visited`. Tabela i paginacja są aktualizowane.
+-   **Kliknięcie przycisku "Usuń":**
+    1.  Skrypt JS odczytuje `data-city-id` i `data-city-name` z klikniętego przycisku lub jego wiersza nadrzędnego.
+    2.  Wyświetlany jest `DeleteConfirmationModal`, przekazując `cityId` i `cityName`.
+-   **Kliknięcie "Anuluj" w modalu:** Modal jest zamykany, brak dalszych akcji.
+-   **Kliknięcie "Potwierdź" w modalu:**
+    1.  Skrypt JS wysyła żądanie `DELETE /api/cities/{cityId}` używając zapisanego `cityId`.
+    3.  Po otrzymaniu odpowiedzi 204: Modal jest zamykany, **dane dla bieżącej strony są ponownie ładowane** (wysyłane jest żądanie `GET /api/cities` z `currentPage` i `currentFilter`), aby odświeżyć listę i paginację, wyświetlany jest komunikat o sukcesie (np. toast/alert).
+    4.  Po otrzymaniu błędu (np. 404, 500): Modal jest zamykany, wyświetlany jest komunikat o błędzie.
+-   **Sortowanie (jeśli implementowane po stronie klienta):** Użytkownik klika nagłówek kolumny. Skrypt JS sortuje istniejące wiersze w `<tbody>` i aktualizuje widok tabeli.
+
+## 9. Warunki i walidacja
+-   **Dostęp:** Widok dostępny tylko dla zalogowanych użytkowników (backend powinien weryfikować token JWT przy każdym żądaniu API). Jeśli użytkownik nie jest zalogowany, powinien zostać przekierowany na stronę logowania.
+-   **Usuwanie:** Operacja usunięcia miasta wymaga potwierdzenia przez użytkownika w modalu, aby zapobiec przypadkowemu usunięciu danych.
+-   **Dane wejściowe API:** Nie ma bezpośrednich pól formularzy w tym widoku. Walidacja dotyczy głównie poprawności `cityId` przekazywanego do API (co jest zapewnione przez pobranie go z listy istniejących miast).
+-   **Paginacja:** Przyciski paginacji ("Poprzednia", "Następna") powinny być wyłączone (`disabled`), jeśli użytkownik jest odpowiednio na pierwszej lub ostatniej stronie.
+
+## 10. Obsługa błędów
+-   **Błąd ładowania listy miast (`GET /api/cities`):** Jeśli żądanie API zawiedzie (np. błąd serwera 500, brak autoryzacji 401/403), zamiast tabeli należy wyświetlić komunikat błędu, np. "Wystąpił błąd podczas ładowania listy miast. Prosimy spróbować ponownie później." W przypadku błędu 401/403, przekierować użytkownika do strony logowania.
+-   **Błąd usuwania miasta (`DELETE /api/cities/{cityId}`):** Jeśli żądanie API zawiedzie (np. 404 - miasto nie znalezione, 500 - błąd serwera), należy wyświetlić stosowny komunikat błędu użytkownikowi i nie usuwać wiersza z tabeli. Np. "Nie udało się usunąć miasta. Spróbuj ponownie."
+-   **Pusta lista miast (dla strony/filtra):** Jeśli API zwróci pustą tablicę `data` (np. dla danego filtra lub strony nie ma miast), należy wyczyścić `<tbody>` tabeli i wyświetlić komunikat informacyjny, np. "Nie znaleziono miast spełniających kryteria." lub "Nie masz jeszcze żadnych zapisanych miast. Kliknij 'Dodaj Nowe Miasto', aby rozpocząć!" (jeśli ogólnie brak miast). Należy również odpowiednio zaktualizować/ukryć kontrolki paginacji.
+-   **Komunikaty:** Wszystkie komunikaty dla użytkownika (błędy, sukcesy, potwierdzenia) powinny być w języku polskim i wyświetlane w sposób nieinwazyjny (np. Bootstrap Alerts, Toastr.js).
+
+## 11. Kroki implementacji
+1.  **Utworzenie szablonu Smarty (`dashboard.tpl`):**
+    -   Zdefiniuj podstawową strukturę HTML strony z użyciem kontenerów Bootstrap.
+    -   Dodaj nagłówek `<h1>Moje Miasta</h1>`.
+    -   Dodaj przycisk/link "Dodaj Nowe Miasto" (`<a href="/cities/search" class="btn btn-primary">Dodaj Nowe Miasto</a>`).
+    -   Dodaj element `select` dla filtra `VisitedFilter`.
+    -   Dodaj pustą strukturę tabeli HTML (`<table id="citiesTable" class="table table-striped table-bordered" style="width:100%">`) z `<thead>` zawierającym odpowiednie nagłówki (Nazwa, Rekomendacje, Status, Akcje) i pustym `<tbody>`.
+    -   Dodaj kontener dla kontrolek paginacji (`<div id="paginationControls">`).
+    -   Dodaj strukturę HTML dla modala potwierdzenia usunięcia (np. Bootstrap Modal) z ID (np. `deleteCityModal`), miejscem na nazwę miasta, oraz przyciskami "Potwierdź" i "Anuluj".
+2.  **Backend (PHP - Kontroler/Logika):**
+    -   Zapewnij routing dla ścieżki `/dashboard`.
+    -   Implementuj logikę sprawdzającą autoryzację użytkownika.
+    -   *Opcja 2 (Renderowanie po stronie klienta):* Przygotuj pustą stronę (szablon) i pozwól JS załadować dane.
+3.  **Frontend (JavaScript - `dashboard.js`):**
+    -   Zdefiniuj zmienne stanu: `let currentPage = 1;`, `let currentVisitedFilter = null;` (`null` dla 'Wszystkie', `true` dla 'Odwiedzone', `false` dla 'Nieodwiedzone'), `let perPage = 10;` (lub pobierz z konfiguracji).
+    -   Utwórz funkcję `loadCities(page, visitedFilter)`:
+        -   Wykonuje żądanie Ajax (`$.ajax`) do `GET /api/cities` z parametrami `page`, `per_page` (zmienna globalna lub stała) i `visited` (jeśli `visitedFilter !== null`).
+        -   W callbacku sukcesu:
+            -   Odczytaj `data` i `pagination` z odpowiedzi.
+            -   Wyczyść `<tbody>` tabeli `#citiesTable`.
+            -   Jeśli `data` jest pusta, pokaż komunikat "Brak miast...".
+            -   Dla każdego miasta w `data`, dodaj wiersz (`<tr>`) do `<tbody>`, wypełniając komórki (`<td>`) danymi (`name` jako link do `/city/{id}`, `recommendationCount`, `visited`, przyciski "Usuń" z `data-city-id`, `data-city-name` i "Rekomendacje" jako link do `/city/{id}/recommendations`).
+            -   Zaktualizuj `currentPage` (na podstawie odpowiedzi `pagination.currentPage`).
+            -   Wywołaj funkcję `updatePaginationControls(pagination.currentPage, pagination.totalPages)`.
+        -   W callbacku błędu: Pokaż komunikat o błędzie ładowania.
+    -   Utwórz funkcję `updatePaginationControls(currentPage, totalPages)`:
+        -   Wyczyść kontener `#paginationControls`.
+        -   Dodaj HTML dla przycisków "Poprzednia", "Następna" i wskaźnika strony (np. "Strona X z Y").
+        -   Wyłącz przycisk "Poprzednia", jeśli `currentPage <= 1`.
+        -   Wyłącz przycisk "Następna", jeśli `currentPage >= totalPages`.
+        -   Dodaj event listenery do przycisków paginacji, które wywołują `loadCities()` z odpowiednio `currentPage - 1` lub `currentPage + 1` i `currentVisitedFilter`.
+    -   Użyj `$(document).ready()` do inicjalizacji:
+        -   Wywołaj `loadCities(currentPage, currentVisitedFilter)` po raz pierwszy.
+        -   Dodaj event listener `change` do filtra `#visitedFilter`:
+            -   Odczytaj nową wartość filtra.
+            -   Zaktualizuj `currentVisitedFilter`.
+            -   Wywołaj `loadCities(1, currentVisitedFilter)` (resetuj do strony 1 po zmianie filtra).
+    -   **Obsługa kliknięcia "Usuń":** Użyj delegacji zdarzeń jQuery do obsługi kliknięć na przyciskach `.delete-city-btn` wewnątrz tabeli.
+        ```javascript
+        $('#citiesTable tbody').on('click', '.delete-city-btn', function() {
+            const cityId = $(this).data('city-id');
+            const cityName = $(this).data('city-name'); // Pobierz nazwę miasta
+            // Wypełnij i pokaż modal #deleteCityModal
+            $('#deleteCityModal').data('city-id', cityId); // Zapisz ID w modalu
+            $('#deleteCityModal .city-name-placeholder').text(cityName); // Wstaw nazwę miasta
+            $('#deleteCityModal').modal('show');
+        });
+        ```
+    -   **Obsługa potwierdzenia usunięcia:** Dodaj obsługę kliknięcia przycisku "Potwierdź" w modalu.
+        ```javascript
+        $('#confirmDeleteBtn').on('click', function() {
+            const cityId = $('#deleteCityModal').data('city-id');
+            // Pokaż wskaźnik ładowania
+            $(this).prop('disabled', true).text('Usuwanie...');
+
+            $.ajax({
+                url: `/api/cities/${cityId}`, // Użyj poprawnego endpointu
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + your_jwt_token }, // Dodaj token JWT
+                success: function() {
+                    $('#deleteCityModal').modal('hide');
+                    // Przeładuj bieżącą stronę
+                    loadCities(currentPage, currentVisitedFilter);
+                    // Pokaż komunikat sukcesu
+                    showSuccessMessage('Miasto zostało pomyślnie usunięte.');
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    // Pokaż komunikat błędu
+                    showErrorMessage('Nie udało się usunąć miasta. Spróbuj ponownie.');
+                    console.error("Delete error:", textStatus, errorThrown);
+                },
+                complete: function() {
+                    // Przywróć przycisk w modalu
+                    $('#confirmDeleteBtn').prop('disabled', false).text('Potwierdź');
+                }
+            });
+        });
+        ```
+    -   **Implementacja funkcji pomocniczych:** `showSuccessMessage`, `showErrorMessage` (np. używając Bootstrap Alerts).
+    -   **Obsługa tokena JWT:** Upewnij się, że token JWT jest poprawnie pobierany (np. z `localStorage` lub `sessionStorage`) i dołączany do wszystkich żądań Ajax w nagłówku `Authorization`.
+4.  **Styling (CSS/SCSS):**
+    -   Dodaj ewentualne niestandardowe style CSS do poprawy wyglądu tabeli, przycisków, filtra, kontrolek paginacji lub modala, jeśli standardowe style Bootstrap są niewystarczające.
+    -   Zdefiniuj styl dla wskaźnika statusu "Odwiedzone" (np. kolor tekstu, ikona).
+
+Twoim zadaniem jest zaimplementowanie widoku frontendu w oparciu o podany plan implementacji i zasady implementacji. Twoim celem jest stworzenie szczegółowej i dokładnej implementacji, która jest zgodna z dostarczonym planem, poprawnie reprezentuje strukturę komponentów, integruje się z API i obsługuje wszystkie określone interakcje użytkownika.
+
+W pierwszej kolejności skup się na zaimplementowaniu widoku miast użytkownika. 
+Przeanalizuj kod projektu (użyj listy katalogów projektu @folders.txt)
+Użyj istniejącej autoryzację, widoku szablonów, istniejących API.
+Jeśli czegoś nie możesz odnaleźć - pytaj.
+
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+
+
+
+
+Feedback:
+
+
+Tak wdrażaj swoje kroki. Pamiętaj, że wiele funkcji i działań jest już zrobiona i wdrożona w  plikach /api/ i /commonDB/. Zanim coś dodasz sprawdź czy już nie istnieje. Zawsze kieruj się istniejącym kodem projektu.
+Chodzi o pobieranie danych z bazy, pokazywanie błędów, autentykację.
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+
+
+
+
+
+
+
+
+
+

@@ -127,10 +127,13 @@ try {
     }
     
     // Wysłanie odpowiedzi z zapisanymi rekomendacjami
-    Response::success([
-        'message' => 'Rekomendacje zostały zapisane',
-        'count' => count($savedRecommendations),
-        'recommendations' => $savedRecommendations
+    Response::success(201, 'Rekomendacje zostały zapisane.', [
+        'city' => [
+            'id' => $cityId,
+            'name' => $city['name']
+         ],
+         'savedRecommendations' => count($savedRecommendations),
+         'recommendations' => $savedRecommendations
     ]);
     
 } catch (Exception $e) {

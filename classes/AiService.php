@@ -55,9 +55,18 @@ class AiService {
                 throw new Exception("Nie udało się uzyskać odpowiedzi od serwisu AI");
             }
             
-            // Walidacja odpowiedzi
-            if (!isset($response['city_summary']) || !isset($response['recommendations'])) {
-                throw new Exception("Niepoprawny format odpowiedzi z serwisu AI");
+            // Szczegółowa walidacja odpowiedzi
+            if (!isset($response['city_summary']) || !is_string($response['city_summary'])) {
+                throw new Exception("Brak lub nieprawidłowy format podsumowania miasta");
+            }
+            
+            if (!isset($response['recommendations']) || !is_array($response['recommendations']) || empty($response['recommendations'])) {
+                throw new Exception("Brak lub nieprawidłowy format rekomendacji");
+            }
+            
+            // Sprawdzenie minimalnej liczby rekomendacji
+            if (count($response['recommendations']) < 3) {
+                throw new Exception("Zbyt mało rekomendacji w odpowiedzi AI (minimum 3)");
             }
             
             // Ograniczenie długości summary
@@ -65,9 +74,17 @@ class AiService {
             
             // Przygotowanie listy rekomendacji
             $recommendations = [];
+            $invalidRecommendations = 0;
+            
             foreach ($response['recommendations'] as $rec) {
-                // Sprawdzenie czy rekomendacja zawiera wymagane pola
-                if (!isset($rec['title']) || !isset($rec['description'])) {
+                // Szczegółowa walidacja rekomendacji
+                if (!isset($rec['title']) || !is_string($rec['title']) || empty(trim($rec['title']))) {
+                    $invalidRecommendations++;
+                    continue;
+                }
+                
+                if (!isset($rec['description']) || !is_string($rec['description']) || strlen(trim($rec['description'])) < 100) {
+                    $invalidRecommendations++;
                     continue;
                 }
                 
@@ -86,6 +103,16 @@ class AiService {
                 if (count($recommendations) >= 10) {
                     break;
                 }
+            }
+            
+            // Sprawdzenie czy mamy wystarczającą liczbę prawidłowych rekomendacji
+            if (count($recommendations) < 3) {
+                throw new Exception("Zbyt mało prawidłowych rekomendacji (minimum 3, otrzymano " . count($recommendations) . ")");
+            }
+            
+            // Logowanie statystyk
+            if ($invalidRecommendations > 0) {
+                error_log("Pominięto $invalidRecommendations nieprawidłowych rekomendacji dla miasta $cityName");
             }
             
             // Logowanie udanego wywołania

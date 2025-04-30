@@ -71,7 +71,7 @@ Kryteria akceptacji:
 
 US-003  
 Tytuł: Przeglądanie i edycja rekomendacji  
-Opis: Jako turysta chcę przeglądać, edytować, akceptować lub odrzucać propozycje atrakcji, aby dostosować je do moich potrzeb.  
+Opis: Jako turysta chcę przeglądać, edytować, akceptować lub odrzucać propozycje atrakcji w danym mieście, aby dostosować je do moich potrzeb.  
 Kryteria akceptacji:  
 - Użytkownik widzi listę propozycji z tytułem i rozwinięciem.  
 - Użytkownik może edytować propozycje; zmiany zapisują się po kliknięciu przycisku "zapisz".  

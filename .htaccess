@@ -30,6 +30,28 @@ RewriteRule ^admin/logs$ admin/logs.php [L]
 # Przekierowanie /cities/search do cities/search.php
 RewriteRule ^cities/search$ cities/search.php [L]
 
+# API Endpoints
+
+# 1b. Obsługa żądań PUT do konkretnego zasobu z ID: /api/cities/123
+#     Przepisuje na update.php przekazując ID.
+RewriteCond %{REQUEST_METHOD} PUT
+RewriteRule ^api/cities/([0-9]+)$ api/cities/update.php?id=$1 [L]
+
+# 1. Obsługa żądań do konkretnego zasobu z ID: /api/cities/123 (np. DELETE)
+#    Przepisuje na index.php przekazując ID. Zachowuje query string ([QSA]).
+RewriteRule ^api/cities/([0-9]+)$ api/cities/index.php?id=$1 [L,QSA]
+
+# 2. Obsługa żądań do kolekcji: /api/cities (np. GET z filtrami)
+#    Przepisuje na index.php. Zachowuje query string ([QSA]).
+RewriteRule ^api/cities$ api/cities/index.php [L,QSA]
+
+# STARA REGUŁA (zastąpiona przez powyższe): 
+# RewriteRule ^api/cities(?:/([0-9]+))?$ api/cities/index.php?id=$1 [L,QSA]
+# Usunięto również poleganie na DirectoryIndex dla POST
+
+# Przekierowanie /api/users/register do api/users/register.php
+RewriteRule ^api/users/register$ api/users/register.php [L]
+
 # Obsługa zasobów statycznych (CSS, JS, obrazy)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} \.(css|js|jpg|jpeg|png|gif|ico)$
@@ -38,4 +60,4 @@ RewriteRule ^(.*)$ $1 [L]
 # Przekierowanie wszystkich innych żądań do index.php
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.php [L] 
+RewriteRule ^ index.php [L]

@@ -20,16 +20,7 @@ header('Content-Type: text/html; charset=UTF-8');
 // Sprawdzenie autoryzacji
 $auth = new Auth();
 
-// Debug: sprawdź ciasteczko
-error_log("JWT Cookie: " . (isset($_COOKIE['jwtToken']) ? "present" : "not present"));
-if (isset($_COOKIE['jwtToken'])) {
-    error_log("JWT Token value: " . substr($_COOKIE['jwtToken'], 0, 20) . "...");
-}
-
 $userId = $auth->authenticateAndGetUserId();
-
-// Debug: sprawdź wynik autoryzacji
-error_log("Auth Result - userId: " . ($userId ? $userId : "null"));
 
 if (!$userId) {
     // Przekierowanie do strony logowania
@@ -40,9 +31,6 @@ if (!$userId) {
 
 // Pobranie danych użytkownika
 $user = getUserProfile($userId);
-
-// Debug: sprawdź dane użytkownika
-error_log("User data: " . ($user ? json_encode($user) : "null"));
 
 if (!$user) {
     // Błąd pobierania danych użytkownika

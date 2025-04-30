@@ -188,6 +188,13 @@
   ```
 - **Error (400 Bad Request)**: If the supplement action has already been performed.
 
+#### DELETE /api/cities/{cityId}
+- **Description**: Delete a city and all its associated recommendations for the authenticated user. Requires confirmation from the client-side before calling.
+- **Response**:
+  - **Success (204 No Content)**: The city and its recommendations were successfully deleted.
+  - **Error (404 Not Found)**: If the cityId does not exist or does not belong to the authenticated user.
+  - **Error (403 Forbidden)**: If the user is not authorized to delete this city (should typically be handled by the 404 check based on user ID).
+
 ### 2.3 Recommendations
 
 #### GET /api/cities/{cityId}/recommendations

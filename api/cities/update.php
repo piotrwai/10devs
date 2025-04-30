@@ -17,19 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'PUT') {
     exit;
 }
 
-// Pobranie ID miasta z URL
-$requestUri = $_SERVER['REQUEST_URI'];
-$parts = explode('/', trim($requestUri, '/'));
-// Ostatni element URL powinien być ID miasta
-$cityId = end($parts);
+// Pobierz ID z parametru GET przekazanego przez .htaccess
+$cityId = isset($_GET['id']) ? (int)$_GET['id'] : null;
 
 // Sprawdzenie czy ID jest liczbą
-if (!is_numeric($cityId) || (int)$cityId <= 0) {
-    Response::error(400, 'Nieprawidłowe ID miasta');
+if ($cityId === null || $cityId <= 0) { // Sprawdź czy null lub niepoprawna liczba
+    Response::error(400, 'Nieprawidłowe lub brakujące ID miasta');
     exit;
 }
-
-$cityId = (int)$cityId;
 
 try {
     // Sprawdzenie autentykacji przez token JWT
@@ -42,7 +37,14 @@ try {
     }
     
     // Pobranie i dekodowanie danych JSON
-    $requestData = json_decode(file_get_contents('php://input'), true);
+    $requestJson = file_get_contents('php://input');
+    $requestData = json_decode($requestJson, true);
+    
+    // Sprawdzenie czy json_decode się powiodło
+    if ($requestData === null && json_last_error() !== JSON_ERROR_NONE) {
+        Response::error(400, 'Nieprawidłowy format danych JSON.');
+        exit;
+    }
     
     // Sprawdzenie czy istnieje parametr 'visited'
     if (!isset($requestData['visited'])) {
@@ -72,16 +74,24 @@ try {
     // Pobranie zaktualizowanych danych miasta
     $updatedCity = getCityById($cityId, $userId);
     
-    // Formatowanie odpowiedzi
+    // Upewnij się, że dane zostały pobrane
+    if (!$updatedCity) {
+        // To nie powinno się zdarzyć, skoro update się powiódł, ale dla bezpieczeństwa
+        ErrorLogger::logError('api_error', 'Nie udało się pobrać danych miasta po aktualizacji statusu.', $userId, $_SERVER['REQUEST_URI'] ?? null);
+        Response::error(500, 'Wystąpił błąd podczas pobierania zaktualizowanych danych miasta.');
+        exit;
+    }
+    
+    // Formatowanie odpowiedzi z użyciem poprawnych kluczy
     $response = [
-        'id' => (int)$updatedCity['cit_id'],
-        'name' => $updatedCity['cit_name'],
-        'visited' => (bool)$visited,
-        'description' => $updatedCity['cit_desc']
+        'id' => (int)$updatedCity['id'],         // Poprawiono na 'id'
+        'name' => $updatedCity['name'],       // Poprawiono na 'name'
+        'visited' => (bool)$updatedCity['visited'], // Używamy teraz wartości z $updatedCity
+        'description' => $updatedCity['description'] // Poprawiono na 'description'
     ];
     
     // Wysłanie odpowiedzi
-    Response::success($response);
+    Response::success(200, '', $response);
     
 } catch (Exception $e) {
     // Logowanie błędu

@@ -12,6 +12,11 @@ require_once '../../classes/AiService.php';
 require_once '../../commonDB/cities.php';
 require_once '../../commonDB/errorLogs.php';
 
+// Ustawienie nagłówków
+header('Content-Type: application/json; charset=UTF-8');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST');
+
 // Sprawdzenie czy żądanie jest metodą POST
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     Response::error(405, 'Metoda nie dozwolona. Oczekiwano POST.');
@@ -50,8 +55,8 @@ try {
             exit;
         }
         
-        $cityName = $cityData['cit_name'];
-        $cityDesc = $cityData['cit_desc'];
+        $cityName = $cityData['name'];
+        $cityDesc = $cityData['description'];
     } else {
         // Standardowe wyszukiwanie
         if (!isset($requestData['cityName']) || empty(trim($requestData['cityName']))) {
@@ -150,7 +155,7 @@ try {
     error_log("Zwracam odpowiedź z " . count($aiResult['recommendations']) . " rekomendacjami dla miasta o ID: $cityId");
     
     // Wysłanie odpowiedzi
-    Response::success($response);
+    Response::success(200, 'Pomyślnie wygenerowano rekomendacje dla miasta', $aiResult);
     
 } catch (Exception $e) {
     // Logowanie błędu
