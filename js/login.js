@@ -63,17 +63,33 @@ $(document).ready(function() {
                 $formMessages
                     .addClass('alert alert-success')
                     .text('Logowanie pomyślne. Przekierowywanie...');
-                
-                // Przekierowanie do wyszukiwania miast
+
+                // Przekierowanie w zależności od tego, czy użytkownik ma miasta
                 setTimeout(function() {
-                    window.location.href = '/cities/search';
-                }, 300);
+                    if (response.data.user.hasCities) {
+                        window.location.href = '/dashboard';
+                    } else {
+                        window.location.href = '/cities/search';
+                    }
+                }, 100);
             },
             error: function(xhr, status, error) {
                 let errorMessage = 'Wystąpił błąd podczas logowania';
                 
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
+                // Szczegółowa obsługa błędów na podstawie kodów statusu HTTP
+                if (xhr.status === 401) {
+                    errorMessage = 'Nieprawidłowy login lub hasło.';
+                } else if (xhr.status === 429) {
+                    errorMessage = 'Zbyt wiele prób logowania. Spróbuj ponownie później.';
+                } else if (xhr.status >= 500) {
+                    errorMessage = 'Wystąpił błąd serwera. Spróbuj ponownie później.';
+                }
+                
+                // Jeśli serwer zwrócił bardziej szczegółową wiadomość, użyj jej
+                if (xhr.responseJSON) {
+                    if (xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
                 }
                 
                 // Wyświetlenie komunikatu błędu w formularzu

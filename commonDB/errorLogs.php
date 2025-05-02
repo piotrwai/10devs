@@ -16,6 +16,39 @@ require_once __DIR__ . '/dbConnect.php';
  */
 function setErrorLog($errorType, $errorMessage, $userId = null, $url = null, $payload = null) {
     try {
+        // Jeśli URL nie jest podany, spróbuj go pobrać automatycznie
+        if ($url === null) {
+            $url = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+        }
+        
+        // Dodaj informacje o śladzie stosu dla łatwiejszego debugowania
+        $debugBacktrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+        $traceInfo = [];
+        
+        foreach ($debugBacktrace as $trace) {
+            $traceItem = '';
+            if (isset($trace['file']) && isset($trace['line'])) {
+                $traceItem = basename($trace['file']) . ':' . $trace['line'];
+                if (isset($trace['function'])) {
+                    $traceItem .= ' w ' . $trace['function'];
+                    if (isset($trace['class'])) {
+                        $traceItem = $trace['class'] . '::' . $traceItem;
+                    }
+                }
+                $traceInfo[] = $traceItem;
+            }
+        }
+        
+        // Dodaj informacje o śladzie do payload jeśli nie jest pusty
+        if (!empty($traceInfo)) {
+            $traceString = implode(" -> ", $traceInfo);
+            if ($payload === null) {
+                $payload = 'Trace: ' . $traceString;
+            } else {
+                $payload .= "\nTrace: " . $traceString;
+            }
+        }
+        
         // Pobranie połączenia do bazy
         $db = getDbConnection();
         

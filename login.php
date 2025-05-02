@@ -43,6 +43,9 @@ if (isset($_GET['error'])) {
         case 'logout_failed':
             $smarty->assign('errorMessage', 'Wystąpił problem podczas wylogowywania. Spróbuj ponownie.');
             break;
+        case 'internal':
+            $smarty->assign('errorMessage', 'Wystąpił wewnętrzny błąd systemu. Zaloguj się ponownie.');
+            break;
         default:
             $smarty->assign('errorMessage', 'Wystąpił błąd. Spróbuj ponownie.');
     }

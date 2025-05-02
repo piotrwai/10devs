@@ -59,6 +59,6 @@
 </div>
 
 {* Dołączenie skryptu JS obsługującego formularz logowania *}
-<script src="/js/login.js"></script>
+<script src="{'/js/login.js'|add_js_version}"></script>
 
 {include file="footer.tpl"} 

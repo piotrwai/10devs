@@ -91,10 +91,10 @@ $(document).ready(function() {
                 
                 // Przekierowanie do strony logowania
                 setTimeout(function() {
-                    window.location.href = '/login';
+                    window.location.href = '/login?registered=1';
                 }, 2000);
             },
-            error: function(xhr) {
+            error: function(xhr) {console.log();
                 let errorMessage = 'Wystąpił błąd podczas rejestracji.';
                 
                 if (xhr.responseJSON && xhr.responseJSON.errors) {

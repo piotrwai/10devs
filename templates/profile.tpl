@@ -61,6 +61,6 @@
 </div>
 
 {* Dołączenie skryptu JS obsługującego formularz profilu *}
-<script src="/js/profile.js"></script>
+<script src="{'/js/profile.js'|add_js_version}"></script>
 
 {include file="footer.tpl"} 

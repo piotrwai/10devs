@@ -19,7 +19,7 @@ $userId = $auth->authenticateAndGetUserId();
 
 if (!$userId) {
     // Użytkownik nie jest zalogowany - przekierowanie do strony logowania
-    header('Location: /login');
+    header('Location: /login?error=access');
     exit;
 }
 
@@ -28,7 +28,7 @@ $currentUser = getUserProfile($userId);
 
 if (!$currentUser) {
     // Nie znaleziono użytkownika w bazie - przekierowanie do strony logowania
-    header('Location: /login');
+    header('Location: /login?error=access');
     exit;
 }
 

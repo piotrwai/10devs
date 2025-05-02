@@ -93,12 +93,12 @@ function addCity($cityName, $userId, $description = null) {
     try {
         // Walidacja danych wejściowych
         if (empty($cityName) || !is_string($cityName)) {
-            error_log("Błąd addCity: Nieprawidłowa nazwa miasta");
+            ErrorLogger::logError('db_error', "Błąd addCity: Nieprawidłowa nazwa miasta", $userId);
             return null;
         }
         
         if (!is_numeric($userId) || $userId <= 0) {
-            error_log("Błąd addCity: Nieprawidłowy ID użytkownika: $userId");
+            ErrorLogger::logError('db_error', "Błąd addCity: Nieprawidłowy ID użytkownika: $userId", $userId);
             return null;
         }
         
@@ -118,7 +118,8 @@ function addCity($cityName, $userId, $description = null) {
             mysqli_stmt_fetch($checkStmt);
             mysqli_stmt_close($checkStmt);
             
-            error_log("Miasto '$cityName' już istnieje dla użytkownika $userId, ID: $existingCityId");
+            ErrorLogger::logError('db_error', "Miasto '$cityName' już istnieje dla użytkownika $userId, ID: $existingCityId", $userId);
+            
             return $existingCityId;
         }
         
@@ -130,14 +131,14 @@ function addCity($cityName, $userId, $description = null) {
         // Jeśli opis jest pusty, ustawiamy domyślny opis - kolumna cit_desc ma ograniczenie NOT NULL
         if ($description === null || $description === '') {
             $description = 'Brak opisu. Opis zostanie wygenerowany automatycznie.';
-            error_log("Użyto domyślnego opisu dla miasta '$cityName'");
+            ErrorLogger::logError('db_error', "Użyto domyślnego opisu dla miasta '$cityName'", $userId);
         }
         
         // Przygotowanie i wykonanie zapytania
         $stmt = mysqli_prepare($db, $query);
         
         if (!$stmt) {
-            error_log("Błąd przygotowania zapytania: " . mysqli_error($db));
+            ErrorLogger::logError('db_error', 'Błąd przygotowania zapytania: ' . mysqli_error($db), $userId);
             return null;
         }
         
@@ -146,7 +147,7 @@ function addCity($cityName, $userId, $description = null) {
         
         if (!$executeResult) {
             $errorMessage = mysqli_stmt_error($stmt);
-            error_log("Błąd wykonania zapytania: " . $errorMessage);
+            ErrorLogger::logError('db_error', 'Błąd wykonania zapytania: ' . $errorMessage, $userId);
             mysqli_stmt_close($stmt);
             return null;
         }
@@ -155,17 +156,14 @@ function addCity($cityName, $userId, $description = null) {
         $affectedRows = mysqli_stmt_affected_rows($stmt);
         if ($affectedRows > 0) {
             $newCityId = mysqli_insert_id($db);
-            error_log("Dodano nowe miasto '$cityName' dla użytkownika $userId, przydzielono ID: $newCityId");
             mysqli_stmt_close($stmt);
             return $newCityId;
         } else {
-            error_log("Nie dodano żadnego rekordu dla miasta '$cityName', użytkownik: $userId");
+            ErrorLogger::logError('db_error', 'Nie dodano żadnego rekordu dla miasta', $userId);
             mysqli_stmt_close($stmt);
             return null;
         }
     } catch (Exception $e) {
-        // Logowanie błędu
-        error_log("Wyjątek w addCity: " . $e->getMessage());
         ErrorLogger::logError('db_error', 'Błąd podczas dodawania miasta: ' . $e->getMessage(), $userId);
         return null;
     }
@@ -195,7 +193,7 @@ function updateCityDescription($cityId, $userId, $description) {
         // Sprawdzenie czy update się powiódł
         return (mysqli_stmt_affected_rows($stmt) > 0);
     } catch (Exception $e) {
-        // Logowanie błędu
+        // Logowanie błędu z pełnym komunikatem
         ErrorLogger::logError('db_error', 'Błąd podczas aktualizacji opisu miasta: ' . $e->getMessage(), $userId);
         return false;
     }
@@ -297,13 +295,14 @@ function getUserCitiesWithRecommendationCount($userId, $page = 1, $perPage = 10,
         ];
         
     } catch (Exception $e) {
-        // Logowanie błędu
+        // Logowanie błędu z pełnym komunikatem
         ErrorLogger::logError('db_error', 'Błąd podczas pobierania listy miast: ' . $e->getMessage(), $userId);
-        // Zwracamy pusty wynik w przypadku błędu
-        return [
-            'data' => [],
-            'totalItems' => 0
-        ];
+        
+        // Zwrócenie informacji o błędzie w odpowiedzi
+        Response::error(500, 'Wystąpił błąd podczas przetwarzania: ' . $e->getMessage());
+        
+        // Zwróć pustą tablicę jako fallback
+        return ['data' => [], 'totalItems' => 0];
     }
 }
 

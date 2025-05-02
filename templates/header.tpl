@@ -22,8 +22,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- Skrypty pomocnicze -->
-    <script src="/js/cookie-utils.js"></script>
-    <script src="/js/auth.js"></script>
+    <script src="{'/js/cookie-utils.js'|add_js_version}"></script>
+    <script src="{'/js/auth.js'|add_js_version}"></script>
 </head>
 <body>
     <!-- Główna nawigacja -->
@@ -37,7 +37,7 @@
             <div class="collapse navbar-collapse" id="navbarMain">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" href="/dashboard">Dashboard</a>
+                        <a class="nav-link" href="/dashboard">Miasta</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/cities/search">Nowe miasto</a>

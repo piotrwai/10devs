@@ -61,17 +61,30 @@ $(document).ready(function() {
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 let errorMessage = 'Wystąpił błąd podczas ładowania listy miast.';
-                if (jqXHR.status === 401 || jqXHR.status === 403) {
-                    errorMessage = 'Błąd autoryzacji. Sesja mogła wygasnąć lub nie masz uprawnień. Spróbuj zalogować się ponownie.';
-                    // Opcjonalnie: przekieruj na stronę logowania
-                    // window.location.href = '/login?error=session';
+                
+                // Obsługa różnych kodów błędów
+                if (jqXHR.status === 401) {
+                    errorMessage = 'Twoja sesja wygasła. Zaloguj się ponownie.';
+                    // Przekierowanie na stronę logowania z odpowiednim kodem błędu
+                    window.location.href = '/login?error=session';
+                    return;
+                } else if (jqXHR.status === 403) {
+                    errorMessage = 'Nie masz uprawnień do tej operacji.';
+                    window.location.href = '/login?error=access';
+                    return;
+                } else if (jqXHR.status === 500) {
+                    errorMessage = 'Wystąpił wewnętrzny błąd serwera.';
+                    if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
+                        errorMessage = jqXHR.responseJSON.message;
+                    }
                 } else if (jqXHR.responseJSON && jqXHR.responseJSON.message) {
                     errorMessage = jqXHR.responseJSON.message;
                 }
+                
                 // Zamiast w tabeli, pokaż błąd w kontenerze komunikatów
                 showMessage(errorMessage, 'danger'); 
                 // Opcjonalnie wyczyść tabelę
-                $('#citiesTable tbody').html(`<tr><td colspan="4" class="text-center text-muted">Błąd ładowania danych.</td></tr>`); 
+                $('#citiesTable tbody').html(`<tr><td colspan="4" class="text-center text-muted">Błąd ładowania danych: ${sanitizeHTML(errorMessage)}</td></tr>`); 
                 $('#paginationControls').empty(); // Wyczyść paginację w razie błędu
             },
             // Dodajemy wyczyszczenie komunikatów przed nowym ładowaniem
@@ -123,9 +136,8 @@ $(document).ready(function() {
                     ${statusIcon} ${statusText}
                 </button>`;
             
-            // Link do szczegółów miasta (jeśli istnieje widok /city/{id})
-            // Jeśli nie, można usunąć <a> lub zmienić href
-            const cityLink = `<a href="/city/${cityId}">${cityName}</a>`;
+            // Link do listy rekomendacji miasta (zamiast szczegółów)
+            const cityLink = `<a href="/city/${cityId}/recommendations">${cityName}</a>`;
             
             // Link do rekomendacji (zakładamy, że istnieje widok /city/{id}/recommendations)
             const recommendationsLink = `<a href="/city/${cityId}/recommendations" class="btn btn-info btn-sm" title="Zobacz Rekomendacje">Rekomendacje</a>`;

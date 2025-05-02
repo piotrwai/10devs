@@ -30,8 +30,6 @@ try {
     // Sprawdzenie autentykacji przez token JWT
     $auth = new Auth();
     $userId = $auth->authenticateAndGetUserId();
-//echo "<br>UID: $userId<br>";
-    //$userId = 1;
     
     if (!$userId) {
         Response::error(401, 'Brak autoryzacji lub nieprawidłowy token');
@@ -80,9 +78,6 @@ try {
         if ($cityData) {
             $cityId = $cityData['cit_id'];
             $cityDesc = $cityData['cit_desc'];
-            
-            // Diagnostyka - miasto znalezione
-            error_log("Miasto '$cityName' znalezione w bazie, ID: $cityId, opis: " . ($cityDesc ? "istnieje" : "brak"));
         }
     }
     
@@ -94,11 +89,8 @@ try {
     $aiService = new AiService();
     $aiResult = $aiService->generateCityRecommendations($cityName, $userId, $cityId);
     
-    error_log("Wywołano AiService z ID miasta: " . ($cityId ? $cityId : "null"));
-    
     if (!$aiResult || empty($aiResult['recommendations'])) {
         // Błąd podczas generowania rekomendacji - logujemy błąd i zwracamy informację o błędzie
-        error_log("Generowanie rekomendacji nie powiodło się lub zwrócono puste rekomendacje");
         ErrorLogger::logError('ai_error', 'Nie udało się wygenerować rekomendacji dla miasta: ' . $cityName, $userId);
         
         Response::error(500, 'Nie udało się wygenerować rekomendacji dla miasta. Spróbuj ponownie później.');
@@ -106,33 +98,24 @@ try {
     }
     
     // Jeśli miasto nie istnieje, a odpowiedź AI jest poprawna, dodajemy miasto do bazy
-    if (!$cityId) {
-        // Miasto nie istnieje - dodajemy je do bazy
-        error_log("Próba dodania nowego miasta '$cityName' dla użytkownika $userId");
-        
+    if (!$cityId) {        
         // Używamy opisu miasta wygenerowanego przez AI
         $cityDesc = $aiResult['city']['summary'];
         
         $cityId = addCity($cityName, $userId, $cityDesc);
         
         if ($cityId) {
-            // Diagnostyka - miasto dodane
-            error_log("Miasto '$cityName' dodane do bazy, przydzielono ID: $cityId");
-            
             // Sprawdzamy jeszcze raz, czy miasto zostało poprawnie dodane
             $checkCity = getCityById($cityId, $userId);
             if ($checkCity) {
-                error_log("Weryfikacja: miasto o ID $cityId istnieje w bazie");
+                ErrorLogger::logError('db_error', "Weryfikacja: miasto o ID $cityId istnieje w bazie", $userId);
             } else {
-                error_log("BŁĄD weryfikacji: miasto o ID $cityId NIE istnieje w bazie mimo dodania!");
+                ErrorLogger::logError('db_error', "BŁĄD weryfikacji: miasto o ID $cityId NIE istnieje w bazie mimo dodania!", $userId);
                 // Zwracamy błąd, ponieważ nie udało się zweryfikować dodania miasta
                 Response::error(500, 'Wystąpił błąd podczas dodawania miasta. Spróbuj ponownie później.');
                 exit;
             }
         } else {
-            // Diagnostyka - błąd dodawania
-            error_log("BŁĄD: Nie udało się dodać miasta '$cityName' do bazy");
-            
             // Logowanie błędu
             ErrorLogger::logError('db_error', 'Nie udało się dodać miasta: ' . $cityName, $userId);
             
@@ -143,7 +126,6 @@ try {
     } else if (($cityDesc === null || empty(trim($cityDesc))) && !empty($aiResult['city']['summary'])) {
         // Jeśli miasto już istnieje, ale nie ma opisu, aktualizujemy opis
         $updateResult = updateCityDescription($cityId, $userId, $aiResult['city']['summary']);
-        error_log("Aktualizacja opisu miasta: " . ($updateResult ? "sukces" : "niepowodzenie"));
     }
     
     // Ustawiamy prawidłowe ID miasta w odpowiedzi AI
@@ -151,8 +133,6 @@ try {
     
     // Zwracamy pełną odpowiedź z danymi AI
     $response = $aiResult;
-    
-    error_log("Zwracam odpowiedź z " . count($aiResult['recommendations']) . " rekomendacjami dla miasta o ID: $cityId");
     
     // Wysłanie odpowiedzi
     Response::success(200, 'Pomyślnie wygenerowano rekomendacje dla miasta', $aiResult);

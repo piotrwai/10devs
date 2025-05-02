@@ -41,6 +41,31 @@
   - **Success (200 OK)**: Returns a JWT token and user information.
   - **Error (401 Unauthorized)**: Invalid login or password.
 
+#### POST /api/users/logout
+- **Description**: Wylogowanie użytkownika. Unieważnia aktualny token JWT.
+- **Response**:
+  - **Success (200 OK)**:
+    ```json
+    {
+      "message": "Wylogowano pomyślnie"
+    }
+    ```
+
+#### PUT /api/users/me
+- **Description**: Aktualizacja danych zalogowanego użytkownika.
+- **Request Payload**:
+  ```json
+  {
+    "login": "string",              // opcjonalne, musi być unikalne i 2-50 znaków
+    "password": "string",           // opcjonalne, minimum 8 znaków
+    "cityBase": "string"            // opcjonalne, do 150 znaków
+  }
+  ```
+- **Response**:
+  - **Success (200 OK)**: Zwraca zaktualizowane dane użytkownika (bez hasła)
+  - **Error (400 Bad Request)**: Błędy walidacji
+  - **Error (409 Conflict)**: Jeśli nowy login jest już zajęty
+
 #### GET /api/users/me
 - **Description**: Retrieve the authenticated user's profile.
 - **Response (200 OK)**:
@@ -104,7 +129,7 @@
     ```
   - **Error (400 Bad Request)**: If the city name is invalid or empty.
 
-#### POST /api/cities/save-recommendations
+#### POST /api/recommendations/save
 - **Description**: Save AI-generated city and recommendations after a user decides to keep them. This creates a new city record for the user (if not exists) and saves all accepted recommendations.
 - **Request Payload**:
   ```json
@@ -217,6 +242,42 @@
     ...
   ]
   ```
+
+#### POST /api/cities/{cityId}/recommendations
+- **Description**: Dodaje nowe rekomendacje do istniejącego miasta. Może być używane do ręcznego dodawania rekomendacji lub zapisywania rekomendacji wygenerowanych przez AI.
+- **Request Payload**:
+  ```json
+  {
+    "recommendations": [
+      {
+        "title": "string",
+        "description": "string",
+        "model": "string",          // 'manual' lub identyfikator modelu AI
+        "status": "string"          // 'accepted', 'edited', lub 'rejected'
+      }
+    ]
+  }
+  ```
+- **Response**:
+  - **Success (201 Created)**:
+    ```json
+    {
+      "savedRecommendations": number,  // liczba zapisanych rekomendacji
+      "recommendations": [             // lista zapisanych rekomendacji z ID
+        {
+          "id": number,
+          "title": "string",
+          "description": "string",
+          "model": "string",
+          "status": "string",
+          "dateCreated": "timestamp"
+        }
+      ]
+    }
+    ```
+  - **Error (400 Bad Request)**: Błędy walidacji
+  - **Error (404 Not Found)**: Jeśli miasto nie istnieje
+  - **Error (409 Conflict)**: W przypadku duplikatu tytułu rekomendacji
 
 #### GET /api/recommendations/{id}
 - **Description**: Retrieve details of a specific recommendation.

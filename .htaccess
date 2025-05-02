@@ -52,6 +52,15 @@ RewriteRule ^api/cities$ api/cities/index.php [L,QSA]
 # Przekierowanie /api/users/register do api/users/register.php
 RewriteRule ^api/users/register$ api/users/register.php [L]
 
+# Reguła dla widoku rekomendacji miasta
+RewriteRule ^city/([0-9]+)/recommendations$ city/recommendations.php?id=$1 [L,QSA]
+
+# Reguła dla API rekomendacji dla miasta
+RewriteRule ^api/cities/([0-9]+)/recommendations$ api/cities/recommendations.php?cityId=$1 [L,QSA]
+
+# Reguła dla API operacji na pojedynczych rekomendacjach
+RewriteRule ^api/recommendations/([0-9]+)$ api/recommendations/index.php?id=$1 [L,QSA]
+
 # Obsługa zasobów statycznych (CSS, JS, obrazy)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} \.(css|js|jpg|jpeg|png|gif|ico)$

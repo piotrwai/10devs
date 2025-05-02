@@ -58,7 +58,7 @@ try {
             
             // Sprawdzenie czy są jakieś dane (logika bez zmian)
             if (empty($cities) && $page === 1 && $visited === null) { // Sprawdzaj tylko na pierwszej stronie bez filtrów
-                 Response::success(200, 'Nie masz jeszcze żadnych zapisanych miast.', ['data' => [], 'pagination' => ['currentPage' => 1, 'totalPages' => 0, 'totalItems' => 0, 'perPage' => $perPage]]);
+                 Response::success(200, 'Nie wprowadziłeś żadnego miasta!', ['data' => [], 'pagination' => ['currentPage' => 1, 'totalPages' => 0, 'totalItems' => 0, 'perPage' => $perPage]]);
                  exit;
             }
             

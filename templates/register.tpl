@@ -69,6 +69,6 @@
 </div>
 
 {* Dołączenie skryptu JS obsługującego formularz rejestracji *}
-<script src="/js/register.js"></script>
+<script src="{'/js/register.js'|add_js_version}"></script>
 
 {include file="footer.tpl"} 

@@ -8,6 +8,7 @@ require_once __DIR__ . '/../../config.php';
 require_once __DIR__ . '/../../classes/Response.php';
 require_once __DIR__ . '/../../classes/Auth.php';
 require_once __DIR__ . '/../../commonDB/users.php';
+require_once __DIR__ . '/../../commonDB/cities.php';
 
 // Ustawienie nagłówków CORS i typu odpowiedzi
 header('Access-Control-Allow-Origin: *');
@@ -69,7 +70,8 @@ try {
             'id' => $user['usr_id'],
             'login' => $user['usr_login'],
             'cityBase' => $user['usr_city'],
-            'isAdmin' => (bool)$user['usr_admin']
+            'isAdmin' => (bool)$user['usr_admin'],
+            'hasCities' => userHasAnyCities($user['usr_id'])
         ]
     ]);
 

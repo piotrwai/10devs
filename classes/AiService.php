@@ -112,7 +112,7 @@ class AiService {
             
             // Logowanie statystyk
             if ($invalidRecommendations > 0) {
-                error_log("Pominięto $invalidRecommendations nieprawidłowych rekomendacji dla miasta $cityName");
+                ErrorLogger::logError('add_city_info', "Pominięto $invalidRecommendations nieprawidłowych rekomendacji dla miasta $cityName", $userId, null, $cityId);
             }
             
             // Logowanie udanego wywołania

@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../commonDB/dbConnect.php';
 require_once __DIR__ . '/../../commonDB/users.php';
 require_once __DIR__ . '/../../classes/Auth.php';
 require_once __DIR__ . '/../../classes/ErrorLogger.php';
+require_once __DIR__ . '/../../classes/Response.php';
 
 // Inicjalizacja odpowiedzi (domyślnie JSON)
 header('Content-Type: application/json');
@@ -93,8 +94,7 @@ try {
     }
     
     // Sukces - zwróć zaktualizowane dane użytkownika
-    http_response_code(200);
-    echo json_encode([
+    Response::success(200, 'Profil został pomyślnie zaktualizowany.', [
         'id' => $userId,
         'login' => $login,
         'cityBase' => $cityBase,

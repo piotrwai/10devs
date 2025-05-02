@@ -24,8 +24,7 @@ $userId = $auth->authenticateAndGetUserId();
 
 if (!$userId) {
     // Przekierowanie do strony logowania
-    header('Location: /login?error=auth'); // 
-    //echo "Brak autoryzacji 1";var_dump($userId);
+    header('Location: /login?error=access');
     exit;
 }
 
@@ -34,8 +33,7 @@ $user = getUserProfile($userId);
 
 if (!$user) {
     // Błąd pobierania danych użytkownika
-    header('Location: /login?error=auth');
-    //echo "Brak autoryzacji 2";var_dump($userId);
+    header('Location: /login?error=access');
     exit;
 }
 

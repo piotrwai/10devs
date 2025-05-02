@@ -86,6 +86,6 @@
 </div>
 
 {* Dołączenie skryptu JS obsługującego wyszukiwanie *}
-<script src="/js/cities/search.js"></script>
+<script src="{'/js/cities/search.js'|add_js_version}"></script>
 
 {include file="../footer.tpl"} 

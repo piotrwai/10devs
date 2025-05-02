@@ -68,7 +68,16 @@ main {
 
 
 /* Modyfikacje PW */
-.btn-close {
+.alert-danger .btn-close {
     background-position: top;
     background-size: 0.9em;
+}
+
+.alert-success .btn-close {
+    background-position: center;
+    background-size: 0.9em;
+}
+
+a.nav-link {
+    padding: 0 20px !important;
 }

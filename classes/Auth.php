@@ -60,7 +60,7 @@ class Auth {
             
         } catch (Exception $e) {
             // Logowanie błędu można dodać tutaj
-            error_log("JWT Error: " . $e->getMessage());
+            //error_log("JWT Error: " . $e->getMessage());
             return null;
         }
     }

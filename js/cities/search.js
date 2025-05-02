@@ -318,8 +318,8 @@ $(document).ready(function() {
                 
                 // Przekierowanie do listy miast po 2 sekundach
                 setTimeout(() => {
-                    window.location.href = '/cities';
-                }, 2000);
+                    window.location.href = '/dashboard';
+                }, 1000);
             },
             error: function(xhr) {
                 let errorMessage = 'Wystąpił błąd podczas zapisywania rekomendacji';

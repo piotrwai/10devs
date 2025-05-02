@@ -70,7 +70,6 @@ try {
     
     // Jeśli wszystkie rekomendacje są nieprawidłowe, zwracamy błąd
     if ($validRecommendationsCount === 0) {
-        error_log("Wszystkie " . count($recommendations) . " rekomendacji ma nieprawidłowy format");
         ErrorLogger::logError('validation_error', 'Wszystkie rekomendacje mają nieprawidłowy format', $userId, null, $cityId);
         Response::error(400, 'Wszystkie rekomendacje mają nieprawidłowy format. Wymagane są pola title i description.');
         exit;
@@ -78,7 +77,7 @@ try {
     
     // Jeśli niektóre rekomendacje są nieprawidłowe, logujemy to
     if ($invalidRecommendationsCount > 0) {
-        error_log("$invalidRecommendationsCount z " . count($recommendations) . " rekomendacji ma nieprawidłowy format i zostanie pominięte");
+        ErrorLogger::logError('validation_error', "$invalidRecommendationsCount z " . count($recommendations) . " rekomendacji ma nieprawidłowy format i zostanie pominięte", $userId, null, $cityId);
     }
     
     // Zapisanie rekomendacji do bazy danych

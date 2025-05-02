@@ -88,7 +88,7 @@ $(document).ready(function() {
                 
                 if (xhr.status === 401) {
                     // Brak autoryzacji - przekieruj do strony logowania
-                    window.location.href = '/login';
+                    window.location.href = '/login?error=access';
                     return;
                 }
                 
@@ -220,7 +220,7 @@ $(document).ready(function() {
                     }
                 } else if (xhr.status === 401) {
                     // Brak autoryzacji - przekieruj do strony logowania
-                    window.location.href = '/login';
+                    window.location.href = '/login?error=access';
                     return;
                 } else {
                     // Inny błąd

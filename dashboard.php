@@ -36,7 +36,6 @@ if (!$userId) {
 $currentUser = getUserProfile($userId);
 if (!$currentUser) {
     // To nie powinno się zdarzyć, jeśli autoryzacja przeszła, ale na wszelki wypadek
-    error_log("Dashboard: Nie udało się pobrać profilu dla zalogowanego użytkownika ID: $userId");
     // Można rozważyć przekierowanie do błędu lub logowania
     header('Location: /login?error=internal'); 
     exit;
