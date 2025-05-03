@@ -42,6 +42,11 @@ $(document).ready(function() {
         $submitButton.prop('disabled', true);
         $spinner.removeClass('d-none');
         
+        // Dodanie komunikatu "szukam..."
+        $formMessages
+            .addClass('alert alert-info')
+            .html('<i class="bi bi-search"></i> Sprawdzam i szukam rekomendacji dla miasta...');
+        
         // Wywołanie API
         searchCity(cityName);
     });
@@ -90,15 +95,31 @@ $(document).ready(function() {
                 displaySearchResults(response.data);
             },
             error: function(xhr) {
+                // Domyślny komunikat błędu
                 let errorMessage = 'Wystąpił błąd podczas wyszukiwania miasta';
                 
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
+                // Próba pobrania komunikatu błędu z odpowiedzi
+                if (xhr.responseJSON) {
+                    if (xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
                 }
                 
+                // Usunięcie klasy info (komunikat "szukam...") i dodanie klasy danger
                 $formMessages
-                    .addClass('alert alert-danger')
-                    .text(errorMessage);
+                    .removeClass('alert-info')
+                    .addClass('alert alert-danger');
+                
+                // Sprawdzenie, czy odpowiedź zawiera informację, że to nie jest miasto
+                if (xhr.responseText && xhr.responseText.indexOf('nie jest rozpoznawana jako miasto') !== -1) {
+                    // Dodanie ikony i sformatowanie komunikatu
+                    $formMessages.html('<i class="bi bi-geo-alt-fill text-danger"></i> ' + errorMessage);
+                    // Podświetlenie pola wejściowego jako nieprawidłowe
+                    $cityInput.addClass('is-invalid');
+                } else {
+                    // Standardowy komunikat błędu
+                    $formMessages.text(errorMessage);
+                }
             },
             complete: function() {
                 // Ukrycie spinnera i odblokowanie przycisku

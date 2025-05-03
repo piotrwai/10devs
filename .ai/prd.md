@@ -22,7 +22,9 @@ Turyści mają trudności ze znalezieniem i katalogowaniem informacji o ciekawyc
   - Nie korzystamy z zewnętrznych serwisów logowania (np. Google, GitHub).
 - Wyszukiwanie atrakcji:
   - Po zalogowaniu użytkownik wprowadza nazwę miasta, które chce odwiedzić.
-  - System prezentuje krótką charakterystykę miasta (do 150 znaków) oraz do 10 rekomendowanych propozycji atrakcji.
+  - System weryfikuje, czy wprowadzona nazwa odpowiada miastu, używając Google Geocoding API.
+  - W przypadku nieprawidłowej nazwy, system wyświetla komunikat o błędzie i przerywa wyszukiwanie.
+  - Dla poprawnych nazw miast, system prezentuje krótką charakterystykę miasta (do 150 znaków) oraz do 10 rekomendowanych propozycji atrakcji.
 - Prezentacja propozycji:
   - Każda propozycja zawiera tytuł (do 150 znaków) oraz rozwinięcie wyjaśniające, dlaczego warto zobaczyć dane miejsce.
 - Edycja i zarządzanie rekomendacjami:
@@ -70,7 +72,10 @@ Tytuł: Wyszukiwanie atrakcji w docelowym mieście
 Opis: Jako turysta chcę wprowadzić nazwę miasta, które chcę odwiedzić, aby otrzymać krótką charakterystykę miasta (do 150 znaków) oraz listę do 10 rekomendowanych atrakcji.  
 Kryteria akceptacji:  
 - Użytkownik wprowadza miasto docelowe w formularzu.  
-- System prezentuje charakterystykę miasta (do 150 znaków) oraz listę do 10 propozycji.
+- System weryfikuje, czy wprowadzona nazwa jest rzeczywiście nazwą miasta, używając Google Geocoding API.
+- Jeśli wprowadzony tekst nie jest miastem, system wyświetla komunikat błędu i nie kontynuuje wyszukiwania.
+- Podczas weryfikacji nazwy miasta, użytkownik widzi komunikat "szukam..." oraz spinner wskazujące na trwający proces.
+- Po pozytywnej weryfikacji, system prezentuje charakterystykę miasta (do 150 znaków) oraz listę do 10 propozycji.
 
 US-003  
 Tytuł: Przeglądanie i edycja rekomendacji  

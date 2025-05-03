@@ -11,6 +11,7 @@ require_once '../../classes/ErrorLogger.php';
 require_once '../../classes/AiService.php';
 require_once '../../commonDB/cities.php';
 require_once '../../commonDB/errorLogs.php';
+require_once '../../classes/GeoHelper.php';
 
 // Ustawienie nagłówków
 header('Content-Type: application/json; charset=UTF-8');
@@ -30,12 +31,12 @@ try {
     // Sprawdzenie autentykacji przez token JWT
     $auth = new Auth();
     $userId = $auth->authenticateAndGetUserId();
-    
+
     if (!$userId) {
         Response::error(401, 'Brak autoryzacji lub nieprawidłowy token');
         exit;
     }
-    
+
     // Walidacja danych wejściowych
     if (isset($requestData['supplement']) && $requestData['supplement'] === true) {
         // Tryb uzupełniania rekomendacji
@@ -61,7 +62,7 @@ try {
             Response::error(400, 'Nazwa miasta jest wymagana');
             exit;
         }
-        
+
         $cityName = trim($requestData['cityName']);
         
         // Sprawdzenie długości nazwy miasta (max 150 znaków)
@@ -84,6 +85,12 @@ try {
     // Ustawienie limitu czasu wykonania skryptu
     // Dajemy trochę więcej czasu niż timeout AI, aby móc obsłużyć ewentualne błędy
     set_time_limit(70); // 70 sekund na całe wykonanie skryptu
+    
+    // Sprawdzenie czy to miasto
+    if (!GeoHelper::isCity($cityName)) {
+        Response::error(400, 'Wprowadzona nazwa "' . htmlspecialchars($cityName) . '" nie jest rozpoznawana jako miasto. Sprawdź pisownię lub podaj inną nazwę.');
+        exit;
+    }
     
     // Wywołanie serwisu AI dla generowania podsumowania i rekomendacji
     $aiService = new AiService();
@@ -144,4 +151,6 @@ try {
     // Wysłanie odpowiedzi z błędem
     Response::error(500, 'Wystąpił błąd podczas przetwarzania żądania');
     exit;
-} 
+}
+
+?> 

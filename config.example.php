@@ -6,37 +6,44 @@
  */
 
 return [
-    // Konfiguracja bazy danych
+    // Konfiguracja bazy danych - zgodna z config.php
     'database' => [
-        'host' => 'localhost',         // Adres hosta bazy danych
-        'name' => 'nazwa_bazy',        // Nazwa bazy danych
-        'user' => 'uzytkownik_bazy',   // Nazwa użytkownika bazy danych
-        'password' => 'haslo_bazy',    // Hasło do bazy danych
-        'charset' => 'utf8mb4'         // Kodowanie znaków
+        'host' => 'localhost',
+        'name' => '10devs', // Zmieniono z 'dbname' na 'name' dla zgodności
+        'user' => 'root',
+        'password' => '', // Przykładowe puste hasło jak w config.php
+        'charset' => 'utf8mb4'
     ],
     
-    // Konfiguracja API OpenAI
+    // Konfiguracja API OpenAI - zgodna z config.php
     'openai' => [
-        'api_key' => 'sk-your-openai-api-key-here',  // Klucz API OpenAI
-        'model' => 'gpt-4.1-mini',                   // Model AI do użycia
-        'timeout' => 60,                             // Timeout w sekundach
-        'max_tokens' => 1500                         // Maksymalna długość odpowiedzi
+        'api_key' => 'sk-YOUR_OPENAI_API_KEY_HERE', // Zmieniono 'apiKey' na 'api_key'
+        'model' => 'gpt-4.1-mini',
+        'timeout' => 60,
+        'max_tokens' => 1500
     ],
     
-    // Konfiguracja aplikacji
+    // Konfiguracja aplikacji - zgodna z config.php (bez js_version)
     'app' => [
-        'debug' => true,                      // Tryb debugowania (zmień na false w produkcji)
-        'log_errors' => true,                 // Czy logować błędy
-        'max_recommendations' => 10,          // Maksymalna liczba rekomendacji
-        'max_cities_per_page' => 20,          // Maksymalna liczba miast na stronie
-        'default_summary_length' => 150,      // Domyślna długość opisu miasta
-        'default_title_length' => 200         // Domyślna długość tytułu rekomendacji
+        'debug' => true, // Przykładowo true, jak w config.php
+        'log_errors' => true,
+        'max_recommendations' => 10,
+        'max_cities_per_page' => 3, // Przykładowo 3, jak w config.php
+        'default_summary_length' => 150,
+        'default_title_length' => 200,
+        'js_version' => date('YmdHis')         // Wersja JavaScriptu
     ],
     
-    // Konfiguracja JWT (do autoryzacji)
+    // Konfiguracja Google Geocoding API - zgodna z config.php
+    'geocoding' => [
+        'apiKey' => 'YOUR_GOOGLE_GEOCODING_API_KEY_HERE',
+        'language' => 'pl'
+    ],
+    
+    // Konfiguracja JWT - zgodna z config.php
     'jwt' => [
-        'secret_key' => 'your-jwt-secret-key-here',   // Klucz do podpisywania tokenów JWT (zmień na silny klucz w produkcji)
-        'expiration' => 3600,                         // Czas ważności tokenu w sekundach
-        'issuer' => '10devs-api'                      // Wydawca tokenu
+        'secret_key' => 'tajny-klucz-do-jwt-zmien-na-produkcji', // Zgodne z config.php
+        'expiration' => 3600,
+        'issuer' => '10devs-api' // Zgodne z config.php
     ]
 ]; 

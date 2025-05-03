@@ -101,6 +101,11 @@
 
 #### POST /api/cities/search
 - **Description**: Search for a city and generate AI recommendations for attractions. This is the initial step when a user wants to explore a new city.
+- **Process Flow**:
+  1. The system validates the city name format (length restrictions).
+  2. The system verifies if the provided name is actually a city using Google Geocoding API, checking for the 'locality' type in the response.
+  3. If the name is not recognized as a city, the API returns an error response.
+  4. If valid, the system generates AI recommendations for the city.
 - **Request Payload**:
   ```json
   {
@@ -127,7 +132,21 @@
       ]
     }
     ```
-  - **Error (400 Bad Request)**: If the city name is invalid or empty.
+  - **Error (400 Bad Request)**:
+    - If the city name is invalid or empty:
+    ```json
+    {
+      "error": "MISSING_DATA",
+      "message": "Nazwa miasta jest wymagana."
+    }
+    ```
+    - If the provided name is not recognized as a city:
+    ```json
+    {
+      "error": "INVALID_CITY",
+      "message": "Wprowadzona nazwa \"[city_name]\" nie jest rozpoznawana jako miasto. Sprawdź pisownię lub podaj inną nazwę."
+    }
+    ```
 
 #### POST /api/recommendations/save
 - **Description**: Save AI-generated city and recommendations after a user decides to keep them. This creates a new city record for the user (if not exists) and saves all accepted recommendations.
