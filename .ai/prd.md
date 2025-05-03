@@ -42,6 +42,9 @@ Turyści mają trudności ze znalezieniem i katalogowaniem informacji o ciekawyc
   - Po uzupełnieniu system prezentuje nowe propozycje na podstawie analizy poprzednich wyników. Prezentuje nowe propozycje nad starymi propozycjami.
 - Logowanie działań AI:
   - System rejestruje działania AI, zapisując datę, informacje o użytkowniku, proponowane miejsca oraz statusy (zaakceptowana, edytowana, odrzucona).
+- Drukowanie rekomendacji:
+  - Użytkownik może wydrukować listę rekomendacji dla danego miasta bezpośrednio z przeglądarki.
+  - Wydruk jest zoptymalizowany pod kątem czytelności i oszczędności papieru (brak zbędnych elementów interfejsu, kompaktowy układ).
 
 ## 4. Granice produktu
 - Brak wymiany danych między użytkownikami.
@@ -121,6 +124,17 @@ Kryteria akceptacji:
 - Nazwa/login użytkownika musi być unikalny.
 - Miasto bazowe musi być podane.
 - Hasło musi być podane i mieć minimum 5 znaków.
+
+US-010
+Tytuł: Drukowanie listy rekomendacji dla miasta
+Opis: Jako turysta chcę mieć możliwość wydrukowania listy zaakceptowanych i edytowanych rekomendacji dla wybranego miasta w kompaktowej formie, bez elementów interfejsu strony (menu, przyciski akcji), aby móc zabrać listę ze sobą.
+Kryteria akceptacji:
+- Na stronie ze szczegółami miasta i jego rekomendacjami znajduje się przycisk "Drukuj".
+- Po kliknięciu przycisku "Drukuj" przeglądarka otwiera okno dialogowe drukowania.
+- Wydruk zawiera tylko listę rekomendacji (tytuł i opis) w jednej kolumnie.
+- Wydruk nie zawiera nagłówka strony, menu, stopki, przycisków "Powrót", "Dodaj", ani kolumny "Akcja".
+- Układ wydruku jest zoptymalizowany pod kątem oszczędności miejsca (np. mniejsza czcionka, mniejsze marginesy).
+- Na wydruku widoczne są tylko rekomendacje ze statusem 'zaakceptowana' lub 'edytowana'. (Opcjonalne, do decyzji - czy drukować wszystkie, czy tylko te "pozytywne"?)
 
 ## 6. Metryki sukcesu
 - Minimum 75% propozycji musi być zaakceptowanych lub edytowanych i zaakceptowanych.

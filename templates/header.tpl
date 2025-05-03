@@ -18,7 +18,7 @@
     <script>sessionStorage.setItem('jwtToken', '{$jwtToken}');</script>
     
     <!-- Własne style CSS -->
-    <link href="/css/style.css" rel="stylesheet">
+    <link href="{'/css/style.css'|add_js_version}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!-- Skrypty pomocnicze -->
@@ -56,7 +56,8 @@
                         <span class="navbar-text me-3">Witaj, {$currentUser.login}!</span>
                         <button id="logout-btn" class="btn btn-outline-light">Wyloguj</button>
                     {else}
-                        <a href="/register" class="btn btn-outline-light">Zarejestruj się</a>
+                        <a href="/register" class="btn btn-outline-light me-2">Zarejestruj się</a>
+                        <a href="/login" class="btn btn-outline-light">Zaloguj się</a>
                     {/if}
                 </div>
             </div>

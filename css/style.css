@@ -81,3 +81,121 @@ main {
 a.nav-link {
     padding: 0 20px !important;
 }
+
+/* Dodatkowe style, jeśli są potrzebne */
+
+/* Ukrywanie elementów tylko do wydruku na ekranie */
+.print-only {
+    display: none !important;
+}
+
+/* --- Style dla drukowania --- */
+@media print {
+    /* Ukrywanie elementów niepotrzebnych na wydruku */
+    .no-print,
+    header,
+    footer,
+    nav,
+    .modal,
+    .modal-backdrop {
+        display: none !important;
+    }
+
+    /* Ukrywanie odrzuconych rekomendacji */
+    .recommendation-row[data-status="rejected"] {
+        display: none !important;
+    }
+
+    /* Resetowanie stylów strony dla lepszego wydruku */
+    body {
+        margin: 0;
+        padding: 0;
+        background: none;
+        width: 100%;
+    }
+
+    /* Pokazywanie elementów tylko do wydruku */
+    .print-only {
+        display: block !important;
+    }
+
+    /* Pokazywanie tylko kontenera z rekomendacjami */
+    #recommendationsContainer {
+        padding: 0;
+        margin: 0;
+        width: 100vw;
+        max-width: none !important;
+    }
+
+    /* Stylizacja tabeli rekomendacji dla wydruku */
+    #recommendationsTable {
+        width: 100vw !important;
+        border: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Ukrywamy nagłówki tabeli */
+    #recommendationsTable thead {
+        display: none;
+    }
+
+    /* Formatowanie wierszy rekomendacji */
+    #recommendationsTable tbody tr {
+        display: block;
+        width: 100%;
+        margin-bottom: 5mm;
+        padding: 0;
+        border-bottom: 0.5pt solid #ccc;
+        page-break-inside: avoid;
+    }
+
+    /* Formatowanie komórek */
+    #recommendationsTable td {
+        display: block;
+        width: 100%;
+        padding: 0 !important;
+        border: none !important;
+    }
+
+    /* Tytuł rekomendacji */
+    #recommendationsTable td:first-child {
+        font-weight: bold;
+        font-size: 12pt;
+        margin-bottom: 2mm;
+    }
+
+    /* Opis rekomendacji */
+    #recommendationsTable td:nth-child(2) {
+        font-size: 10pt;
+        line-height: 1.4;
+        margin-bottom: 2mm;
+    }
+
+    /* Status odwiedzenia */
+    .visited-status {
+        font-size: 9pt;
+        font-style: italic;
+        color: #666 !important;
+        border-top: 0.25pt dotted #ccc !important;
+        padding-top: 1mm !important;
+        margin-top: 2mm;
+    }
+
+    /* Ukrywamy pozostałe kolumny */
+    #recommendationsTable td:nth-child(n+3):not(.visited-status) {
+        display: none;
+    }
+
+    /* Ukrywamy linki */
+    a {
+        text-decoration: none;
+        color: #000 !important;
+    }
+
+    /* Ustawienia strony */
+    @page {
+        margin: 10mm 5mm;
+        size: auto;
+    }
+}

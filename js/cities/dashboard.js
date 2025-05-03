@@ -6,8 +6,40 @@ $(document).ready(function() {
     let perPage = typeof MAX_CITIES_PER_PAGE !== 'undefined' ? MAX_CITIES_PER_PAGE : 10; 
     let totalPages = 1;
 
+    // Funkcja do odczytywania parametrów z URL
+    function getUrlParameters() {
+        const params = new URLSearchParams(window.location.search);
+        const page = parseInt(params.get('page')) || 1;
+        let visited = params.get('visited');
+        
+        // Konwersja visited na odpowiedni typ
+        if (visited === 'true') visited = true;
+        else if (visited === 'false') visited = false;
+        else visited = null;
+
+        return { page, visited };
+    }
+
+    // Funkcja do zapisywania parametrów do localStorage
+    function saveParameters(page, visitedFilter) {
+        localStorage.setItem('citiesDashboardPage', page);
+        localStorage.setItem('citiesDashboardVisitedFilter', visitedFilter === null ? '' : visitedFilter);
+    }
+
+    // Inicjalizacja parametrów z URL
+    const urlParams = getUrlParameters();
+    currentPage = urlParams.page;
+    currentVisitedFilter = urlParams.visited;
+
+    // Ustaw filtr w select-boxie
+    if (currentVisitedFilter !== null) {
+        $('#visitedFilter').val(currentVisitedFilter.toString());
+    }
+
     // Funkcja do pobierania i wyświetlania listy miast
     function loadCities(page, visitedFilter) {
+        // Zapisz parametry do localStorage
+        saveParameters(page, visitedFilter);
 
         // Przygotowanie parametrów żądania
         const params = {

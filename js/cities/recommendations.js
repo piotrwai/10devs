@@ -60,7 +60,12 @@ $(document).ready(function() {
                 $tbody.empty();
                 if (recs.length === 0) {
                     $tbody.html('<tr><td colspan="6" class="text-center">Brak rekomendacji dla tego miasta.</td></tr>');
+                    // Dezaktywuj przycisk drukowania
+                    $('.btn-info[onclick*="print"]').addClass('disabled').prop('disabled', true);
                 } else {
+                    // Aktywuj przycisk drukowania
+                    $('.btn-info[onclick*="print"]').removeClass('disabled').prop('disabled', false);
+                    
                     recs.forEach(rec => {
                         const doneElementHtml = createDoneElementHtml(rec.id, rec.done);
                         // Mapowanie statusu na polski przy ładowaniu
@@ -71,22 +76,29 @@ $(document).ready(function() {
                             case 'rejected': polishStatus = 'Odrzucona'; break;
                             case 'saved': polishStatus = 'Zapisana (nowa)'; break;
                             case 'done': polishStatus = 'Odwiedzona'; break;
-                            default: polishStatus = sanitizeHTML(rec.status); // Bezpieczeństwo dla nieznanych statusów
+                            default: polishStatus = sanitizeHTML(rec.status);
                         }
                         const rowHtml = `
-                            <tr data-rec-id="${rec.id}" data-title="${sanitizeHTML(rec.title)}" data-description="${sanitizeHTML(rec.description)}">
+                            <tr data-rec-id="${rec.id}" 
+                                data-title="${sanitizeHTML(rec.title)}" 
+                                data-description="${sanitizeHTML(rec.description)}"
+                                data-status="${rec.status}"
+                                class="recommendation-row">
                                 <td>${sanitizeHTML(rec.title)}</td>
                                 <td>${rec.description.replace(/\n/g, '<br>')}</td>
-                                <td class="text-center" style="white-space: nowrap;">${sanitizeHTML(rec.model)}</td>
-                                <td class="text-center">${polishStatus}</td>
-                                <td class="text-center">${doneElementHtml}</td>
-                                <td>
+                                <td class="text-center no-print" style="white-space: nowrap;">${sanitizeHTML(rec.model)}</td>
+                                <td class="text-center no-print">${polishStatus}</td>
+                                <td class="text-center no-print">${doneElementHtml}</td>
+                                <td class="no-print">
                                     <div class="btn-group" role="group" aria-label="Akcje dla rekomendacji">
                                         <button class="btn btn-sm btn-success accept-btn" data-id="${rec.id}" title="Akceptuj"><i class="fas fa-check"></i></button>
                                         <button class="btn btn-sm btn-danger reject-btn" data-id="${rec.id}" title="Odrzuć"><i class="fas fa-times"></i></button>
                                         <button class="btn btn-sm btn-warning edit-btn" data-id="${rec.id}" title="Edytuj"><i class="fas fa-edit"></i></button>
                                         <button class="btn btn-sm btn-secondary delete-btn" data-id="${rec.id}" title="Usuń"><i class="fas fa-trash"></i></button>
                                     </div>
+                                </td>
+                                <td class="print-only visited-status">
+                                    Odwiedzona: ${rec.done ? 'Tak' : 'Nie'}
                                 </td>
                             </tr>`;
                         let inserted = false;
@@ -99,7 +111,7 @@ $(document).ready(function() {
                             }
                         });
                         if (!inserted) {
-                            $('#recommendationsTable tbody').append(rowHtml); // Dodaj na końcu, jeśli większy od wszystkich
+                            $('#recommendationsTable tbody').append(rowHtml);
                         }
                     });
                 }
@@ -108,6 +120,8 @@ $(document).ready(function() {
                 const msg = xhr.responseJSON?.message || xhr.statusText || 'błąd sieci';
                 showMessage(`Nie można załadować rekomendacji: ${msg}`, 'danger');
                 $('#recommendationsTable tbody').empty();
+                // Dezaktywuj przycisk drukowania w przypadku błędu
+                $('.btn-info[onclick*="print"]').addClass('disabled').prop('disabled', true);
             }
         });
     }
@@ -127,7 +141,9 @@ $(document).ready(function() {
             data: JSON.stringify({ status: 'accepted' }),
             success: function(response) {
                 showMessage('Rekomendacja została zaakceptowana.', 'success');
-                $(`tr[data-rec-id='${recId}'] td:nth-child(4)`).text('Zaakceptowana');
+                const $row = $(`tr[data-rec-id='${recId}']`);
+                $row.attr('data-status', 'accepted');
+                $row.find('td:nth-child(4)').text('Zaakceptowana');
             },
             error: function(xhr) {
                 const msg = xhr.responseJSON?.message || 'Błąd akceptacji rekomendacji.';
@@ -148,7 +164,9 @@ $(document).ready(function() {
             data: JSON.stringify({ status: 'rejected' }),
             success: function() {
                 showMessage('Rekomendacja została odrzucona.', 'warning');
-                $(`tr[data-rec-id='${recId}'] td:nth-child(4)`).text('Odrzucona');
+                const $row = $(`tr[data-rec-id='${recId}']`);
+                $row.attr('data-status', 'rejected');
+                $row.find('td:nth-child(4)').text('Odrzucona');
             },
             error: function(xhr) {
                 const msg = xhr.responseJSON?.message || 'Błąd odrzucenia rekomendacji.';
@@ -191,6 +209,7 @@ $(document).ready(function() {
             success: function(response) {
                 showMessage('Rekomendacja została zaktualizowana.', 'success');
                 const $tr = $(`tr[data-rec-id='${recId}']`);
+                $tr.attr('data-status', 'edited');
                 $tr.find('td:eq(0)').text(response.data.title);
                 $tr.find('td:eq(1)').html(response.data.description.replace(/\n/g, '<br>'));
                 $tr.find('td:eq(3)').text('Edytowana');
@@ -351,6 +370,35 @@ $(document).ready(function() {
                 $element.replaceWith(originalDoneHtml);
             }
         });
+    });
+
+    // Obsługa przycisku powrotu do listy miast
+    $('#returnToCitiesBtn').on('click', function(e) {
+        e.preventDefault();
+        
+        // Pobierz parametry z localStorage (jeśli istnieją)
+        const page = localStorage.getItem('citiesDashboardPage') || 1;
+        const visitedFilter = localStorage.getItem('citiesDashboardVisitedFilter') || '';
+        
+        // Zbuduj URL z parametrami
+        let returnUrl = '/dashboard';
+        const params = new URLSearchParams();
+        
+        if (page !== 1) {
+            params.append('page', page);
+        }
+        if (visitedFilter !== '') {
+            params.append('visited', visitedFilter);
+        }
+        
+        // Dodaj parametry do URL jeśli istnieją
+        const queryString = params.toString();
+        if (queryString) {
+            returnUrl += '?' + queryString;
+        }
+        
+        // Przekieruj do dashboardu z parametrami
+        window.location.href = returnUrl;
     });
 
 }); 
