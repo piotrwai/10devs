@@ -61,6 +61,36 @@
         </div>
     </div>
 
+    <!-- Modal edycji nazwy miasta -->
+    <div class="modal fade" id="editCityNameModal" tabindex="-1" aria-labelledby="editCityNameModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editCityNameModalLabel">Edycja nazwy miasta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editCityNameForm">
+                        <input type="hidden" id="editCityId" name="cityId">
+                        <div class="mb-3">
+                            <label for="newCityName" class="form-label">Nowa nazwa miasta</label>
+                            <input type="text" class="form-control" id="newCityName" name="newName" maxlength="150" required>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                    </form>
+                    <div id="editCityNameMessages" class="alert d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Anuluj</button>
+                    <button type="button" class="btn btn-primary" id="saveCityNameBtn">
+                        <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                        Zapisz
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 <script>
     // Przekazanie zmiennej z PHP (Smarty) do JavaScriptu
     const MAX_CITIES_PER_PAGE = {$maxCitiesPerPage|default:10};

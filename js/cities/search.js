@@ -20,7 +20,7 @@ $(document).ready(function() {
         e.preventDefault();
         
         // Reset komunikatów i stanu
-        $formMessages.empty().removeClass('alert alert-danger alert-success');
+        $formMessages.empty().removeClass('alert alert-danger alert-success alert-info');
         $('.is-invalid').removeClass('is-invalid');
         $searchResults.addClass('d-none');
         
@@ -42,20 +42,29 @@ $(document).ready(function() {
         $submitButton.prop('disabled', true);
         $spinner.removeClass('d-none');
         
-        // Dodanie komunikatu "szukam..."
-        $formMessages
-            .addClass('alert alert-info')
-            .html('<i class="bi bi-search"></i> Sprawdzam i szukam rekomendacji dla miasta...');
+        // Zmiana komunikatu na "Sprawdzam poprawność miasta..."
+        setLoadingMessage('Sprawdzam poprawność miasta...', 'bi-geo-alt');
         
         // Wywołanie API
         searchCity(cityName);
     });
+
+    // Funkcja do ustawiania komunikatu ładowania
+    function setLoadingMessage(message, iconClass = 'bi-search') {
+         $formMessages
+            .removeClass('alert-danger alert-success')
+            .addClass('alert alert-info')
+            .html(`<i class="bi ${iconClass} me-2"></i> ${message}`);
+    }
 
     // Funkcja do wyszukiwania miasta
     function searchCity(cityName, supplement = false) {
         const requestData = supplement ? 
             { cityId: currentCityId, supplement: true } : 
             { cityName: cityName };
+        
+        // Set initial loading message for the whole process
+        setLoadingMessage('Sprawdzam miasto, szukam trasy i generuję rekomendacje...', 'bi-compass');
 
         $.ajax({
             url: '/api/cities/search',
@@ -93,9 +102,10 @@ $(document).ready(function() {
                 
                 // Wyświetlenie wyników
                 displaySearchResults(response.data);
+                // Usunięcie komunikatu ładowania po sukcesie
+                $formMessages.empty().removeClass('alert alert-info');
             },
             error: function(xhr) {
-                // Domyślny komunikat błędu
                 let errorMessage = 'Wystąpił błąd podczas wyszukiwania miasta';
                 
                 // Próba pobrania komunikatu błędu z odpowiedzi
@@ -105,21 +115,7 @@ $(document).ready(function() {
                     }
                 }
                 
-                // Usunięcie klasy info (komunikat "szukam...") i dodanie klasy danger
-                $formMessages
-                    .removeClass('alert-info')
-                    .addClass('alert alert-danger');
-                
-                // Sprawdzenie, czy odpowiedź zawiera informację, że to nie jest miasto
-                if (xhr.responseText && xhr.responseText.indexOf('nie jest rozpoznawana jako miasto') !== -1) {
-                    // Dodanie ikony i sformatowanie komunikatu
-                    $formMessages.html('<i class="bi bi-geo-alt-fill text-danger"></i> ' + errorMessage);
-                    // Podświetlenie pola wejściowego jako nieprawidłowe
-                    $cityInput.addClass('is-invalid');
-                } else {
-                    // Standardowy komunikat błędu
-                    $formMessages.text(errorMessage);
-                }
+                showErrorMessage(errorMessage, xhr.status === 400);
             },
             complete: function() {
                 // Ukrycie spinnera i odblokowanie przycisku
@@ -127,6 +123,18 @@ $(document).ready(function() {
                 $spinner.addClass('d-none');
             }
         });
+    }
+
+    // Funkcja do wyświetlania komunikatów o błędach
+    function showErrorMessage(message, isValidationError = false) {
+        $formMessages
+            .removeClass('alert-info alert-success')
+            .addClass('alert alert-danger')
+            .html(`<i class="bi bi-exclamation-triangle-fill me-2"></i> ${message}`);
+            
+        if (isValidationError && message.includes('nie jest rozpoznawana jako miasto')) {
+            $cityInput.addClass('is-invalid');
+        }
     }
 
     // Funkcja wyświetlająca wyniki wyszukiwania
@@ -142,11 +150,17 @@ $(document).ready(function() {
         $recommendationsList.empty();
         
         data.recommendations.forEach((rec, index) => {
+            // Zamiana \n na <br> w opisie dla poprawnego wyświetlania kroków trasy
+            const descriptionHtml = rec.description.replace(/\n/g, '<br>'); 
+            const isRoute = rec.model === 'route_planner' || rec.model === 'route_planner_error';
+            const cardClass = isRoute ? 'border-primary' : ''; // Dodatkowa klasa dla karty trasy
+            const titleIcon = isRoute ? '<i class="bi bi-signpost-split me-2"></i>' : ''; // Ikona dla trasy
+
             const $recommendation = $(`
-                <div class="card mb-3 recommendation" data-id="${rec.id || ''}" data-index="${index}">
+                <div class="card mb-3 recommendation ${cardClass}" data-id="${rec.id || ''}" data-index="${index}" data-model="${rec.model}">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title" contenteditable="true">${rec.title}</h5>
+                            <h5 class="card-title" contenteditable="true">${titleIcon}${rec.title}</h5>
                             <div class="btn-group">
                                 <button class="btn btn-sm btn-outline-primary edit-btn">
                                     <i class="bi bi-pencil"></i> Edytuj
@@ -159,18 +173,11 @@ $(document).ready(function() {
                                 </button>
                             </div>
                         </div>
-                        <p class="card-text" contenteditable="true">${rec.description}</p>
+                        <p class="card-text recommendation-description" contenteditable="true">${descriptionHtml}</p>
                         <div class="text-muted small">
                             <em>Źródło: ${rec.model}</em>
                         </div>
-                        <div class="edit-controls d-none mt-2">
-                            <button class="btn btn-sm btn-success save-edit-btn">
-                                <i class="bi bi-check"></i> Zapisz zmiany
-                            </button>
-                            <button class="btn btn-sm btn-secondary cancel-edit-btn">
-                                <i class="bi bi-x"></i> Anuluj
-                            </button>
-                        </div>
+                        <div class="recommendation-status mt-2" style="display: none;"></div>
                     </div>
                 </div>
             `);
@@ -181,6 +188,13 @@ $(document).ready(function() {
             
             $recommendationsList.append($recommendation);
         });
+        
+        // Pokazanie przycisków akcji (jeśli są jakieś rekomendacje poza trasą)
+        if (data.recommendations.some(r => r.model !== 'route_planner' && r.model !== 'route_planner_error')) {
+            $('#accept-all-btn, #save-recommendations-btn').removeClass('d-none');
+        } else {
+            $('#accept-all-btn, #save-recommendations-btn').addClass('d-none');
+        }
     }
 
     // Obsługa przycisku "Akceptuj wszystkie"
@@ -328,7 +342,7 @@ $(document).ready(function() {
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                cityId: currentCityId,
+                city: cityData,
                 recommendations: recommendations
             }),
             success: function(response) {

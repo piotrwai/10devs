@@ -1,7 +1,7 @@
 <?php
 // Plik obsługujący endpoint /api/cities/{cityId}
 // Metoda: PUT
-// Parametry: visited (boolean)
+// Parametry: visited (boolean), newName (string)
 // Odpowiedź: Zaktualizowane dane miasta
 
 // Dołączenie potrzebnych plików
@@ -46,15 +46,6 @@ try {
         exit;
     }
     
-    // Sprawdzenie czy istnieje parametr 'visited'
-    if (!isset($requestData['visited'])) {
-        Response::error(400, 'Brak wymaganego parametru: visited');
-        exit;
-    }
-    
-    // Konwersja parametru na boolean
-    $visited = filter_var($requestData['visited'], FILTER_VALIDATE_BOOLEAN);
-    
     // Sprawdzenie czy miasto istnieje i należy do użytkownika
     $city = getCityById($cityId, $userId);
     
@@ -62,12 +53,41 @@ try {
         Response::error(404, 'Miasto nie zostało znalezione');
         exit;
     }
+
+    // Określenie typu aktualizacji na podstawie przesłanych danych
+    $updateType = isset($requestData['visited']) ? 'visited' : (isset($requestData['newName']) ? 'name' : null);
+
+    if (!$updateType) {
+        Response::error(400, 'Brak wymaganych parametrów. Oczekiwano "visited" lub "newName".');
+        exit;
+    }
+
+    $updateResult = false;
     
-    // Aktualizacja statusu odwiedzenia
-    $updateResult = updateCityVisitedStatus($cityId, $userId, $visited);
+    if ($updateType === 'visited') {
+        // Aktualizacja statusu odwiedzenia
+        $visited = filter_var($requestData['visited'], FILTER_VALIDATE_BOOLEAN);
+        $updateResult = updateCityVisitedStatus($cityId, $userId, $visited);
+    } else {
+        // Aktualizacja nazwy miasta
+        $newName = trim($requestData['newName']);
+        
+        // Walidacja nowej nazwy
+        if (empty($newName)) {
+            Response::error(400, 'Nowa nazwa miasta jest wymagana');
+            exit;
+        }
+
+        if (mb_strlen($newName) > 150) {
+            Response::error(400, 'Nazwa miasta nie może przekraczać 150 znaków');
+            exit;
+        }
+
+        $updateResult = updateCityName($cityId, $userId, $newName);
+    }
     
     if (!$updateResult) {
-        Response::error(500, 'Nie udało się zaktualizować statusu miasta');
+        Response::error(500, 'Nie udało się zaktualizować miasta');
         exit;
     }
     
@@ -76,22 +96,22 @@ try {
     
     // Upewnij się, że dane zostały pobrane
     if (!$updatedCity) {
-        // To nie powinno się zdarzyć, skoro update się powiódł, ale dla bezpieczeństwa
-        ErrorLogger::logError('api_error', 'Nie udało się pobrać danych miasta po aktualizacji statusu.', $userId, $_SERVER['REQUEST_URI'] ?? null);
+        ErrorLogger::logError('api_error', 'Nie udało się pobrać danych miasta po aktualizacji.', $userId, $_SERVER['REQUEST_URI'] ?? null);
         Response::error(500, 'Wystąpił błąd podczas pobierania zaktualizowanych danych miasta.');
         exit;
     }
     
-    // Formatowanie odpowiedzi z użyciem poprawnych kluczy
+    // Formatowanie odpowiedzi
     $response = [
-        'id' => (int)$updatedCity['id'],         // Poprawiono na 'id'
-        'name' => $updatedCity['name'],       // Poprawiono na 'name'
-        'visited' => (bool)$updatedCity['visited'], // Używamy teraz wartości z $updatedCity
-        'description' => $updatedCity['description'] // Poprawiono na 'description'
+        'id' => (int)$updatedCity['id'],
+        'name' => $updatedCity['name'],
+        'visited' => (bool)$updatedCity['visited'],
+        'description' => $updatedCity['description']
     ];
     
     // Wysłanie odpowiedzi
-    Response::success(200, '', $response);
+    $message = $updateType === 'visited' ? 'Status miasta został zaktualizowany' : 'Nazwa miasta została zaktualizowana';
+    Response::success(200, $message, ['city' => $response]);
     
 } catch (Exception $e) {
     // Logowanie błędu

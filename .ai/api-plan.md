@@ -100,12 +100,15 @@
   ```
 
 #### POST /api/cities/search
-- **Description**: Search for a city and generate AI recommendations for attractions. This is the initial step when a user wants to explore a new city.
+- **Description**: Search for a destination city. The system verifies the city name, calculates the route from the user's base city, and then generates AI recommendations for attractions. This is the initial step when a user wants to explore a new city.
 - **Process Flow**:
   1. The system validates the city name format (length restrictions).
   2. The system verifies if the provided name is actually a city using Google Geocoding API, checking for the 'locality' type in the response.
   3. If the name is not recognized as a city, the API returns an error response.
-  4. If valid, the system generates AI recommendations for the city.
+  4. If the city name is valid, the system retrieves the user's base city from their profile.
+  5. It then attempts to find a driving route from the base city to the destination city using Google Directions API.
+  6. Regardless of whether a route is found, the system proceeds to generate AI recommendations for the destination city.
+  7. The route information (or an error message if not found) is added as the first item in the recommendations list.
 - **Request Payload**:
   ```json
   {
@@ -123,12 +126,19 @@
       },
       "recommendations": [
         {
+          "id": null,
+          "title": "string",          // Format: "[Base City] - [Destination City]: [Distance] km" or "[Base City] - [Destination City]"
+          "description": "string",    // Steps of the route separated by newline or error message
+          "model": "route_planner | route_planner_error",
+          "status": "generated"
+        },
+        {
           "id": number,           // will be null as these are not yet saved
           "title": "string",
           "description": "string",
           "model": "string"       // AI model identifier
         },
-        // ... up to 10 recommendations
+        // ... up to 10 AI recommendations
       ]
     }
     ```

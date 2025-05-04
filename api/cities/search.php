@@ -12,6 +12,7 @@ require_once '../../classes/AiService.php';
 require_once '../../commonDB/cities.php';
 require_once '../../commonDB/errorLogs.php';
 require_once '../../classes/GeoHelper.php';
+require_once '../../commonDB/users.php';
 
 // Ustawienie nagłówków
 header('Content-Type: application/json; charset=UTF-8');
@@ -27,15 +28,26 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // Pobranie i dekodowanie danych JSON
 $requestData = json_decode(file_get_contents('php://input'), true);
 
+// Konfiguracja jest ładowana wewnątrz klas pomocniczych (np. GeoHelper, AiService, Auth)
+
 try {
     // Sprawdzenie autentykacji przez token JWT
-    $auth = new Auth();
+    $auth = new Auth(); // Konfiguracja ładowana wewnątrz Auth
     $userId = $auth->authenticateAndGetUserId();
 
     if (!$userId) {
         Response::error(401, 'Brak autoryzacji lub nieprawidłowy token');
         exit;
     }
+
+    // Pobranie danych użytkownika, w tym miasta bazowego
+    $userData = getUserProfile($userId);
+    if (!$userData || empty($userData['cityBase'])) {
+        ErrorLogger::logError('user_error', 'Nie udało się pobrać danych użytkownika lub brak miasta bazowego.', $userId);
+        Response::error(500, 'Błąd wewnętrzny - nie można pobrać danych użytkownika.');
+        exit;
+    }
+    $userBaseCity = $userData['cityBase'];
 
     // Walidacja danych wejściowych
     if (isset($requestData['supplement']) && $requestData['supplement'] === true) {
@@ -83,25 +95,75 @@ try {
     }
     
     // Ustawienie limitu czasu wykonania skryptu
-    // Dajemy trochę więcej czasu niż timeout AI, aby móc obsłużyć ewentualne błędy
-    set_time_limit(70); // 70 sekund na całe wykonanie skryptu
+    set_time_limit(90);
     
-    // Sprawdzenie czy to miasto
-    if (!GeoHelper::isCity($cityName)) {
-        Response::error(400, 'Wprowadzona nazwa "' . htmlspecialchars($cityName) . '" nie jest rozpoznawana jako miasto. Sprawdź pisownię lub podaj inną nazwę.');
+    // Sprawdzenie czy to miasto za pomocą statycznej metody GeoHelper
+    $cityCheck = GeoHelper::isCity($cityName);
+    if ($cityCheck === false) {
+        Response::error(500, 'Błąd podczas weryfikacji miasta. Spróbuj ponownie później.');
         exit;
     }
     
+    if (!$cityCheck['isCity']) {
+        Response::error(400, 'Wprowadzona nazwa "' . htmlspecialchars($cityName) . '" nie jest rozpoznawana jako miasto. Sprawdź pisownię lub podaj inną nazwę.');
+        exit;
+    }
+
+    // Aktualizacja nazwy miasta jeśli różni się od wprowadzonej
+    $cityName = $cityCheck['properName'];
+    
+    // --------------------------------------------------------------------
+    // NOWY KROK: Sprawdzenie trasy z miasta bazowego użytkownika (metoda statyczna)
+    // --------------------------------------------------------------------
+    $directionsRecommendation = null; 
+    $directionsData = GeoHelper::getDirections($userBaseCity, $cityName);
+
+    if ($directionsData) {
+        $directionsTitle = sprintf(
+            '%s - %s: %d km',
+            $userBaseCity,
+            $cityName,
+            $directionsData['distance_km']
+        );
+        $directionsDescription = implode("\n", $directionsData['steps']);
+        
+        $directionsRecommendation = [
+            'id' => null,
+            'title' => mb_substr($directionsTitle, 0, 150),
+            'description' => $directionsDescription,
+            'model' => 'route_planner',
+            'status' => null
+        ];
+    } else {
+         // Nie udało się znaleźć trasy lub wystąpił błąd
+         $directionsTitle = sprintf('%s - %s', $userBaseCity, $cityName);
+         $directionsDescription = 'Prawdopodobnie nie da się jej pokonać samochodem lub błąd odczytania trasy z Google API.';
+         $directionsRecommendation = [
+            'id' => null,
+            'title' => mb_substr($directionsTitle, 0, 150),
+            'description' => $directionsDescription,
+            'model' => 'route_planner_error',
+            'status' => null
+        ];
+        // Można dodać logowanie błędu z GeoHelper
+        // ErrorLogger::logError('directions_error', "Nie udało się pobrać trasy: $userBaseCity -> $cityName", $userId); // Można usunąć lub zostawić dla dodatkowego kontekstu
+    }
+    // --------------------------------------------------------------------
+    
     // Wywołanie serwisu AI dla generowania podsumowania i rekomendacji
-    $aiService = new AiService();
+    $aiService = new AiService(); // Konfiguracja ładowana wewnątrz AiService
     $aiResult = $aiService->generateCityRecommendations($cityName, $userId, $cityId);
     
-    if (!$aiResult || empty($aiResult['recommendations'])) {
-        // Błąd podczas generowania rekomendacji - logujemy błąd i zwracamy informację o błędzie
-        ErrorLogger::logError('ai_error', 'Nie udało się wygenerować rekomendacji dla miasta: ' . $cityName, $userId);
-        
-        Response::error(500, 'Nie udało się wygenerować rekomendacji dla miasta. Spróbuj ponownie później.');
+    if (!$aiResult || !isset($aiResult['recommendations'])) {
+        // Błąd podczas generowania rekomendacji
+        ErrorLogger::logError('ai_error', 'Nie udało się wygenerować rekomendacji AI dla miasta: ' . $cityName, $userId);
+        Response::error(500, 'Nie udało się wygenerować rekomendacji AI dla miasta. Spróbuj ponownie później.');
         exit;
+    }
+    
+    // Dodanie rekomendacji z trasą na początek listy
+    if ($directionsRecommendation) {
+        array_unshift($aiResult['recommendations'], $directionsRecommendation);
     }
     
     // Jeśli miasto nie istnieje, a odpowiedź AI jest poprawna, dodajemy miasto do bazy
@@ -109,27 +171,8 @@ try {
         // Używamy opisu miasta wygenerowanego przez AI
         $cityDesc = $aiResult['city']['summary'];
         
-        $cityId = addCity($cityName, $userId, $cityDesc);
-        
-        if ($cityId) {
-            // Sprawdzamy jeszcze raz, czy miasto zostało poprawnie dodane
-            $checkCity = getCityById($cityId, $userId);
-            if ($checkCity) {
-                ErrorLogger::logError('db_error', "Weryfikacja: miasto o ID $cityId istnieje w bazie", $userId);
-            } else {
-                ErrorLogger::logError('db_error', "BŁĄD weryfikacji: miasto o ID $cityId NIE istnieje w bazie mimo dodania!", $userId);
-                // Zwracamy błąd, ponieważ nie udało się zweryfikować dodania miasta
-                Response::error(500, 'Wystąpił błąd podczas dodawania miasta. Spróbuj ponownie później.');
-                exit;
-            }
-        } else {
-            // Logowanie błędu
-            ErrorLogger::logError('db_error', 'Nie udało się dodać miasta: ' . $cityName, $userId);
-            
-            // Zwracamy błąd
-            Response::error(500, 'Wystąpił błąd podczas dodawania miasta. Spróbuj ponownie później.');
-            exit;
-        }
+        // Usuwamy dodawanie miasta - będzie dodawane dopiero przy zapisie rekomendacji
+        $cityId = null;
     } else if (($cityDesc === null || empty(trim($cityDesc))) && !empty($aiResult['city']['summary'])) {
         // Jeśli miasto już istnieje, ale nie ma opisu, aktualizujemy opis
         $updateResult = updateCityDescription($cityId, $userId, $aiResult['city']['summary']);

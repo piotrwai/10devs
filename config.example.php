@@ -45,5 +45,13 @@ return [
         'secret_key' => 'tajny-klucz-do-jwt-zmien-na-produkcji', // Zgodne z config.php
         'expiration' => 3600,
         'issuer' => '10devs-api' // Zgodne z config.php
+    ],
+    
+    // Konfiguracja Google Maps Directions API
+    'googleapis' => [
+        'apiKey' => 'TWOJ_NOWY_KLUCZ_API_GOOGLE_DIRECTIONS',
+        'mode' => 'driving',
+        'units' => 'metric',
+        'language' => 'pl'
     ]
 ]; 

@@ -24,7 +24,13 @@ Turyści mają trudności ze znalezieniem i katalogowaniem informacji o ciekawyc
   - Po zalogowaniu użytkownik wprowadza nazwę miasta, które chce odwiedzić.
   - System weryfikuje, czy wprowadzona nazwa odpowiada miastu, używając Google Geocoding API.
   - W przypadku nieprawidłowej nazwy, system wyświetla komunikat o błędzie i przerywa wyszukiwanie.
+  - Jeśli nazwa miasta jest poprawna, ale różni się od oficjalnej nazwy w Google API, system automatycznie koryguje nazwę.
+  - Miasto nie jest zapisywane w bazie danych podczas wyszukiwania, tylko po zapisaniu przynajmniej jednej rekomendacji.
   - Dla poprawnych nazw miast, system prezentuje krótką charakterystykę miasta (do 150 znaków) oraz do 10 rekomendowanych propozycji atrakcji.
+- Zarządzanie miastami:
+  - Użytkownik może edytować nazwę miasta poprzez kliknięcie na jego nazwę na liście miast.
+  - Edycja nazwy odbywa się w modalu, gdzie nowa nazwa nie jest weryfikowana przez Google Geocoding API.
+  - Użytkownik może oznaczyć miasto jako odwiedzone.
 - Prezentacja propozycji:
   - Każda propozycja zawiera tytuł (do 150 znaków) oraz rozwinięcie wyjaśniające, dlaczego warto zobaczyć dane miejsce.
 - Edycja i zarządzanie rekomendacjami:
@@ -68,14 +74,18 @@ Kryteria akceptacji:
 - Po prawidłowej rejestracji i prawidłowym logowaniu system przechodzi do funkcji wyszukiwania atrakcji.
 
 US-002  
-Tytuł: Wyszukiwanie atrakcji w docelowym mieście  
-Opis: Jako turysta chcę wprowadzić nazwę miasta, które chcę odwiedzić, aby otrzymać krótką charakterystykę miasta (do 150 znaków) oraz listę do 10 rekomendowanych atrakcji.  
+Tytuł: Wyszukiwanie atrakcji i trasy w docelowym mieście  
+Opis: Jako turysta chcę wprowadzić nazwę miasta, które chcę odwiedzić, aby otrzymać informację o trasie z mojego miasta bazowego, krótką charakterystykę miasta (do 150 znaków) oraz listę do 10 rekomendowanych atrakcji przez AI.  
 Kryteria akceptacji:  
 - Użytkownik wprowadza miasto docelowe w formularzu.  
 - System weryfikuje, czy wprowadzona nazwa jest rzeczywiście nazwą miasta, używając Google Geocoding API.
 - Jeśli wprowadzony tekst nie jest miastem, system wyświetla komunikat błędu i nie kontynuuje wyszukiwania.
-- Podczas weryfikacji nazwy miasta, użytkownik widzi komunikat "szukam..." oraz spinner wskazujące na trwający proces.
-- Po pozytywnej weryfikacji, system prezentuje charakterystykę miasta (do 150 znaków) oraz listę do 10 propozycji.
+- System próbuje wyznaczyć trasę samochodową z miasta bazowego użytkownika (zapisanego w profilu) do miasta docelowego, używając Google Directions API.
+- Podczas weryfikacji nazwy miasta i szukania trasy, użytkownik widzi komunikat "szukam..." oraz spinner wskazujące na trwający proces.
+- Po pozytywnej weryfikacji miasta, system prezentuje:
+  - Jako pierwszą pozycję: informację o trasie (Tytuł: `Miasto Bazowe` - `Miasto Docelowe`: `dystans km`; Treść: lista kroków trasy lub informacja o braku możliwości wyznaczenia trasy samochodowej).
+  - Charakterystykę miasta docelowego (do 150 znaków).
+  - Listę do 10 propozycji atrakcji wygenerowanych przez AI.
 
 US-003  
 Tytuł: Przeglądanie i edycja rekomendacji  
@@ -140,6 +150,34 @@ Kryteria akceptacji:
 - Wydruk nie zawiera nagłówka strony, menu, stopki, przycisków "Powrót", "Dodaj", ani kolumny "Akcja".
 - Układ wydruku jest zoptymalizowany pod kątem oszczędności miejsca (np. mniejsza czcionka, mniejsze marginesy).
 - Na wydruku widoczne są tylko rekomendacje ze statusem 'zaakceptowana' lub 'edytowana'. (Opcjonalne, do decyzji - czy drukować wszystkie, czy tylko te "pozytywne"?)
+
+US-011
+Tytuł: Wyświetlanie informacji o trasie
+Opis: Jako turysta, po wyszukaniu nowego miasta, chcę zobaczyć jako pierwszą informację podsumowanie trasy z mojego miasta bazowego do tego miasta, w tym dystans i główne kroki, aby szybko ocenić podróż.
+Kryteria akceptacji:
+- Po wyszukaniu miasta, pierwsza wyświetlona "rekomendacja" zawiera informacje o trasie.
+- Tytuł zawiera miasto początkowe (bazowe), miasto docelowe i całkowity dystans w kilometrach.
+- Opis zawiera listę kroków trasy (opis i dystans kroku), każdy w nowej linii.
+- Jeśli trasa nie może być wyznaczona (np. brak drogi, błąd API), wyświetlany jest odpowiedni komunikat zamiast kroków trasy.
+- Informacja o trasie nie posiada opcji edycji, akceptacji ani odrzucenia.
+
+US-012
+Tytuł: Edycja nazwy miasta
+Opis: Jako turysta chcę móc edytować nazwę miasta na liście moich miast, aby poprawić błędy lub dostosować nazwę do oficjalnej nazwy z Google API.
+Kryteria akceptacji:
+- Nazwa miasta jest edytowalna poprzez kliknięcie na nią na liście miast.
+- Edycja odbywa się w modalu z polem tekstowym i przyciskami "Zapisz" i "Anuluj".
+- Po zapisaniu zmian, nowa nazwa jest natychmiast widoczna na liście miast.
+- W przypadku błędu walidacji lub problemów z API, użytkownik otrzymuje odpowiedni komunikat.
+
+US-013
+Tytuł: Automatyczna korekta nazw miast
+Opis: Jako turysta chcę, aby system automatycznie korygował wprowadzone nazwy miast na ich oficjalne odpowiedniki z Google API, aby zapewnić spójność i poprawność danych.
+Kryteria akceptacji:
+- Podczas wyszukiwania nowego miasta, system sprawdza jego nazwę w Google Geocoding API.
+- Jeśli wprowadzona nazwa jest poprawna, ale różni się od oficjalnej, system używa oficjalnej nazwy.
+- System informuje użytkownika o automatycznej korekcie nazwy.
+- Korekta nazwy następuje tylko podczas wyszukiwania.
 
 ## 6. Metryki sukcesu
 - Minimum 75% propozycji musi być zaakceptowanych lub edytowanych i zaakceptowanych.

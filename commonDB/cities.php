@@ -416,4 +416,40 @@ function delCityByIdAndUserId($cityId, $userId) {
         ErrorLogger::logError('db_error', 'Wyjątek podczas usuwania miasta: ' . $e->getMessage(), $userId);
         return false;
     }
+}
+
+/**
+ * Aktualizuje nazwę miasta w bazie danych
+ * 
+ * @param int $cityId ID miasta do aktualizacji
+ * @param int $userId ID użytkownika (dla weryfikacji uprawnień)
+ * @param string $newName Nowa nazwa miasta
+ * @return bool True jeśli aktualizacja się powiodła, false w przeciwnym razie
+ */
+function updateCityName($cityId, $userId, $newName) {
+    try {
+        $db = getDbConnection();
+        
+        $query = "UPDATE cities SET cit_name = ? WHERE cit_id = ? AND cit_usr_id = ?";
+        $stmt = mysqli_prepare($db, $query);
+        
+        if (!$stmt) {
+            throw new Exception('Błąd przygotowania zapytania: ' . mysqli_error($db));
+        }
+        
+        mysqli_stmt_bind_param($stmt, 'sii', $newName, $cityId, $userId);
+        
+        if (!mysqli_stmt_execute($stmt)) {
+            throw new Exception('Błąd wykonania zapytania: ' . mysqli_stmt_error($stmt));
+        }
+        
+        $affected = mysqli_stmt_affected_rows($stmt);
+        mysqli_stmt_close($stmt);
+        
+        return $affected > 0;
+        
+    } catch (Exception $e) {
+        ErrorLogger::logError('db_error', 'Błąd podczas aktualizacji nazwy miasta: ' . $e->getMessage(), $userId);
+        return false;
+    }
 } 

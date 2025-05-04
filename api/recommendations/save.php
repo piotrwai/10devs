@@ -35,25 +35,46 @@ try {
     }
     
     // Walidacja danych wejściowych
-    if (!isset($requestData['cityId']) || !is_numeric($requestData['cityId'])) {
-        Response::error(400, 'ID miasta jest wymagane i musi być liczbą');
+    if (!isset($requestData['city']) || !is_array($requestData['city'])) {
+        Response::error(400, 'Dane miasta są wymagane');
         exit;
     }
-    
+
     if (!isset($requestData['recommendations']) || !is_array($requestData['recommendations']) || empty($requestData['recommendations'])) {
         Response::error(400, 'Lista rekomendacji jest wymagana i nie może być pusta');
         exit;
     }
-    
-    $cityId = (int)$requestData['cityId'];
+
+    $cityData = $requestData['city'];
     $recommendations = $requestData['recommendations'];
-    
-    // Sprawdzenie czy miasto istnieje i należy do użytkownika
-    $city = getCityById($cityId, $userId);
-    
-    if (!$city) {
-        Response::error(404, 'Miasto o podanym ID nie zostało znalezione lub nie należy do tego użytkownika');
+
+    // Sprawdzenie czy są jakieś zaakceptowane lub edytowane rekomendacje
+    $hasAcceptedRecommendations = false;
+    foreach ($recommendations as $rec) {
+        if (isset($rec['status']) && in_array($rec['status'], ['accepted', 'edited'])) {
+            $hasAcceptedRecommendations = true;
+            break;
+        }
+    }
+
+    if (!$hasAcceptedRecommendations) {
+        Response::error(400, 'Przynajmniej jedna rekomendacja musi być zaakceptowana lub edytowana');
         exit;
+    }
+
+    // Sprawdzenie czy miasto już istnieje dla tego użytkownika
+    $existingCity = getCityByNameAndUserId($cityData['name'], $userId);
+    $cityId = null;
+
+    if ($existingCity) {
+        $cityId = $existingCity['cit_id'];
+    } else {
+        // Dodanie nowego miasta
+        $cityId = addCity($cityData['name'], $userId, $cityData['summary'] ?? null);
+        if (!$cityId) {
+            Response::error(500, 'Nie udało się zapisać miasta');
+            exit;
+        }
     }
     
     // Sprawdzanie poprawności formatu rekomendacji przed zapisaniem
@@ -84,6 +105,11 @@ try {
     $savedRecommendations = [];
     
     foreach ($recommendations as $rec) {
+        // Zapisujemy tylko zaakceptowane i edytowane rekomendacje
+        if (!isset($rec['status']) || !in_array($rec['status'], ['accepted', 'edited'])) {
+            continue;
+        }
+
         // Walidacja danych rekomendacji
         if (!isset($rec['title']) || empty(trim($rec['title'])) || !isset($rec['description']) || empty(trim($rec['description']))) {
             continue; // Pomijamy nieprawidłowe rekomendacje
@@ -125,14 +151,18 @@ try {
         exit;
     }
     
+    // Pobranie aktualnych danych miasta
+    $city = getCityById($cityId, $userId);
+    
     // Wysłanie odpowiedzi z zapisanymi rekomendacjami
     Response::success(201, 'Rekomendacje zostały zapisane.', [
         'city' => [
             'id' => $cityId,
-            'name' => $city['name']
-         ],
-         'savedRecommendations' => count($savedRecommendations),
-         'recommendations' => $savedRecommendations
+            'name' => $city['name'],
+            'summary' => $city['summary']
+        ],
+        'savedRecommendations' => count($savedRecommendations),
+        'recommendations' => $savedRecommendations
     ]);
     
 } catch (Exception $e) {
