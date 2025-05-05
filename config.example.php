@@ -20,7 +20,7 @@ return [
         'api_key' => 'sk-YOUR_OPENAI_API_KEY_HERE', // Zmieniono 'apiKey' na 'api_key'
         'model' => 'gpt-4.1-mini',
         'timeout' => 60,
-        'max_tokens' => 1500
+        'max_tokens' => 10240
     ],
     
     // Konfiguracja aplikacji - zgodna z config.php (bez js_version)

@@ -45,7 +45,7 @@ Turyści mają trudności ze znalezieniem i katalogowaniem informacji o ciekawyc
 - Oznaczanie miasta jako "Odwiedzone":
   - Użytkownik ma możliwość oznaczenia miasta jako odwiedzone.
 - Uzupełnienie rekomendacji:
-  - Jeżeli procent akceptacji propozycji spada poniżej 60%, system wyświetla pytanie o uzupełnienie rekomendacji.
+  - Jeżeli procent akceptacji propozycji spada poniżej 60%, system wyświetla możliwość uzupełnienia rekomendacji.
   - Użytkownik, jeśli chce dodatkowych rekomendacji, musi to potwierdzić aktywując przycisk "Uzupełnij rekomendacje" (akcja możliwa tylko raz dla danego miasta).
   - Po uzupełnieniu system prezentuje nowe propozycje na podstawie analizy poprzednich wyników. Prezentuje nowe propozycje nad starymi propozycjami.
 - Logowanie działań AI:
@@ -122,9 +122,9 @@ Tytuł: Uzupełnienie rekomendacji
 Opis: Jako turysta chcę uzupełnić rekomendacje, gdy poziom akceptacji propozycji AI spadnie poniżej 60%, aby otrzymać dodatkowe propozycje atrakcji.  
 Kryteria akceptacji:  
 - System monitoruje poziom akceptacji rekomendacji.  
-- Gdy akceptacja spadnie poniżej 60%, użytkownik otrzymuje pytanie o uzupełnienie rekomendacji.  
+- Gdy akceptacja spadnie poniżej 60%, użytkownik otrzymuje możliwość uzupełnienia rekomendacji.  
 - Użytkownik aktywuje funkcję poprzez kliknięcie przycisku "Uzupełnij rekomendacje", który może być użyty tylko raz dla danego miasta.  
-- System prezentuje nowe propozycje po uzupełnieniu.
+- System prezentuje nowe propozycje po uzupełnieniu nad poprzednio znalezionymi rekomendacjami.
 
 US-008  
 Tytuł: Logowanie działań AI  
@@ -180,8 +180,8 @@ Kryteria akceptacji:
 - Korekta nazwy następuje tylko podczas wyszukiwania.
 
 ## 6. Metryki sukcesu
-- Minimum 75% propozycji musi być zaakceptowanych lub edytowanych i zaakceptowanych.
-- Monitorowanie poziomu akceptacji: jeśli akceptacje spadają poniżej 60%, wywoływana jest funkcja uzupełnienia rekomendacji.
+- Minimum 60% propozycji musi być zaakceptowanych lub edytowanych i zaakceptowanych.
+- Monitorowanie poziomu akceptacji: jeśli akceptacje spadają poniżej 60%, pokazywana jest możliwość uzupełnienia rekomendacji.
 - Rejestracja logów AI: system zapisuje operacje na propozycjach (data, użytkownik, status), co pozwala na analizę trafności rekomendacji.
 - Liczba wykonanych operacji (edycja, akceptacja, odrzucenie) służy jako wskaźnik użyteczności systemu.
 

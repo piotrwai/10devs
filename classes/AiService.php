@@ -321,7 +321,7 @@ Odpowiedź sformatuj jako obiekt JSON w następującym formacie:
 ```
 
 Każda rekomendacja powinna zawierać unikalny tytuł (maksymalnie 200 znaków) oraz szczegółowy opis (maksymalnie 64000 znaków).
-Upewnij się, że odpowiedź jest w poprawnym formacie JSON i zawiera co najmniej 3 rekomendacje.
+Upewnij się, że odpowiedź jest w poprawnym formacie JSON i zawiera od 3 do 10 rekomendacji.
 PROMPT;
     }
     

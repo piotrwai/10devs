@@ -125,7 +125,7 @@ try {
             $cityName,
             $directionsData['distance_km']
         );
-        $directionsDescription = implode("\n", $directionsData['steps']);
+        $directionsDescription = implode("\n\r", $directionsData['steps']);
         
         $directionsRecommendation = [
             'id' => null,

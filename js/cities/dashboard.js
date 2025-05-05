@@ -466,9 +466,9 @@ $(document).ready(function() {
     // Obsługa kliknięcia w link edycji nazwy miasta
     $(document).on('click', '.edit-city-name, .edit-city-name-btn', function(e) {
         e.preventDefault();
-        const cityId = $(this).data('city-id');
-        //const currentName = $(this).data('city-name');
-        const currentName = $(this).html();
+        const cityId = $(this).attr('data-city-id');
+        const currentName = $(this).attr('data-city-name');
+        //const currentName = $(this).html();
         
         // Wypełnienie formularza
         $cityIdInput.val(cityId);
