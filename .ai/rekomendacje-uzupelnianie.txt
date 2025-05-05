@@ -1,0 +1,112 @@
+IMPLEMENTACJA UZUPEŁNIENIA REKOMENDACJI, JEŚLI WSPÓŁCZYNNIK ICH AKCEPTACJI SPADNIE DO 60% LUB MNIEJ.
+---------------------------
+
+Jesteś doświadczonym programistą PHP oraz wykwalifikowanym twórcą promptów dla AI.
+W projekcie @folders.txt i jego @prd.md ustalono, że przy dodawaniu miasta w trakcie pierwszego wyszukiwania dla niego rekomendacji, należy się skupić na procencie zaakceptowanym rekomendacji. 
+Jeśli procent będzie niższy lub równy 60%, to należy pokazać użytkownikowi button, który pozwoli dodać nowe rekomendacje.
+Możliwość taka może pojawić się tylko raz.
+
+Plan działania:
+- w widoku dodawania miasta wyszukiwane są rekomendacje - zaimplementowane;
+- w trakcie wyszukiwania button `Wyszukaj atrakcje` staje się nieaktywny, by uniemożliwić ponowne wywołanie wyszukiwania;
+- pojawiają się na stronie rekomendacje z pierwszego wyszukiwania AI - zaimplementowane;
+- procent akceptacji obliczasz tak, że do niezaakceptowanych zaliczasz tylko rekomendacje z zaznaczonym `Odrzuć`;
+- jeśli procent akceptacji spadnie do 60% i niżej, button `Wyszukaj atrakcje` powinien stać się aktywny, ale powinna zmienić się jego treść na `Uzupełnij rekomendacje`;
+- po kliknięciu `Uzupełnij rekomendacje` powinno się odbyć zapytanie do AI w poszukiwaniu kolejnych rekomendacji;
+- prompt do tego wyszukiwania powinien zawierać informacje o już znalezionych atrakcjach - ponowne wyszukiwanie nie może ich zawierać ani niczego bardzo podobnego;
+- format zwróconych rekomendacji musi być taki jak format pierwszych atrakcji;
+- w trakcie wyszukiwania button `Uzupełnij rekomendacje` ma być nieaktywny;
+- po wyszukaniu button `Uzupełnij rekomendacje` ma być zdeaktywowany i usunięty, a nowe rekomendacje powinny pojawić się na górze listy rekomendacji bez określonego statusu;
+- powinien pojawić się komunikat: `Znajeziono nowe rekomendacje: {liczba}`
+
+Uwagi:
+- aktualne, pierwsze wyszukiwanie rekomendacji jest zawarte w @AiService.php  - wykorzystaj ten plik i funkcje jako wzór;
+- dla zapytania uzupełniającego rekomendacje napisz prompt uwzględniający poprzednio znalezione atrakcje (wszystkie) - nie mogą one być polecone ponownie ani nic bardzo podobnego;
+- poza prawidłowym zapytaniem do AI (po utworzeniu zakomentuj tą sekcję) dodaj też `TYMCZASOWA ODPOWIEDŹ DO TESTÓW UZUPEŁNIENIA - PRZYKŁAD POPRAWNEJ ODPOWIEDZI`, dzięki temu w czasie testów nie trzeba będzie wykonywać produkcyjnych zapytań do AI;
+- część funkcji uzupełniania rekomendacji została już zaimplementowana - poszukaj tego w kodzie projektu. Może być określone jako: supplement;
+- w @api-plan.md określony jest endpoint `/api/cities/{cityId}/recommendations/supplement` - zastanów się czy jest potrzebny w takiej formie i czy nie da się tego obsłużyć ładniej innym, już istniejącym endpointem - jeśli tak zmodyfikuj @api-plan.md, jeśli nie napisz dlaczego;
+
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+---
+
+
+---
+
+Feedback:
+1. OK
+2. generateSupplementaryRecommendations() nie może otrzymać ID miasta gdyż w trakcie jego wywołania miasto nie istnieje w bazie danych. Posłuż się nazwą miasta.
+3. OK
+Plan:
+1. W momencie wyszukiwania uzupełnienia rekomendacji nie ma jeszcze cityId - miasto i rekomendacje są obecne tylko w JS. Nie ma ich w bazie danych.
+Flaga wykonania uzupełnienia rekomendacji w bazie danych - to nie jest potrzebne - możliwość wyszukiwania rekomendacji istnieje tylko podczas dodawania nowego miasta.
+Rekomendacje i ich tytuły musisz przekazywać do procesu wyszukiwania suplementu z JS, gdzyż istnieją one tylko tam.
+2. To nie jest potrzebne - możliwość wyszukiwania rekomendacji istnieje tylko podczas dodawania nowego miasta.
+3. OK - pamiętaj, że taka możliwość istnieje tylko raz.
+Uwagi i wskazówki:
+Wyszukiwanie rekomendacji dla miasta zawarte jest w @search.php i @search.php wykorzystaj zawarte w nich mechanizmy i poszukaj odniesień do utworzonych wcześniej wskazań do `supplement`, które możesz wykorzystać bądź zmienić.
+Kontynnuj.
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+---
+
+---
+
+Feedback:
+1. OK
+2. OK
+3. Przemyśl swoje działania odnośnie zmian w @search.php Pierwsze wyszukiwanie rekomendacji ma sprawdzić istnienie miasta, poszukać trasy, znajeźć rekomendacje - tak to jest zaimplementowane. Drugie i ostatnie wyszukiwanie rekomendacji (supplement) nie powinno sprawdzać trasy ani sprawdzać czy miasto istnieje. Powinno tylko znaleźć nowe rekomendacje i zwrócić właściwą odpowiedź bądź błąd.
+Plan:
+1. Procent akceptacji obliczasz: (suma rekomendacji z dowolnym statusem BEZ `Odrzucone`) / (wszystkie rekomendacje)
+2. OK
+3. OK,pamiętaj, żeby pokazać komunikat o nowych rekomendacjach lub błędzie jeśli nie zostaną znalezione.
+Kontynnuj.
+<implementation_approach>
+Realizuj maksymalnie 3 kroki planu implementacji, podsumuj krótko co zrobiłeś i opisz plan na 3 kolejne działania - zatrzymaj w tym momencie pracę i czekaj na mój feedback.
+</implementation_approach>
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

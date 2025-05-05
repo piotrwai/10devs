@@ -85,6 +85,24 @@
     </div>
 </div>
 
+<!-- Modal potwierdzenia zapisu rekomendacji -->
+<div class="modal fade" id="saveConfirmationModal" tabindex="-1" aria-labelledby="saveConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="saveConfirmationModalLabel">Potwierdzenie zapisu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+            </div>
+            <div class="modal-body" id="saveConfirmationMessage">
+                <!-- Tutaj będzie wstawiany dynamiczny komunikat -->
+            </div>
+            <div class="modal-footer" id="saveConfirmationFooter">
+                <!-- Przyciski będą dodawane dynamicznie -->
+            </div>
+        </div>
+    </div>
+</div>
+
 {* Dołączenie skryptu JS obsługującego wyszukiwanie *}
 <script src="{'/js/cities/search.js'|add_js_version}"></script>
 

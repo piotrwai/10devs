@@ -526,9 +526,12 @@ $(document).ready(function() {
         };
         
         const recommendations = [];
+        let totalRecommendations = 0;
+        
         $('.recommendation').each(function() {
             const $rec = $(this);
             const status = $rec.data('status') || 'pending';
+            totalRecommendations++;
             
             // Zbieramy tylko zaakceptowane i edytowane rekomendacje
             if (status === 'accepted' || status === 'edited') {
@@ -541,45 +544,73 @@ $(document).ready(function() {
             }
         });
 
-        // Sprawdzenie czy są jakieś rekomendacje do zapisania
+        // Przygotowanie modalu
+        const $modal = $('#saveConfirmationModal');
+        const $modalBody = $('#saveConfirmationMessage');
+        const $modalFooter = $('#saveConfirmationFooter');
+        
+        // Wyczyszczenie poprzedniej zawartości
+        $modalFooter.empty();
+        
         if (recommendations.length === 0) {
-            $formMessages
-                .addClass('alert alert-warning')
-                .text('Proszę wybrać przynajmniej jedną rekomendację do zapisania');
-            return;
+            // Przypadek gdy nie ma rekomendacji do zapisania
+            $modalBody.text('Żadna z rekomendacji nie została oznaczona do zapisania.');
+            $modalFooter.html(`
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            `);
+        } else {
+            // Przypadek gdy są rekomendacje do zapisania
+            $modalBody.text(`Zapisać ${recommendations.length} z ${totalRecommendations} rekomendacji?`);
+            $modalFooter.html(`
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Wróć</button>
+                <button type="button" class="btn btn-primary" id="confirmSave">Tak</button>
+            `);
+            
+            // Obsługa przycisku potwierdzającego zapis
+            $('#confirmSave').on('click', function() {
+                // Wywołanie API do zapisania rekomendacji
+                $.ajax({
+                    url: '/api/recommendations/save',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        city: cityData,
+                        recommendations: recommendations
+                    }),
+                    success: function(response) {
+                        // Zamknięcie modalu
+                        $modal.modal('hide');
+                        
+                        // Wyświetlenie komunikatu sukcesu
+                        $formMessages
+                            .removeClass('alert-danger alert-warning')
+                            .addClass('alert alert-success')
+                            .text('Rekomendacje zostały zapisane pomyślnie');
+                        
+                        // Przekierowanie do listy miast po 1 sekundzie
+                        setTimeout(() => {
+                            window.location.href = '/dashboard';
+                        }, 1000);
+                    },
+                    error: function(xhr) {
+                        // Zamknięcie modalu
+                        $modal.modal('hide');
+                        
+                        let errorMessage = 'Wystąpił błąd podczas zapisywania rekomendacji';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        
+                        $formMessages
+                            .removeClass('alert-success alert-warning')
+                            .addClass('alert alert-danger')
+                            .text(errorMessage);
+                    }
+                });
+            });
         }
         
-        // Wywołanie API do zapisania rekomendacji
-        $.ajax({
-            url: '/api/recommendations/save',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                city: cityData,
-                recommendations: recommendations
-            }),
-            success: function(response) {
-                // Wyświetlenie komunikatu sukcesu
-                $formMessages
-                    .addClass('alert alert-success')
-                    .text('Rekomendacje zostały zapisane pomyślnie');
-                
-                // Przekierowanie do listy miast po 2 sekundach
-                setTimeout(() => {
-                    window.location.href = '/dashboard';
-                }, 1000);
-            },
-            error: function(xhr) {
-                let errorMessage = 'Wystąpił błąd podczas zapisywania rekomendacji';
-                
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
-                }
-                
-                $formMessages
-                    .addClass('alert alert-danger')
-                    .text(errorMessage);
-            }
-        });
+        // Pokazanie modalu
+        $modal.modal('show');
     });
 }); 
