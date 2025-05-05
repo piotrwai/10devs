@@ -50,19 +50,6 @@ $(document).ready(function() {
             params.visited = visitedFilter;
         }
 
-        // Pobranie tokena JWT (przykład: z localStorage) - USUNIĘTE
-        // const jwtToken = localStorage.getItem('jwtToken'); // !!! Dostosuj sposób pobierania tokena !!!
-
-        // Sprawdzanie tokena po stronie klienta - USUNIĘTE
-        // if (!jwtToken) {
-        //     // Jeśli nie ma tokena, można przekierować na stronę logowania
-        //     console.error('Brak tokena JWT. Przekierowanie do logowania.');
-        //     // window.location.href = '/login'; // Odkomentuj, aby włączyć przekierowanie
-        //     $('#citiesTable tbody').html('<tr><td colspan="4" class="text-center text-danger">Błąd autoryzacji. Proszę się zalogować.</td></tr>');
-        //     $('#paginationControls').empty(); // Wyczyść paginację
-        //     return;
-        // }
-
         // Wyświetlenie informacji o ładowaniu
         $('#citiesTable tbody').html('<tr><td colspan="4" class="text-center">Ładowanie danych...</td></tr>');
         $('#paginationControls').empty(); // Wyczyść paginację na czas ładowania
@@ -149,7 +136,7 @@ $(document).ready(function() {
             const cityId = parseInt(city.id);
 
             if (!cityId) {
-                console.warn('Pominięto miasto bez ID:', city);
+                //console.warn('Pominięto miasto bez ID:', city);
                 return; // Pomiń miasta bez ID
             }
 

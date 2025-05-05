@@ -14,15 +14,21 @@ $(document).ready(function() {
     const $saveRecommendationsBtn = $('#save-recommendations-btn');
     let currentCityId = null;
     let supplementRequested = false;
+    let supplementUsed = false;
+    let currentCityName = '';
 
     // Obsługa formularza wyszukiwania
     $form.on('submit', function(e) {
         e.preventDefault();
         
+        const currentMode = $form.data('mode') || 'search';
+
         // Reset komunikatów i stanu
         $formMessages.empty().removeClass('alert alert-danger alert-success alert-info');
         $('.is-invalid').removeClass('is-invalid');
-        $searchResults.addClass('d-none');
+        if (currentMode === 'search') {
+            $searchResults.addClass('d-none');
+        }
         
         // Walidacja
         const cityName = $cityInput.val().trim();
@@ -38,15 +44,27 @@ $(document).ready(function() {
             return;
         }
         
+        // Zapisanie/aktualizacja nazwy miasta
+        currentCityName = cityName;
+
+        // Reset flagi użycia suplementu przy nowym wyszukiwaniu
+        supplementUsed = false;
+
+        // Przywrócenie domyślnego tekstu i stanu przycisku
+        $submitButton.html('Wyszukaj atrakcje').removeClass('btn-warning').addClass('btn-primary');
+        
         // Pokazanie spinnera i blokada przycisku
         $submitButton.prop('disabled', true);
         $spinner.removeClass('d-none');
         
-        // Zmiana komunikatu na "Sprawdzam poprawność miasta..."
-        setLoadingMessage('Sprawdzam poprawność miasta...', 'bi-geo-alt');
-        
-        // Wywołanie API
-        searchCity(cityName);
+        // Ustawienie komunikatu w zależności od trybu
+        if (currentMode === 'supplement') {
+            setLoadingMessage('Generuję dodatkowe rekomendacje...', 'bi-stars');
+            requestSupplement();
+        } else {
+            setLoadingMessage('Sprawdzam poprawność miasta...', 'bi-geo-alt');
+            searchCity(cityName);
+        }
     });
 
     // Funkcja do ustawiania komunikatu ładowania
@@ -58,10 +76,8 @@ $(document).ready(function() {
     }
 
     // Funkcja do wyszukiwania miasta
-    function searchCity(cityName, supplement = false) {
-        const requestData = supplement ? 
-            { cityId: currentCityId, supplement: true } : 
-            { cityName: cityName };
+    function searchCity(cityName) {
+        const requestData = { cityName: cityName };
         
         // Set initial loading message for the whole process
         setLoadingMessage('Sprawdzam miasto, szukam trasy i generuję rekomendacje...', 'bi-compass');
@@ -72,28 +88,17 @@ $(document).ready(function() {
             contentType: 'application/json',
             data: JSON.stringify(requestData),
             success: function(response) {
-                // Debug: logowanie surowej odpowiedzi
-                console.log('Surowa odpowiedź z serwera:', response);
-                
                 // Parsowanie odpowiedzi JSON na obiekt JavaScript
                 try {
                     response = typeof response === 'string' ? JSON.parse(response) : response;
                 } catch (e) {
-                    console.error('Błąd parsowania odpowiedzi JSON:', e);
                     throw new Error('Nieprawidłowy format odpowiedzi z serwera');
                 }
-                
-                // Debug: logowanie sparsowanej odpowiedzi
-                console.log('Sparsowana odpowiedź:', response);
                 
                 // Sprawdzenie czy odpowiedź zawiera wymagane dane
                 if (!response || !response.data || !response.data.city || !response.data.recommendations) {
                     throw new Error('Nieprawidłowa odpowiedź z serwera');
                 }
-                
-                // Debug: logowanie danych
-                console.log('Dane miasta:', response.data.city);
-                console.log('Rekomendacje:', response.data.recommendations);
                 
                 // Zapisanie ID miasta
                 if (response.data.city && response.data.city.id) {
@@ -104,6 +109,8 @@ $(document).ready(function() {
                 displaySearchResults(response.data);
                 // Usunięcie komunikatu ładowania po sukcesie
                 $formMessages.empty().removeClass('alert alert-info');
+                // Sprawdź od razu, czy nie trzeba pokazać przycisku suplementu
+                checkSupplementButton();
             },
             error: function(xhr) {
                 let errorMessage = 'Wystąpił błąd podczas wyszukiwania miasta';
@@ -125,6 +132,137 @@ $(document).ready(function() {
         });
     }
 
+    // Funkcja do wysyłania zapytania o uzupełnienie rekomendacji
+    function requestSupplement() {
+        if (!currentCityName) {
+            showErrorMessage('Brak nazwy miasta do uzupełnienia rekomendacji.');
+            return;
+        }
+
+        const existingTitles = $('.recommendation').map(function() {
+            // Pobierz tytuł, usuwając ewentualną ikonę trasy
+            const titleElement = $(this).find('.card-title');
+            const titleText = titleElement.clone().find('i').remove().end().text().trim();
+            return titleText;
+        }).get();
+
+        // console.log('Requesting supplement for:', currentCityName, 'Existing titles:', existingTitles);
+
+        const requestData = {
+            cityName: currentCityName,
+            supplement: true,
+            existingTitles: existingTitles
+        };
+
+        $submitButton.prop('disabled', true);
+        $spinner.removeClass('d-none');
+        setLoadingMessage('Generuję dodatkowe rekomendacje...', 'bi-stars');
+
+        $.ajax({
+            url: '/api/cities/search', // Używamy tego samego endpointu
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(requestData),
+            success: function(response) {
+                try {
+                    response = typeof response === 'string' ? JSON.parse(response) : response;
+                } catch (e) {
+                    throw new Error('Nieprawidłowy format odpowiedzi z serwera przy uzupełnianiu');
+                }
+
+                if (response && response.data && Array.isArray(response.data.newRecommendations)) {
+                    const newRecs = response.data.newRecommendations;
+                    if (newRecs.length > 0) {
+                        displayNewRecommendations(newRecs);
+                        showSuccessMessage(`Znalezionych rekomendacji: ${newRecs.length}`);
+                        supplementUsed = true; // Oznacz jako użyte
+                        $submitButton.prop('disabled', true).hide(); // Deaktywuj i ukryj przycisk na stałe
+                        $form.data('mode', 'search'); // Wróć do trybu search
+                    } else {
+                        showInfoMessage('Nie znaleziono dodatkowych unikalnych rekomendacji dla tego miasta.');
+                        supplementUsed = true; // Oznacz jako użyte, nawet jeśli nic nie znaleziono
+                        $submitButton.prop('disabled', true).hide(); // Deaktywuj i ukryj
+                        $form.data('mode', 'search'); // Wróć do trybu search
+                    }
+                } else {
+                    throw new Error('Nieprawidłowa odpowiedź serwera przy uzupełnianiu');
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'Wystąpił błąd podczas generowania dodatkowych rekomendacji';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                showErrorMessage(errorMessage);
+                // Nie ustawiamy supplementUsed = true w przypadku błędu, aby umożliwić ponowienie
+                $submitButton.prop('disabled', false); // Odblokuj przycisk w razie błędu
+            },
+            complete: function() {
+                $spinner.addClass('d-none');
+                // Nie odblokowuj przycisku tutaj, zrobiono to w success/error
+            }
+        });
+    }
+
+    // Funkcja do obliczania procentu akceptacji rekomendacji AI
+    function calculateAcceptanceRate() {
+        let totalAiRecommendations = 0;
+        let acceptedOrEditedCount = 0;
+
+        $('.recommendation').each(function() {
+            const $rec = $(this);
+            const model = $rec.data('model');
+
+            // Pomijamy rekomendacje trasy
+            if (model === 'route_planner' || model === 'route_planner_error') {
+                return; // continue
+            }
+
+            totalAiRecommendations++;
+
+            const status = $rec.data('status');
+            // Liczymy wszystko co NIE jest 'rejected' jako pozytywne
+            if (status !== 'rejected') {
+                acceptedOrEditedCount++;
+            }
+        });
+
+        if (totalAiRecommendations === 0) {
+            return 100; // Jeśli nie ma rekomendacji AI, uznajemy 100%
+        }
+
+        const rate = (acceptedOrEditedCount / totalAiRecommendations) * 100;
+        console.log(`Acceptance Rate: ${rate.toFixed(2)}% (${acceptedOrEditedCount}/${totalAiRecommendations})`);
+        return rate;
+    }
+
+    // Funkcja sprawdzająca, czy pokazać przycisk uzupełnienia
+    function checkSupplementButton() {
+        if (supplementUsed) return; // Jeśli już użyto, nie pokazuj ponownie
+
+        const acceptanceRate = calculateAcceptanceRate();
+
+        if (acceptanceRate <= 60) {
+            // console.log('Acceptance rate <= 60%, showing supplement button.');
+            $submitButton.html('Uzupełnij rekomendacje')
+                         .removeClass('btn-primary')
+                         .addClass('btn-warning')
+                         .prop('disabled', false); // Upewnij się, że jest odblokowany
+            // Zmieniamy zachowanie formularza/przycisku na tryb suplementu
+            // Można to zrobić zmieniając flagę lub dodając klasę
+            $form.data('mode', 'supplement');
+        } else {
+             // Jeśli procent wzrośnie powyżej 60, wróć do standardowego przycisku
+             // (choć w tym flow to mało prawdopodobne bez odświeżenia)
+             if ($form.data('mode') === 'supplement') {
+                  $submitButton.html('Wyszukaj atrakcje')
+                               .removeClass('btn-warning')
+                               .addClass('btn-primary');
+                  $form.data('mode', 'search'); 
+             }
+         }
+    }
+
     // Funkcja do wyświetlania komunikatów o błędach
     function showErrorMessage(message, isValidationError = false) {
         $formMessages
@@ -135,6 +273,22 @@ $(document).ready(function() {
         if (isValidationError && message.includes('nie jest rozpoznawana jako miasto')) {
             $cityInput.addClass('is-invalid');
         }
+    }
+
+    // Funkcja do wyświetlania komunikatów sukcesu
+    function showSuccessMessage(message) {
+        $formMessages
+            .removeClass('alert-info alert-danger alert-warning')
+            .addClass('alert alert-success')
+            .html(`<i class="bi bi-check-circle-fill me-2"></i> ${message}`);
+    }
+
+    // Funkcja do wyświetlania komunikatów informacyjnych
+    function showInfoMessage(message) {
+        $formMessages
+            .removeClass('alert-success alert-danger alert-warning')
+            .addClass('alert alert-info')
+            .html(`<i class="bi bi-info-circle-fill me-2"></i> ${message}`);
     }
 
     // Funkcja wyświetlająca wyniki wyszukiwania
@@ -189,12 +343,60 @@ $(document).ready(function() {
             $recommendationsList.append($recommendation);
         });
         
+        // Wyczyszczenie starych komunikatów
+        $formMessages.empty().removeClass('alert alert-danger alert-success alert-info alert-warning');
+
         // Pokazanie przycisków akcji (jeśli są jakieś rekomendacje poza trasą)
         if (data.recommendations.some(r => r.model !== 'route_planner' && r.model !== 'route_planner_error')) {
             $('#accept-all-btn, #save-recommendations-btn').removeClass('d-none');
         } else {
             $('#accept-all-btn, #save-recommendations-btn').addClass('d-none');
         }
+    }
+
+    // Funkcja do wyświetlania NOWYCH rekomendacji (dodaje na górze)
+    function displayNewRecommendations(newRecs) {
+        newRecs.reverse().forEach((rec, index) => {
+            const descriptionHtml = rec.description.replace(/\n/g, '<br>');
+            const isRoute = false; // Nowe rekomendacje nigdy nie są trasą
+            const cardClass = 'border-warning'; // Oznaczamy nowe rekomendacje
+            const titleIcon = '<i class="bi bi-star-fill text-warning me-2"></i>'; // Ikona dla nowych
+
+            const $recommendation = $(`
+                <div class="card mb-3 recommendation ${cardClass}" data-id="" data-index="new-${index}" data-model="${rec.model}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title" contenteditable="true">${titleIcon}${rec.title}</h5>
+                            <div class="btn-group">
+                                <button class="btn btn-sm btn-outline-primary edit-btn">
+                                    <i class="bi bi-pencil"></i> Edytuj
+                                </button>
+                                <button class="btn btn-sm btn-outline-success accept-btn">
+                                    <i class="bi bi-check-lg"></i> Akceptuj
+                                </button>
+                                <button class="btn btn-sm btn-outline-danger reject-btn">
+                                    <i class="bi bi-x-lg"></i> Odrzuć
+                                </button>
+                            </div>
+                        </div>
+                        <p class="card-text recommendation-description" contenteditable="true">${descriptionHtml}</p>
+                        <div class="text-muted small">
+                            <em>Źródło: ${rec.model}</em>
+                        </div>
+                        <div class="recommendation-status mt-2" style="display: none;"></div>
+                    </div>
+                </div>
+            `);
+
+            // Zapisanie oryginalnych wartości
+            $recommendation.data('original-title', rec.title);
+            $recommendation.data('original-description', rec.description);
+
+            // Dodanie na początku listy
+            $recommendationsList.prepend($recommendation);
+        });
+        // Po dodaniu nowych, przeliczmy procent akceptacji (choć przycisk i tak jest już ukryty)
+        calculateAcceptanceRate();
     }
 
     // Obsługa przycisku "Akceptuj wszystkie"
@@ -303,6 +505,17 @@ $(document).ready(function() {
         
         // Usunięcie klasy edycji
         $rec.removeClass('editing');
+    });
+
+    // Nasłuchiwanie na zmianę statusu rekomendacji, aby przeliczyć procent
+    $recommendationsList.on('click', '.accept-btn, .reject-btn', function() {
+        // Poczekaj chwilę na aktualizację danych i przelicz
+        setTimeout(checkSupplementButton, 100);
+    });
+
+    // Obsługa zapisu edycji również powinna wywołać przeliczenie
+    $recommendationsList.on('click', '.save-edit-btn', function() {
+        setTimeout(checkSupplementButton, 100);
     });
 
     // Obsługa przycisku "Zapisz wybrane"

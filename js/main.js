@@ -23,19 +23,19 @@ $(document).ready(function() {
         // Ogólna obsługa błędów HTTP
         if (jqXHR.status === 401) {
             // Nieuprawniony dostęp - przekierowanie do strony logowania
-            console.error('Nieuprawniony dostęp - przekierowanie do strony logowania:', settings.url);
+            //console.error('Nieuprawniony dostęp - przekierowanie do strony logowania:', settings.url);
             window.location.href = '/login?error=access';
         } else if (jqXHR.status === 403) {
             // Zabroniony dostęp
-            console.error('Zabroniony dostęp do zasobu:', settings.url);
+            //console.error('Zabroniony dostęp do zasobu:', settings.url);
             window.location.href = '/login?error=access';
         } else if (jqXHR.status === 404) {
             // Nie znaleziono zasobu
-            console.error('Nie znaleziono zasobu:', settings.url);
+            //console.error('Nie znaleziono zasobu:', settings.url);
             showErrorMessage('Przepraszamy, ale żądany zasób nie został znaleziony. Sprawdź poprawność adresu URL lub spróbuj ponownie później.');
         } else if (jqXHR.status === 500) {
             // Błąd serwera
-            console.error('Błąd serwera podczas przetwarzania żądania:', settings.url);
+            //console.error('Błąd serwera podczas przetwarzania żądania:', settings.url);
             showErrorMessage('Przepraszamy, wystąpił wewnętrzny błąd serwera. Nasi programiści zostali powiadomieni o problemie. Prosimy spróbować ponownie za kilka minut.');
         }
     });

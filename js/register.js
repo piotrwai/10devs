@@ -94,7 +94,8 @@ $(document).ready(function() {
                     window.location.href = '/login?registered=1';
                 }, 2000);
             },
-            error: function(xhr) {console.log();
+            error: function(xhr) {
+                // console.log();
                 let errorMessage = 'Wystąpił błąd podczas rejestracji.';
                 
                 if (xhr.responseJSON && xhr.responseJSON.errors) {

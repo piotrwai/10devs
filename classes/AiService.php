@@ -44,7 +44,6 @@ class AiService {
             $payload = [
                 'city' => $cityName,
                 'user_id' => $userId,
-                'city_id' => $cityId,
                 'max_recommendations' => 10
             ];
             
@@ -348,5 +347,240 @@ PROMPT;
             ErrorLogger::logError('ai_log_error', $e->getMessage(), $userId);
             return false;
         }
+    }
+
+    /**
+     * Generuje dodatkowe rekomendacje dla miasta, unikając istniejących
+     *
+     * @param string $cityName Nazwa miasta
+     * @param int $userId ID użytkownika
+     * @param array $existingTitles Lista tytułów istniejących rekomendacji
+     * @return array|null Nowe rekomendacje wygenerowane przez AI
+     */
+    public function generateSupplementaryRecommendations($cityName, $userId, $existingTitles)
+    {
+        try {
+            // Ustawienie limitu czasu wykonania skryptu
+            set_time_limit($this->timeout + 10);
+
+            // Nazwa miasta jest teraz przekazywana bezpośrednio
+            if (empty(trim($cityName))) {
+                 throw new Exception("Nazwa miasta nie może być pusta.");
+            }
+
+            // Przygotowanie danych do wysłania
+            $payload = [
+                'city' => $cityName,
+                'user_id' => $userId,
+                'existing_titles' => $existingTitles,
+                'max_recommendations' => 5 // Możemy chcieć mniej rekomendacji uzupełniających
+            ];
+
+            // Wywołanie serwisu AI (użyjemy dedykowanej metody do promptu uzupełniającego)
+            $response = $this->callSupplementaryAiService($payload);
+
+            if (!$response) {
+                throw new Exception("Nie udało się uzyskać odpowiedzi od serwisu AI dla rekomendacji uzupełniających");
+            }
+
+            // Walidacja odpowiedzi (podobna jak w generateCityRecommendations, ale bez city_summary)
+            if (!isset($response['recommendations']) || !is_array($response['recommendations'])) {
+                 // Dopuszczamy pustą tablicę, jeśli AI nie znajdzie nic nowego
+                if (empty($response['recommendations'])) {
+                   return []; // Zwracamy pustą tablicę, jeśli nie ma nowych rekomendacji
+                }
+                throw new Exception("Brak lub nieprawidłowy format rekomendacji uzupełniających");
+            }
+
+            // Przygotowanie listy nowych rekomendacji
+            $newRecommendations = [];
+            $invalidRecommendations = 0;
+
+            foreach ($response['recommendations'] as $rec) {
+                // Walidacja pojedynczej rekomendacji
+                if (!isset($rec['title']) || !is_string($rec['title']) || empty(trim($rec['title']))) {
+                    $invalidRecommendations++;
+                    continue;
+                }
+
+                if (!isset($rec['description']) || !is_string($rec['description']) || strlen(trim($rec['description'])) < 100) {
+                    $invalidRecommendations++;
+                    continue;
+                }
+
+                 // Sprawdzenie czy tytuł już istnieje (dodatkowa ochrona)
+                 if (in_array(trim($rec['title']), $existingTitles)) {
+                    $invalidRecommendations++;
+                    continue;
+                 }
+
+                // Ograniczenie długości pól
+                $title = mb_substr(trim($rec['title']), 0, 200);
+                $description = mb_substr($rec['description'], 0, 64000);
+
+                $newRecommendations[] = [
+                    'id' => null, // Nowe rekomendacje nie mają jeszcze ID
+                    'title' => $title,
+                    'description' => $description,
+                    'model' => $this->model // Model użyty do generowania
+                ];
+
+                // Ograniczenie do maksymalnej liczby nowych rekomendacji
+                if (count($newRecommendations) >= $payload['max_recommendations']) {
+                    break;
+                }
+            }
+            
+            // Logowanie statystyk
+            if ($invalidRecommendations > 0) {
+                ErrorLogger::logError('supplement_info', "Pominięto $invalidRecommendations nieprawidłowych lub zduplikowanych rekomendacji uzupełniających dla miasta $cityName", $userId);
+            }
+
+            // Logowanie udanego wywołania (można dodać specyficzny status/content)
+            $this->logAiCall($userId, null, 'supplement_success', $cityName);
+
+            return $newRecommendations;
+
+        } catch (Exception $e) {
+            ErrorLogger::logError('supplement_ai_error', "Błąd przy generowaniu uzupełnienia dla '$cityName': " . $e->getMessage(), $userId);
+            $this->logAiCall($userId, null, 'supplement_error', $cityName . ' - ' . $e->getMessage());
+            return null; // Zwracamy null w przypadku błędu
+        }
+    }
+
+    /**
+     * Wywołuje serwis AI OpenAI dla rekomendacji uzupełniających
+     *
+     * @param array $payload Dane do wysłania
+     * @return array|null Odpowiedź z serwisu AI
+     * @throws Exception W przypadku błędu komunikacji z API
+     */
+    private function callSupplementaryAiService($payload) {
+        // Przygotowanie promptu dla modelu OpenAI, uwzględniając istniejące tytuły
+        $prompt = $this->prepareSupplementaryPrompt($payload['city'], $payload['existing_titles']);
+
+        /*
+         * ZAKOMENTOWANY KOD PRODUKCYJNY - WYWOŁANIE API OpenAI DLA UZUPEŁNIENIA
+         */
+        /*
+        $requestData = [
+            'model' => $this->model,
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => 'Jesteś pomocnym asystentem specjalizującym się w turystyce i rekomendacjach miejsc wartych odwiedzenia. Odpowiadasz w strukturyzowanym formacie JSON.'
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ],
+            'temperature' => 0.75, // Można lekko zwiększyć temperaturę dla większej różnorodności
+            'max_tokens' => $this->maxTokens,
+            'response_format' => ['type' => 'json_object']
+        ];
+
+        $ch = curl_init($this->apiEndpoint);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($requestData));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json',
+            'Authorization: Bearer ' . $this->apiKey
+        ]);
+        curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            curl_close($ch);
+            throw new Exception('Błąd cURL przy uzupełnianiu: ' . curl_error($ch));
+        }
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            throw new Exception('Błąd API OpenAI przy uzupełnianiu: kod HTTP ' . $httpCode . ', odpowiedź: ' . $response);
+        }
+
+        $responseData = json_decode($response, true);
+
+        if (!isset($responseData['choices'][0]['message']['content'])) {
+            throw new Exception('Nieprawidłowy format odpowiedzi z API OpenAI przy uzupełnianiu');
+        }
+
+        $content = $responseData['choices'][0]['message']['content'];
+        $result = json_decode($content, true);
+
+        if ($result === null) {
+            throw new Exception('Nie można zdekodować zawartości JSON z odpowiedzi OpenAI przy uzupełnianiu');
+        }
+
+        return $result;
+        */
+
+        /*
+         * TYMCZASOWA ODPOWIEDŹ DO TESTÓW UZUPEŁNIENIA - PRZYKŁAD POPRAWNEJ ODPOWIEDZI
+         * Ten kod zwraca przykładową odpowiedź dla celów testowych uzupełniania.
+         */
+        return [
+            'recommendations' => [
+                [
+                    'title' => 'Nowa Atrakcja 1',
+                    'description' => 'To jest zupełnie nowa atrakcja, której nie było wcześniej. Opis musi być wystarczająco długi, aby przejść walidację (minimum 100 znaków). Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+                    'model' => $this->model
+                ],
+                [
+                    'title' => 'Inny punkt widokowy',
+                    'description' => 'Kolejna unikalna propozycja wygenerowana w ramach uzupełnienia. Zapewnia inne spojrzenie na miasto niż poprzednie rekomendacje. Pamiętajmy o minimalnej długości opisu.',
+                    'model' => $this->model
+                ]
+            ]
+        ];
+    }
+
+    /**
+     * Przygotowuje prompt dla modelu AI uzupełniającego
+     *
+     * @param string $cityName Nazwa miasta
+     * @param array $existingTitles Lista tytułów istniejących rekomendacji
+     * @return string Przygotowany prompt
+     */
+    private function prepareSupplementaryPrompt($cityName, $existingTitles) {
+        // Przygotowanie promptu dla modelu OpenAI, uwzględniając istniejące tytuły
+        // Upewnijmy się, że tytuły są bezpieczne do wstawienia w prompt
+        $escapedTitles = array_map(function($title) {
+            return str_replace(["\n", "\r", '"', '`'], ' ', $title); // Podstawowe czyszczenie
+        }, $existingTitles);
+        $existingTitlesStr = '"' . implode('", "', $escapedTitles) . '"';
+
+        return <<<PROMPT
+Znajdź dodatkowe, interesujące miejsca lub atrakcje turystyczne w mieście $cityName.
+
+Potrzebuję listy nowych rekomendacji, które są **zupełnie inne** niż te, które już mam. Oto lista tytułów istniejących rekomendacji, których **nie należy powtarzać ani proponować niczego bardzo podobnego**: [$existingTitlesStr].
+
+Wygeneruj od 1 do 5 nowych rekomendacji.
+
+Odpowiedź sformatuj jako obiekt JSON w następującym formacie:
+```json
+{
+  "recommendations": [
+    {
+      "title": "Unikalna nazwa nowej atrakcji",
+      "description": "Szczegółowy opis nowej atrakcji (co najmniej 100 znaków, maksymalnie 64000 znaków)"
+    }
+    // ...ewentualnie więcej nowych rekomendacji...
+  ]
+}
+```
+
+Każda nowa rekomendacja musi mieć:
+- `title`: Unikalny tytuł (maksymalnie 200 znaków), różniący się od podanych powyżej.
+- `description`: Szczegółowy opis (minimum 100 znaków, maksimum 64000 znaków).
+
+Upewnij się, że odpowiedź jest poprawnym JSONem i zawiera tylko klucz `recommendations` z listą nowych propozycji.
+PROMPT;
     }
 } 

@@ -67,7 +67,7 @@ $(document).ready(function() {
                 }
                 
                 const userData = response.data;
-                console.log('Pobrane dane użytkownika:', userData);
+                // console.log('Pobrane dane użytkownika:', userData);
                 
                 // Aktualizuj pola tylko jeśli dane się zmieniły
                 if (userData.login && userData.login !== currentLogin) {

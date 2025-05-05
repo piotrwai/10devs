@@ -159,7 +159,7 @@ try {
         'city' => [
             'id' => $cityId,
             'name' => $city['name'],
-            'summary' => $city['summary']
+            'summary' => $city['description']
         ],
         'savedRecommendations' => count($savedRecommendations),
         'recommendations' => $savedRecommendations

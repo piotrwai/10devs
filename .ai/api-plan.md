@@ -100,63 +100,68 @@
   ```
 
 #### POST /api/cities/search
-- **Description**: Search for a destination city. The system verifies the city name, calculates the route from the user's base city, and then generates AI recommendations for attractions. This is the initial step when a user wants to explore a new city.
-- **Process Flow**:
-  1. The system validates the city name format (length restrictions).
-  2. The system verifies if the provided name is actually a city using Google Geocoding API, checking for the 'locality' type in the response.
-  3. If the name is not recognized as a city, the API returns an error response.
-  4. If the city name is valid, the system retrieves the user's base city from their profile.
-  5. It then attempts to find a driving route from the base city to the destination city using Google Directions API.
-  6. Regardless of whether a route is found, the system proceeds to generate AI recommendations for the destination city.
-  7. The route information (or an error message if not found) is added as the first item in the recommendations list.
-- **Request Payload**:
+- **Description**: Search for a destination city or request supplementary recommendations.
+  - **Standard Search**: Verifies city name via Google Geocoding, calculates route from user's base city, and generates initial AI recommendations.
+  - **Supplement Search**: If `supplement: true` is passed along with `cityName` and an array of `existingTitles`, it generates *new*, unique recommendations, avoiding the provided titles.
+- **Process Flow (Standard Search)**:
+  1. Validate `cityName`.
+  2. Verify `cityName` using Google Geocoding API. Return error if not a city. Correct name if needed.
+  3. Retrieve user's base city.
+  4. Attempt to find driving route via Google Directions API.
+  5. Generate initial AI recommendations (summary + up to 10 attractions).
+  6. Prepend route information to the recommendations list.
+- **Process Flow (Supplement Search)**:
+  1. Validate `cityName` and `existingTitles`.
+  2. Call AI service to generate supplementary recommendations (e.g., up to 5), avoiding `existingTitles`.
+  3. Return only the newly generated recommendations.
+- **Request Payload (Standard Search)**:
   ```json
   {
     "cityName": "string"           // name of the city to search for
   }
   ```
-- **Response**:
-  - **Success (200 OK)**:
-    ```json
-    {
-      "city": {
-        "id": number,             // will be null if city is not yet saved for this user
-        "name": "string",
-        "summary": "string"       // AI-generated summary (up to 150 characters)
-      },
-      "recommendations": [
-        {
-          "id": null,
-          "title": "string",          // Format: "[Base City] - [Destination City]: [Distance] km" or "[Base City] - [Destination City]"
-          "description": "string",    // Steps of the route separated by newline or error message
-          "model": "route_planner | route_planner_error",
-          "status": "generated"
-        },
-        {
-          "id": number,           // will be null as these are not yet saved
-          "title": "string",
-          "description": "string",
-          "model": "string"       // AI model identifier
-        },
-        // ... up to 10 AI recommendations
-      ]
-    }
-    ```
-  - **Error (400 Bad Request)**:
-    - If the city name is invalid or empty:
-    ```json
-    {
-      "error": "MISSING_DATA",
-      "message": "Nazwa miasta jest wymagana."
-    }
-    ```
-    - If the provided name is not recognized as a city:
-    ```json
-    {
-      "error": "INVALID_CITY",
-      "message": "Wprowadzona nazwa \"[city_name]\" nie jest rozpoznawana jako miasto. Sprawdź pisownię lub podaj inną nazwę."
-    }
-    ```
+- **Request Payload (Supplement Search)**:
+  ```json
+  {
+    "cityName": "string",          // name of the city
+    "supplement": true,
+    "existingTitles": ["string"]   // array of existing recommendation titles to avoid
+  }
+  ```
+- **Response (Standard Search - 200 OK)**:
+  ```json
+  {
+    "city": {
+      "id": null,               // ID is null as city is not saved yet
+      "name": "string",         // Corrected city name
+      "summary": "string"       // AI-generated summary
+    },
+    "recommendations": [
+      { /* Route Info */ },
+      { /* AI Recommendation 1 */ },
+      // ... up to 10 AI recommendations
+    ]
+  }
+  ```
+- **Response (Supplement Search - 200 OK)**:
+  ```json
+  {
+    "newRecommendations": [
+      {
+         "id": null,
+         "title": "string",
+         "description": "string",
+         "model": "string",
+         "status": "generated"
+      }
+      // ... new recommendations
+    ]
+  }
+  ```
+- **Error Responses**:
+  - 400 Bad Request (Missing/invalid `cityName`, `existingTitles` in supplement mode, name not a city)
+  - 401 Unauthorized
+  - 500 Internal Server Error (Geocoding/Directions/AI service errors)
 
 #### POST /api/recommendations/save
 - **Description**: Save AI-generated city and recommendations after a user decides to keep them. This creates a new city record for the user (if not exists) and saves all accepted recommendations.
@@ -231,16 +236,6 @@
     ```
   - **Error (404 Not Found)**: If the cityId does not exist.
 
-#### POST /api/cities/{cityId}/recommendations/supplement
-- **Description**: Trigger supplementary recommendations if the acceptance rate of recommendations falls below 60%. This action can be performed only once per city.
-- **Response (200 OK)**:
-  ```json
-  {
-    "message": "Supplementary recommendations added successfully.",
-    "newRecommendations": [ { ... } ]
-  }
-  ```
-- **Error (400 Bad Request)**: If the supplement action has already been performed.
 
 #### DELETE /api/cities/{cityId}
 - **Description**: Delete a city and all its associated recommendations for the authenticated user. Requires confirmation from the client-side before calling.

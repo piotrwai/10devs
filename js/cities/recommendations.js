@@ -133,7 +133,7 @@ $(document).ready(function() {
     $(document).on('click', '.accept-btn', function() {
         clearMessages();
         const recId = $(this).data('id');
-        console.log('Accepting recommendation ID:', recId);
+        // console.log('Accepting recommendation ID:', recId);
         $.ajax({
             url: `/api/recommendations/${recId}`,
             method: 'PUT',
@@ -156,7 +156,7 @@ $(document).ready(function() {
     $(document).on('click', '.reject-btn', function() {
         clearMessages();
         const recId = $(this).data('id');
-        console.log('Rejecting recommendation ID:', recId);
+        // console.log('Rejecting recommendation ID:', recId);
         $.ajax({
             url: `/api/recommendations/${recId}`,
             method: 'PUT',
@@ -194,7 +194,7 @@ $(document).ready(function() {
     $('#saveRecBtn').on('click', function() {
         clearMessages();
         const recId = $('#editRecModal').data('rec-id');
-        console.log('Saving recommendation ID:', recId);
+        // console.log('Saving recommendation ID:', recId);
         const newTitle = $('#recTitle').val().trim();
         const newDesc = $('#recDesc').val().trim();
         if (!newTitle || !newDesc) {
@@ -228,7 +228,7 @@ $(document).ready(function() {
     $(document).on('click', '.delete-btn', function() {
         clearMessages();
         const recId = $(this).data('id');
-        console.log('Opening delete modal for recommendation ID:', recId);
+        // console.log('Opening delete modal for recommendation ID:', recId);
         $('#deleteRecModal').data('rec-id', recId);
         bootstrap.Modal.getOrCreateInstance($('#deleteRecModal')).show();
     });
@@ -236,7 +236,7 @@ $(document).ready(function() {
         clearMessages();
         const $btn = $(this);
         const recId = $('#deleteRecModal').data('rec-id');
-        console.log('Deleting recommendation ID:', recId);
+        // console.log('Deleting recommendation ID:', recId);
         $btn.prop('disabled', true).text('Usuwanie...');
         $.ajax({
             url: `/api/recommendations/${recId}`,
@@ -267,7 +267,7 @@ $(document).ready(function() {
     // Obsługa tworzenia nowej rekomendacji
     $('#createRecBtn').on('click', function() {
         clearMessages();
-        console.log('Creating new recommendation for city ID:', CITY_ID);
+        // console.log('Creating new recommendation for city ID:', CITY_ID);
         const newTitle = $('#newRecTitle').val().trim();
         const newDesc = $('#newRecDesc').val().trim();
         if (!newTitle || !newDesc) {
@@ -346,7 +346,7 @@ $(document).ready(function() {
         const currentStatus = $element.data('current-status') === true || $element.data('current-status') === 'true'; // Konwersja na boolean
         const newStatus = !currentStatus;
 
-        console.log(`Toggling done status for recId: ${recId} from ${currentStatus} to ${newStatus}`);
+        // console.log(`Toggling done status for recId: ${recId} from ${currentStatus} to ${newStatus}`);
 
         // Tymczasowa zmiana ikony na spinner
         $element.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
