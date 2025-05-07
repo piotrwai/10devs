@@ -9,6 +9,9 @@ Turyści mają trudności ze znalezieniem i katalogowaniem informacji o ciekawyc
 ## 3. Wymagania funkcjonalne
 - Rejestracja i logowanie:
   - Użytkownik rejestruje się podając login, hasło (szyfrowane w bazie danych) oraz miasto bazowe.
+  - System weryfikuje, czy podane miasto bazowe istnieje, używając Google Geocoding API.
+  - Jeśli miasto bazowe nie istnieje, system wyświetla komunikat błędu i przerywa proces rejestracji.
+  - Jeśli nazwa miasta bazowego różni się od oficjalnej nazwy w Google API, system automatycznie koryguje nazwę.
   - Uwierzytelnianie odbywa się przy użyciu loginu i hasła.
   - Bez prawidłowego logowania można tylko dokonać rejestracji i logowania.
 - Bezpieczny dostęp:
@@ -69,6 +72,9 @@ Tytuł: Rejestracja i logowanie
 Opis: Jako turysta chcę się zarejestrować i zalogować, podając wyłącznie login, hasło (szyfrowane) oraz miasto bazowe, aby uzyskać dostęp do systemu.  
 Kryteria akceptacji:  
 - Użytkownik rejestruje się poprzez formularz rejestracyjny z polami: login, hasło i miasto bazowe.  
+- System weryfikuje poprawność miasta bazowego przez Google Geocoding API.
+- Jeśli miasto bazowe nie istnieje, system wyświetla komunikat błędu i nie pozwala na rejestrację.
+- Jeśli nazwa miasta bazowego różni się od oficjalnej, system automatycznie ją koryguje (np. zapis z dużej litery, czeski błąd, itp.).
 - Hasło jest szyfrowane.  
 - Użytkownik może się zalogować, używając loginu i hasła.
 - Po prawidłowej rejestracji i prawidłowym logowaniu system przechodzi do funkcji wyszukiwania atrakcji.

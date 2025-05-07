@@ -25,7 +25,6 @@
                             <label for="login">Login (2-50 znaków):</label>
                             <input type="text" class="form-control" id="login" name="login" required minlength="2" maxlength="50">
                             <div class="invalid-feedback" id="login-error">Login musi mieć od 2 do 50 znaków.</div>
-                            <small class="form-text text-muted">Login musi być unikalny w systemie.</small>
                         </div>
                         
                         {* Pole: Hasło użytkownika *}
@@ -47,7 +46,7 @@
                             <label for="cityBase">Miasto bazowe (3-150 znaków):</label>
                             <input type="text" class="form-control" id="cityBase" name="cityBase" required minlength="3" maxlength="150">
                             <div class="invalid-feedback" id="cityBase-error">Miasto bazowe musi mieć od 3 do 150 znaków.</div>
-                            <small class="form-text text-muted">Podaj miasto, które będzie Twoim punktem startowym.</small>
+                            <small class="form-text text-muted">Podaj miasto, które będzie Twoim punktem startowym w podróżach.</small>
                         </div>
                         
                         {* Przycisk rejestracji *}

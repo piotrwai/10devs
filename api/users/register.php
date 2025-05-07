@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/../../classes/Response.php';
 require_once __DIR__ . '/../../commonDB/users.php';
+require_once __DIR__ . '/../../classes/GeoHelper.php';
 
 // Ustawienie nagłówków CORS i typu odpowiedzi
 header('Access-Control-Allow-Origin: *');
@@ -25,19 +26,19 @@ $data = json_decode(file_get_contents('php://input'), true);
 $errors = [];
 
 if (empty($data['login']) || strlen($data['login']) < 2 || strlen($data['login']) > 50) {
-    $errors[] = 'Login musi mieć od 2 do 50 znaków';
+    $errors[] = 'Login musi mieć od 2 do 50 znaków,';
 }
 
 if (empty($data['password']) || strlen($data['password']) < 5) {
-    $errors[] = 'Hasło musi mieć minimum 5 znaków';
+    $errors[] = 'Hasło musi mieć minimum 5 znaków,';
 }
 
 if (empty($data['cityBase']) || strlen($data['cityBase']) < 3 || strlen($data['cityBase']) > 150) {
-    $errors[] = 'Miasto bazowe musi mieć od 3 do 150 znaków';
+    $errors[] = 'Miasto bazowe musi mieć od 3 do 150 znaków.';
 }
 
 if (!is_string($data['login']) || !is_string($data['password']) || !is_string($data['cityBase'])) {
-    Response::error(400, 'Nieprawidłowy format danych');
+    Response::error(400, 'Nieprawidłowy format danych.');
     exit();
 }
 
@@ -48,6 +49,23 @@ if (!empty($errors)) {
 }
 
 try {
+    // Sprawdzenie czy miasto istnieje
+    $geoHelper = new GeoHelper();
+    $cityCheck = $geoHelper->isCity($data['cityBase']);
+    
+    if ($cityCheck === false) {
+        Response::error(500, 'Błąd podczas weryfikacji miasta. Spróbuj ponownie później.');
+        exit();
+    }
+    
+    if (!$cityCheck['isCity']) {
+        Response::error(400, 'Miasto nie istnieje. Wprowadź prawidłową nazwę.');
+        exit();
+    }
+    
+    // Aktualizacja nazwy miasta na poprawną formę
+    $data['cityBase'] = $cityCheck['properName'];
+
     // Sprawdzenie czy login jest unikalny
     if (isLoginTaken($data['login'])) {
         Response::error(409, 'Login jest już zajęty');

@@ -31,13 +31,13 @@ $(document).ready(function() {
         
         if (!$loginInput.val().trim()) {
             $loginInput.addClass('is-invalid');
-            $('#login-error').text('Proszę podać login');
+            $('#login-error').text('Proszę podać login.');
             isValid = false;
         }
         
         if (!$passwordInput.val()) {
             $passwordInput.addClass('is-invalid');
-            $('#password-error').text('Proszę podać hasło');
+            $('#password-error').text('Proszę podać hasło.');
             isValid = false;
         }
         

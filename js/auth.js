@@ -15,7 +15,11 @@ $(document).ready(function() {
     });
     
     // Obsługa błędów autoryzacji
-    $(document).ajaxError(function(event, xhr) {
+    $(document).ajaxError(function(event, xhr, settings) {
+        // Ignoruj obsługę błędów dla formularza logowania
+        if (settings.url === '/api/users/login' || window.location.pathname === '/login') {
+            return;
+        }
         if (xhr.status === 401) {
             // Usunięcie lokalnych danych i przekierowanie do strony logowania
             localStorage.removeItem('user_data');

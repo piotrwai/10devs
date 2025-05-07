@@ -1,0 +1,26 @@
+{
+  "name": "10devs",
+  "version": "1.0.0",
+  "description": "- PHP 7.x lub 8.x\r - MySQL/MariaDB\r - Dostęp do API OpenAI (klucz API)\r - Dostęp do Google Geocoding API oraz Google Directions API",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/piotrwai/10devs.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/piotrwai/10devs/issues"
+  },
+  "homepage": "https://github.com/piotrwai/10devs#readme",
+  "devDependencies": {
+    "cypress": "^14.3.3"
+  }
+}

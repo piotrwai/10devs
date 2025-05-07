@@ -35,13 +35,13 @@ try {
     $user = getUserByLogin($data['login']);
     
     if (!$user) {
-        Response::error(401, 'Nieprawidłowy login lub hasło');
+        Response::error(401, 'Nieprawidłowy login lub hasło.');
         exit();
     }
     
     // Weryfikacja hasła
     if (!password_verify($data['password'], $user['usr_password'])) {
-        Response::error(401, 'Nieprawidłowy login lub hasło');
+        Response::error(401, 'Nieprawidłowy login lub hasło.');
         exit();
     }
     

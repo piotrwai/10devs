@@ -21,4 +21,5 @@ smarty/templates_c/*
 
 # PHPUnit
 vendor/
+node_modules/
 

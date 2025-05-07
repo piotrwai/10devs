@@ -16,7 +16,7 @@ $(document).ready(function() {
     // Wspólna obsługa błędów AJAX
     $(document).ajaxError(function(event, jqXHR, settings, thrownError) {
         // Ignoruj obsługę błędów dla formularza logowania
-        if (settings.url === '/api/users/login') {
+        if (settings.url === '/api/users/login' || window.location.pathname === '/login') {
             return;
         }
         
@@ -24,11 +24,11 @@ $(document).ready(function() {
         if (jqXHR.status === 401) {
             // Nieuprawniony dostęp - przekierowanie do strony logowania
             //console.error('Nieuprawniony dostęp - przekierowanie do strony logowania:', settings.url);
-            window.location.href = '/login?error=access';
+            window.location.href = '/login?error=access2';
         } else if (jqXHR.status === 403) {
             // Zabroniony dostęp
             //console.error('Zabroniony dostęp do zasobu:', settings.url);
-            window.location.href = '/login?error=access';
+            window.location.href = '/login?error=access3';
         } else if (jqXHR.status === 404) {
             // Nie znaleziono zasobu
             //console.error('Nie znaleziono zasobu:', settings.url);

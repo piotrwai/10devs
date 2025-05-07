@@ -28,7 +28,7 @@ $(document).ready(function() {
         const cityBase = $cityBaseInput.val().trim();
         
         // Walidacja loginu
-        if (!login || login.length < 2 || login.length > 50) {
+        if (!login || login.length < 3 || login.length > 50) {
             $loginInput.addClass('is-invalid');
             $('#login-error').text('Login musi mieć od 2 do 50 znaków');
             isValid = false;
@@ -95,13 +95,25 @@ $(document).ready(function() {
                 }, 2000);
             },
             error: function(xhr) {
-                // console.log();
                 let errorMessage = 'Wystąpił błąd podczas rejestracji.';
                 
-                if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    errorMessage = xhr.responseJSON.errors.join('<br>');
-                } else if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
+                if (xhr.responseJSON) {
+                    if (xhr.responseJSON.errors) {
+                        errorMessage = xhr.responseJSON.errors.join('<br>');
+                    } else if (xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                        
+                        // Jeśli otrzymaliśmy poprawioną nazwę miasta, zaktualizuj pole
+                        if (xhr.responseJSON.data && xhr.responseJSON.data.properName) {
+                            $cityBaseInput.val(xhr.responseJSON.data.properName);
+                        }
+                        
+                        // Jeśli błąd dotyczy miasta, podświetl pole miasta
+                        if (errorMessage.includes('Miasto nie istnieje')) {
+                            $cityBaseInput.addClass('is-invalid');
+                            $('#cityBase-error').text(errorMessage);
+                        }
+                    }
                 }
                 
                 $formMessages
