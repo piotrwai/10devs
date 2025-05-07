@@ -108,8 +108,11 @@ try {
         // Ustawienie limitu czasu wykonania skryptu
         set_time_limit(90);
 
-        // Sprawdzenie czy to miasto za pomocą statycznej metody GeoHelper
-        $cityCheck = GeoHelper::isCity($cityName);
+        // Utworzenie instancji GeoHelper
+        $geoHelper = new GeoHelper();
+
+        // Sprawdzenie czy to miasto za pomocą metody instancji GeoHelper
+        $cityCheck = $geoHelper->isCity($cityName);
         if ($cityCheck === false) {
             Response::error(500, 'Błąd podczas weryfikacji miasta. Spróbuj ponownie później.');
             exit;
@@ -124,10 +127,10 @@ try {
         $cityName = $cityCheck['properName'];
 
         // --------------------------------------------------------------------
-        // KROK: Sprawdzenie trasy z miasta bazowego użytkownika (metoda statyczna)
+        // KROK: Sprawdzenie trasy z miasta bazowego użytkownika (metoda instancji)
         // --------------------------------------------------------------------
         $directionsRecommendation = null;
-        $directionsData = GeoHelper::getDirections($userBaseCity, $cityName);
+        $directionsData = $geoHelper->getDirections($userBaseCity, $cityName);
 
         if ($directionsData) {
             $directionsTitle = sprintf(

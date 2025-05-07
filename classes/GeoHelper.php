@@ -11,7 +11,7 @@ class GeoHelper
      * @param string $cityName Nazwa do sprawdzenia.
      * @return array|false Zwraca tablicę [isCity => bool, properName => string] lub false w przypadku błędu
      */
-    public static function isCity(string $cityName)
+    public function isCity(string $cityName)
     {
         // Dołączenie potrzebnych plików (jeśli nie zostały wcześniej dołączone)
         require_once __DIR__ . '/../commonDB/errorLogs.php';
@@ -40,7 +40,7 @@ class GeoHelper
         );
 
         // Wywołanie cURL (prywatna metoda pomocnicza)
-        $response = self::performCurlRequest($apiUrl, 'Geocoding');
+        $response = $this->performCurlRequest($apiUrl, 'Geocoding');
 
         if ($response === null) {
             // Błąd został już zalogowany w performCurlRequest
@@ -89,7 +89,7 @@ class GeoHelper
      * @param string $destinationCity Miasto docelowe.
      * @return array|null Dane trasy [distance_km, steps, summary] lub null w przypadku błędu.
      */
-    public static function getDirections(string $originCity, string $destinationCity): ?array
+    public function getDirections(string $originCity, string $destinationCity): ?array
     {
         require_once __DIR__ . '/../commonDB/errorLogs.php';
 
@@ -124,7 +124,7 @@ class GeoHelper
 
         $apiUrl = 'https://maps.googleapis.com/maps/api/directions/json?' . http_build_query($params);
 
-        $response = self::performCurlRequest($apiUrl, 'Directions');
+        $response = $this->performCurlRequest($apiUrl, 'Directions');
 
         if ($response === null) {
             // Błąd zalogowany w performCurlRequest
@@ -179,7 +179,7 @@ class GeoHelper
      * @param string $apiName Nazwa API dla logowania.
      * @return array|null Tablica z odpowiedzią lub null w przypadku błędu.
      */
-    private static function performCurlRequest(string $url, string $apiName): ?array
+    protected function performCurlRequest(string $url, string $apiName): ?array
     {
         $ch = curl_init();
         curl_setopt_array($ch, [

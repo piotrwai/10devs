@@ -6,6 +6,7 @@
 - PHP 7.x lub 8.x
 - MySQL/MariaDB
 - Dostęp do API OpenAI (klucz API)
+- Dostęp do Google Geocoding API oraz Google Directions API
 
 ### Instalacja
 1. Sklonuj repozytorium:
@@ -22,30 +23,68 @@
    - Edytuj `config.php` i wprowadź odpowiednie dane:
      - Dane połączenia do bazy danych
      - Klucz API OpenAI
+     - Klucze Google API (Geocoding i Directions)
+     - Sekret JWT do podpisywania tokenów
      - Inne ustawienia specyficzne dla środowiska
 
 ### Struktura projektu
-- `./api/` - Endpointy API REST
-- `./classes/` - Klasy PHP
-- `./commonDB/` - Funkcje do operacji na bazie danych
-- `./templates/` - Pliki szablonów HTML
-- `./img/` - Pliki graficzne
+- `/api/` - Endpointy API REST
+  - `/api/auth/` - Endpointy autoryzacji (logowanie, rejestracja)
+  - `/api/cities/` - Zarządzanie miastami
+  - `/api/recommendations/` - Zarządzanie rekomendacjami
+  - `/api/users/` - Zarządzanie danymi użytkowników
+- `/cities/` - Widoki związane z wyszukiwaniem miast
+- `/city/` - Widoki szczegółów miasta i rekomendacji
+- `/classes/` - Klasy PHP (AiService, GeoHelper, itp.)
+- `/commonDB/` - Funkcje do operacji na bazie danych
+- `/css/` - Pliki stylów
+- `/js/` - Skrypty JavaScript
+  - `/js/cities/` - Skrypty specyficzne dla miast
+- `/templates/` - Pliki szablonów HTML
+  - `/templates/cities/` - Szablony związane z miastami
 
 ## Endpointy API
 
+### Użytkownicy
+- `POST /api/users/register` - Rejestracja nowego użytkownika
+- `POST /api/users/login` - Logowanie użytkownika i wydanie tokenu JWT
+- `POST /api/users/logout` - Wylogowanie użytkownika
+- `PUT /api/users/me` - Aktualizacja danych zalogowanego użytkownika
+- `GET /api/users/me` - Pobranie profilu zalogowanego użytkownika
+
 ### Miasta
+- `GET /api/cities` - Lista miast użytkownika z liczbą rekomendacji
 - `POST /api/cities/search` - Wyszukiwanie miasta i generowanie rekomendacji
-  
+- `GET /api/cities/{cityId}` - Szczegóły miasta
+- `PUT /api/cities/{cityId}` - Aktualizacja informacji o mieście (np. oznaczenie jako odwiedzone)
+- `DELETE /api/cities/{cityId}` - Usunięcie miasta i powiązanych rekomendacji
+
 ### Rekomendacje
-- `POST /api/recommendation/save` - Zapisywanie rekomendacji dla miasta
+- `GET /api/cities/{cityId}/recommendations` - Lista rekomendacji dla miasta
+- `POST /api/cities/{cityId}/recommendations` - Dodanie nowych rekomendacji do miasta
+- `GET /api/recommendations/{id}` - Szczegóły konkretnej rekomendacji
+- `POST /api/recommendations` - Ręczne dodanie rekomendacji
+- `PUT /api/recommendations/{id}` - Aktualizacja rekomendacji (edycja, akceptacja, odrzucenie)
+- `PUT /api/recommendations/update-done` - Oznaczenie wielu rekomendacji jako odwiedzonych
+- `DELETE /api/recommendations/{id}` - Usunięcie rekomendacji
+
+### Logi
+- `GET /api/ai-logs` - Pobranie logów działań AI (tylko dla administratorów)
+- `POST /api/ai-logs` - Rejestracja działania AI
+- `POST /api/ai-inputs` - Rejestracja zapytania do AI
+- `POST /api/error-logs` - Zapis błędów systemu
+- `GET /api/error-logs` - Pobranie logów błędów (tylko dla administratorów)
 
 ## Bezpieczeństwo
+
+### Mechanizmy autoryzacji
+System wykorzystuje tokeny JWT (JSON Web Token) do autoryzacji użytkowników. Po zalogowaniu, token JWT jest generowany i musi być dołączany w nagłówku `Authorization` (format: `Bearer <token>`) przy kolejnych żądaniach do API.
 
 ### Wrażliwe dane
 W projekcie zarządzamy wrażliwymi danymi przy użyciu pliku `config.php`, który nigdy nie powinien być commitowany do repozytorium. W pliku tym przechowujemy:
 
 - Dane dostępowe do bazy danych
-- Klucze API (np. OpenAI)
+- Klucze API (OpenAI, Google)
 - Klucze JWT do podpisywania tokenów
 - Inne wrażliwe ustawienia konfiguracyjne
 
@@ -61,6 +100,14 @@ Podczas developmentu możesz testować API bez konieczności wywoływania rzeczy
 - MySQL/MariaDB jako baza danych
 - JWT do autoryzacji
 - OpenAI API (model gpt-4.1-mini) do generowania rekomendacji
+- Google Geocoding API do weryfikacji nazwy miasta
+- Google Directions API do określania trasy dojazdu
+
+
+### Narzędzia do testowania
+- **Testy jednostkowe:** PHPUnit - framework do testowania kodu PHP
+- **Testy End-to-End (E2E):** Cypress - framework do automatyzacji testów interfejsu użytkownika
+- **Narzędzia pomocnicze:** Postman/Insomnia - do testowania API REST
 
 ## Table of Contents
 - [Project Description](#project-description)
@@ -83,6 +130,8 @@ Podczas developmentu możesz testować API bez konieczności wywoływania rzeczy
 - **Backend:** PHP 8
 - **Database:** MySQL 5
 - **AI Integration:** GPT-4.1-mini API
+- **Maps Integration:** Google Geocoding API, Google Directions API
+- **Testing:** PHPUnit (Unit Testing), Cypress (E2E Testing), Postman/Insomnia (API Testing)
 
 ## Getting Started Locally
 
@@ -90,6 +139,7 @@ Podczas developmentu możesz testować API bez konieczności wywoływania rzeczy
 - WAMP with PHP 8 or higher
 - MySQL 5
 - Access to GPT-4.1-mini API
+- Google API keys (Geocoding and Directions)
 
 ### Installation Steps
 1. Clone the repository
@@ -104,6 +154,7 @@ Podczas developmentu możesz testować API bez konieczności wywoływania rzeczy
 
 3. Configure API access
    - Add your GPT-4.1-mini API key to the configuration file
+   - Add your Google API keys to the configuration file
 
 4. Start your local server and navigate to the project URL
 
@@ -116,11 +167,15 @@ Podczas developmentu możesz testować API bez konieczności wywoływania rzeczy
 ### Features Included
 - User registration and login (username, password, base city)
 - Searching for attractions in target cities
+- City name verification using Google Geocoding API
+- Calculating routes from base city using Google Directions API
 - Presentation of recommendations (city description and up to 10 attractions)
 - Editing and managing recommendations (accept, edit, reject)
 - City list management with attraction counts
 - Marking cities as "Visited"
+- Marking recommendations as "Visited"
 - Recommendation replenishment if acceptance rate falls below 60%
+- Printing recommendation lists
 - AI action logging
 
 ### Limitations

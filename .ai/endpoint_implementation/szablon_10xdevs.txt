@@ -1,4 +1,4 @@
-Plan implementacji - prompt dla modeli reasoningowych, np. o3-mini
+Plan implementacji - prompt dla modeli reasoningowych, np. o4-mini
 - typ modelu: Agent
 
 -----------------------

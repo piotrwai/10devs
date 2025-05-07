@@ -1,15 +1,16 @@
 .ai/czat_zalozenia_projektu.md
-.ai/koncepcja.md
-.ai/prd-10xdevs.md
 .ai/folders.txt
+.ai/koncepcja.md
+.ai/piotrwai-10devs.txt
+.ai/prd-10xdevs.md
 
 # Pliki konfiguracyjne zawierające wrażliwe dane
 /config.php
 .env
 
 # Pliki tymczasowe
-*.log
 *.cache
+*.log
 *.tmp
 smarty/templates_c/*
 !smarty/templates_c/.gitkeep
@@ -17,3 +18,7 @@ smarty/templates_c/*
 # Katalogi IDE
 .idea/
 .vscode/
+
+# PHPUnit
+vendor/
+
