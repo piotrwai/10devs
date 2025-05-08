@@ -95,35 +95,4 @@
     </div>
 </div>
 
-<style>
-.feature-box {
-    height: 100%;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    transition: transform 0.2s;
-}
-
-.feature-box:hover {
-    transform: translateY(-5px);
-}
-
-.step {
-    padding: 15px;
-}
-
-.step-number {
-    width: 40px;
-    height: 40px;
-    background-color: #007bff;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 15px;
-    font-size: 1.2em;
-    font-weight: bold;
-}
-</style>
-
 {include file="footer.tpl"} 

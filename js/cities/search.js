@@ -13,7 +13,6 @@ $(document).ready(function() {
     const $acceptAllBtn = $('#accept-all-btn');
     const $saveRecommendationsBtn = $('#save-recommendations-btn');
     let currentCityId = null;
-    let supplementRequested = false;
     let supplementUsed = false;
     let currentCityName = '';
 
@@ -300,100 +299,118 @@ $(document).ready(function() {
         $('.city-name').text(data.city.name);
         $('.city-summary').text(data.city.summary);
         
-        // Wyczyszczenie i wypełnienie listy rekomendacji
+        // Wyczyszczenie listy rekomendacji
         $recommendationsList.empty();
         
+        // Znajdź rekomendację trasy i wyodrębnij zwykłe rekomendacje
+        let routeRec = null;
+        const normalRecs = [];
+        
         data.recommendations.forEach((rec, index) => {
-            // Zamiana \n na <br> w opisie dla poprawnego wyświetlania kroków trasy
-            const descriptionHtml = rec.description.replace(/\n/g, '<br>'); 
-            const isRoute = rec.model === 'route_planner' || rec.model === 'route_planner_error';
-            const cardClass = isRoute ? 'border-primary' : ''; // Dodatkowa klasa dla karty trasy
-            const titleIcon = isRoute ? '<i class="bi bi-signpost-split me-2"></i>' : ''; // Ikona dla trasy
-
-            const $recommendation = $(`
-                <div class="card mb-3 recommendation ${cardClass}" data-id="${rec.id || ''}" data-index="${index}" data-model="${rec.model}">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title" contenteditable="true">${titleIcon}${rec.title}</h5>
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary edit-btn">
-                                    <i class="bi bi-pencil"></i> Edytuj
-                                </button>
-                                <button class="btn btn-sm btn-outline-success accept-btn">
-                                    <i class="bi bi-check-lg"></i> Akceptuj
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger reject-btn">
-                                    <i class="bi bi-x-lg"></i> Odrzuć
-                                </button>
-                            </div>
-                        </div>
-                        <p class="card-text recommendation-description" contenteditable="true">${descriptionHtml}</p>
-                        <div class="text-muted small">
-                            <em>Źródło: ${rec.model}</em>
-                        </div>
-                        <div class="recommendation-status mt-2" style="display: none;"></div>
-                    </div>
+            if (rec.model === 'route_planner' || rec.model === 'route_planner_error') {
+                routeRec = rec;
+            } else {
+                normalRecs.push({rec, index});
+            }
+        });
+        
+        // Dodaj link do trasy, jeśli istnieje
+        if (routeRec) {
+            // Tworzenie elementu linku
+            const routeLink = $(`
+                <div class="route-link-container mb-4">
+                    <a href="#route-recommendation" class="route-link btn btn-outline-primary">
+                        <i class="bi bi-signpost-split me-2"></i>
+                        Trasa: ${routeRec.title}
+                    </a>
                 </div>
             `);
             
-            // Zapisanie oryginalnych wartości
-            $recommendation.data('original-title', rec.title);
-            $recommendation.data('original-description', rec.description);
-            
-            $recommendationsList.append($recommendation);
+            // Wstaw PO karcie z podsumowaniem miasta
+            routeLink.insertAfter('#search-results > .card:first-child');
+        }
+        
+        // Dodaj zwykłe rekomendacje
+        normalRecs.forEach(({rec, index}) => {
+            appendRecommendation(rec, index);
         });
+        
+        // Dodaj rekomendację trasy na końcu, jeśli istnieje
+        if (routeRec) {
+            appendRecommendation(routeRec, 'route', true);
+        }
         
         // Wyczyszczenie starych komunikatów
         $formMessages.empty().removeClass('alert alert-danger alert-success alert-info alert-warning');
 
-        // Pokazanie przycisków akcji (jeśli są jakieś rekomendacje poza trasą)
-        if (data.recommendations.some(r => r.model !== 'route_planner' && r.model !== 'route_planner_error')) {
-            $('#accept-all-btn, #save-recommendations-btn').removeClass('d-none');
-        } else {
-            $('#accept-all-btn, #save-recommendations-btn').addClass('d-none');
-        }
+        // Pokaż przyciski akcji jeśli są jakieś rekomendacje poza trasą
+        $('#accept-all-btn, #save-recommendations-btn').toggleClass('d-none', normalRecs.length === 0);
+    }
+
+    // Funkcja pomocnicza do tworzenia elementu karty rekomendacji
+    function createRecommendationCardElement(rec, dataIndexValue, options = {}) {
+        const defaults = {
+            cardClass: '',
+            titleIcon: '',
+            idAttr: '',
+            dataId: rec.id || '' // Domyślne data-id z rekordu lub puste
+        };
+        const config = { ...defaults, ...options };
+    
+        const descriptionHtml = rec.description.replace(/\n/g, '<br>');
+    
+        const $recommendation = $(`
+            <div ${config.idAttr} class="card mb-3 recommendation ${config.cardClass}" data-id="${config.dataId}" data-index="${dataIndexValue}" data-model="${rec.model}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <h5 class="card-title" contenteditable="true">${config.titleIcon}${rec.title}</h5>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-primary edit-btn">
+                                <i class="bi bi-pencil"></i> Edytuj
+                            </button>
+                            <button class="btn btn-sm btn-outline-success accept-btn">
+                                <i class="bi bi-check-lg"></i> Akceptuj
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger reject-btn">
+                                <i class="bi bi-x-lg"></i> Odrzuć
+                            </button>
+                        </div>
+                    </div>
+                    <p class="card-text recommendation-description" contenteditable="true">${descriptionHtml}</p>
+                    <div class="text-muted small">
+                        <em>Źródło: ${rec.model}</em>
+                    </div>
+                    <div class="recommendation-status mt-2" style="display: none;"></div>
+                </div>
+            </div>
+        `);
+    
+        $recommendation.data('original-title', rec.title);
+        $recommendation.data('original-description', rec.description);
+        return $recommendation;
+    }
+
+    // Funkcja pomocnicza do dodawania rekomendacji do listy
+    function appendRecommendation(rec, index, isRoute = false) {
+        const options = {
+            cardClass: isRoute ? 'border-primary' : '',
+            titleIcon: isRoute ? '<i class="bi bi-signpost-split me-2"></i>' : '',
+            idAttr: isRoute ? 'id="route-recommendation"' : ''
+        };
+        const $recommendationElement = createRecommendationCardElement(rec, index, options);
+        $recommendationsList.append($recommendationElement);
     }
 
     // Funkcja do wyświetlania NOWYCH rekomendacji (dodaje na górze)
     function displayNewRecommendations(newRecs) {
-        newRecs.reverse().forEach((rec, index) => {
-            const descriptionHtml = rec.description.replace(/\n/g, '<br>');
-            const isRoute = false; // Nowe rekomendacje nigdy nie są trasą
-            const cardClass = 'border-warning'; // Oznaczamy nowe rekomendacje
-            const titleIcon = '<i class="bi bi-star-fill text-warning me-2"></i>'; // Ikona dla nowych
-
-            const $recommendation = $(`
-                <div class="card mb-3 recommendation ${cardClass}" data-id="" data-index="new-${index}" data-model="${rec.model}">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title" contenteditable="true">${titleIcon}${rec.title}</h5>
-                            <div class="btn-group">
-                                <button class="btn btn-sm btn-outline-primary edit-btn">
-                                    <i class="bi bi-pencil"></i> Edytuj
-                                </button>
-                                <button class="btn btn-sm btn-outline-success accept-btn">
-                                    <i class="bi bi-check-lg"></i> Akceptuj
-                                </button>
-                                <button class="btn btn-sm btn-outline-danger reject-btn">
-                                    <i class="bi bi-x-lg"></i> Odrzuć
-                                </button>
-                            </div>
-                        </div>
-                        <p class="card-text recommendation-description" contenteditable="true">${descriptionHtml}</p>
-                        <div class="text-muted small">
-                            <em>Źródło: ${rec.model}</em>
-                        </div>
-                        <div class="recommendation-status mt-2" style="display: none;"></div>
-                    </div>
-                </div>
-            `);
-
-            // Zapisanie oryginalnych wartości
-            $recommendation.data('original-title', rec.title);
-            $recommendation.data('original-description', rec.description);
-
-            // Dodanie na początku listy
-            $recommendationsList.prepend($recommendation);
+        newRecs.reverse().forEach((rec, i) => {
+            const options = {
+                cardClass: 'border-warning', // Oznaczamy nowe rekomendacje
+                titleIcon: '<i class="bi bi-star-fill text-warning me-2"></i>', // Ikona dla nowych
+                dataId: '' // Nowe rekomendacje nie mają ID początkowo
+            };
+            const $recommendationElement = createRecommendationCardElement(rec, `new-${i}`, options);
+            $recommendationsList.prepend($recommendationElement);
         });
         // Po dodaniu nowych, przeliczmy procent akceptacji (choć przycisk i tak jest już ukryty)
         calculateAcceptanceRate();

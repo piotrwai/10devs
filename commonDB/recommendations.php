@@ -98,7 +98,7 @@ function getRecommendationsByCityId($userId, $cityId) {
         $query = "SELECT rec_id, rec_title, rec_desc, rec_model, rec_status, rec_done, rec_date_created, rec_date_modified 
                  FROM recom 
                  WHERE rec_usr_id = ? AND rec_cit_id = ?
-                 ORDER BY rec_title ASC";
+                 ORDER BY IF(rec_model = 'route_planner', 1, 0), rec_title ASC";
         
         // Przygotowanie i wykonanie zapytania
         $stmt = mysqli_prepare($db, $query);
@@ -188,47 +188,6 @@ function markRecommendationAsDone($userId, $recommendationId) {
         // Logowanie błędu
         ErrorLogger::logError('db_error', 'Błąd podczas aktualizacji rekomendacji: ' . $e->getMessage(), $userId);
         return false;
-    }
-}
-
-/**
- * Pobiera paginowane rekomendacje dla określonego miasta i użytkownika
- * 
- * @param int $userId ID użytkownika
- * @param int $cityId ID miasta
- * @param int $offset Offset do paginacji
- * @param int $limit Limit liczby rekordów
- * @return array|null Tablica rekomendacji lub null w przypadku błędu
- */
-function getRecommendationsByCityPaginated($userId, $cityId, $offset, $limit) {
-    try {
-        $db = getDbConnection();
-        $query = "SELECT rec_id, rec_title, rec_desc, rec_model, rec_status, rec_done, rec_date_created, rec_date_modified
-                  FROM recom
-                  WHERE rec_usr_id = ? AND rec_cit_id = ?
-                  ORDER BY rec_date_created DESC
-                  LIMIT ? OFFSET ?";
-        $stmt = mysqli_prepare($db, $query);
-        mysqli_stmt_bind_param($stmt, 'iiii', $userId, $cityId, $limit, $offset);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-        $recommendations = [];
-        while ($row = mysqli_fetch_assoc($result)) {
-            $recommendations[] = [
-                'id' => (int)$row['rec_id'],
-                'title' => $row['rec_title'],
-                'description' => $row['rec_desc'],
-                'model' => $row['rec_model'],
-                'status' => $row['rec_status'],
-                'done' => (bool)$row['rec_done'],
-                'dateCreated' => $row['rec_date_created'],
-                'dateModified' => $row['rec_date_modified']
-            ];
-        }
-        return $recommendations;
-    } catch (Exception $e) {
-        ErrorLogger::logError('db_error', 'Błąd podczas pobierania rekomendacji z paginacją: ' . $e->getMessage(), $userId);
-        return null;
     }
 }
 

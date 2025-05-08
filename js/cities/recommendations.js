@@ -101,18 +101,7 @@ $(document).ready(function() {
                                     Odwiedzona: ${rec.done ? 'Tak' : 'Nie'}
                                 </td>
                             </tr>`;
-                        let inserted = false;
-                        $('#recommendationsTable tbody tr').each(function() {
-                            const currentTitle = $(this).find('td:first').text();
-                            if (sanitizeHTML(rec.title).localeCompare(currentTitle) < 0) {
-                                $(this).before(rowHtml);
-                                inserted = true;
-                                return false; // zakończ pętlę
-                            }
-                        });
-                        if (!inserted) {
-                            $('#recommendationsTable tbody').append(rowHtml);
-                        }
+                        $('#recommendationsTable tbody').append(rowHtml);
                     });
                 }
             },

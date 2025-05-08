@@ -2,38 +2,6 @@
 
 {include file="../header.tpl" title="Wyszukaj miasto"}
 
-<style>
-    [contenteditable="true"] {
-        border: 1px dashed #ccc;
-        padding: 5px;
-        border-radius: 4px;
-        min-height: 20px;
-    }
-    
-    [contenteditable="true"]:focus {
-        outline: none;
-        border-color: #80bdff;
-        box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-    }
-    
-    .recommendation.editing {
-        box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    
-    .recommendation.editing .card-body {
-        background-color: #f8f9fa;
-    }
-    
-    .card-title {
-        margin-right: 10px;
-        flex: 1;
-    }
-    
-    .btn-group {
-        flex-shrink: 0;
-    }
-</style>
-
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -66,6 +34,8 @@
                         <p class="card-text city-summary"></p>
                     </div>
                 </div>
+                
+                <!-- Link do trasy będzie automatycznie wstawiany tutaj przez JavaScript -->
                 
                 <!-- Lista rekomendacji -->
                 <h3 class="mb-3">Rekomendowane atrakcje</h3>

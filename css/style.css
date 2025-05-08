@@ -228,3 +228,105 @@ a.nav-link {
         size: auto;
     }
 }
+
+/* --- Style przeniesione z index.tpl --- */
+.feature-box {
+    height: 100%;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    transition: transform 0.2s;
+}
+
+.feature-box:hover {
+    transform: translateY(-5px);
+}
+
+.step {
+    padding: 15px;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+/* --- Style przeniesione z search.tpl --- */
+[contenteditable="true"] {
+    border: 1px dashed #ccc;
+    padding: 5px;
+    border-radius: 4px;
+    min-height: 20px;
+}
+
+[contenteditable="true"]:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+.recommendation.editing {
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.recommendation.editing .card-body {
+    background-color: #f8f9fa;
+}
+
+.card-title {
+    margin-right: 10px;
+    flex: 1;
+}
+
+.btn-group {
+    flex-shrink: 0;
+}
+
+/* --- Style dla linku do trasy --- */
+.route-link-container {
+    margin: 1.5rem 0;
+}
+
+.route-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.route-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.route-link i {
+    margin-right: 0.5rem;
+    font-size: 1.1em;
+}
+
+/* Dodatkowy styl dla sekcji trasy na dole strony */
+#route-recommendation {
+    scroll-margin-top: 2rem; /* Zapewnia odstęp przy przewijaniu do kotwicy */
+    transition: background-color 0.3s ease;
+}
+
+#route-recommendation:target {
+    animation: highlight-route 2s ease;
+}
+
+@keyframes highlight-route {
+    0% { background-color: rgba(0, 123, 255, 0.1); }
+    100% { background-color: transparent; }
+}

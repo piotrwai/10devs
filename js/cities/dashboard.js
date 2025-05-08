@@ -144,7 +144,7 @@ $(document).ready(function() {
             const isVisited = city.visited === true;
             const statusClass = isVisited ? 'btn-success' : 'btn-secondary';
             const statusText = isVisited ? 'Odwiedzone' : 'Nieodwiedzone';
-            const statusIcon = isVisited ? '<i class="fas fa-check-circle"></i>' : '<i class="far fa-circle"></i>'; // Wymaga FontAwesome
+            const statusIcon = isVisited ? '<span style="filter: brightness(0) invert(1);">✔️</span>' : '◯'; // Użyj standardowych znaków Unicode zamiast FontAwesome
             const visitedStatusElement = `
                 <button 
                     class="btn btn-sm ${statusClass} toggle-visited-btn" 
@@ -398,7 +398,7 @@ $(document).ready(function() {
                 // Zaktualizuj wygląd przycisku bez przeładowania
                 const statusClass = newVisitedStatus ? 'btn-success' : 'btn-secondary';
                 const statusText = newVisitedStatus ? 'Odwiedzone' : 'Nieodwiedzone';
-                const statusIcon = newVisitedStatus ? '<i class="fas fa-check-circle"></i>' : '<i class="far fa-circle"></i>';
+                const statusIcon = newVisitedStatus ? '<span style="filter: brightness(0) invert(1);">✔️</span>' : '◯'; // Użyj standardowych znaków Unicode zamiast FontAwesome
                                 
                 $buttonElement
                     .removeClass('btn-success btn-secondary')
@@ -423,7 +423,7 @@ $(document).ready(function() {
                 const currentStatus = $buttonElement.attr('data-current-status') === 'true'; // Używamy .attr() zamiast .data()
                 const originalClass = currentStatus ? 'btn-success' : 'btn-secondary';
                 const originalText = currentStatus ? 'Odwiedzone' : 'Nieodwiedzone';
-                const originalIcon = currentStatus ? '<i class="fas fa-check-circle"></i>' : '<i class="far fa-circle"></i>';
+                const originalIcon = currentStatus ? '<span style="filter: brightness(0) invert(1);">✔️</span>' : '◯'; // Użyj standardowych znaków Unicode zamiast FontAwesome
                 $buttonElement
                     .removeClass('btn-success btn-secondary')
                     .addClass(originalClass)
