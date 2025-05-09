@@ -34,4 +34,5 @@ if (isset($_GET['error'])) {
 }
 
 // Renderowanie szablonu register.tpl
+$smarty->assign('isLogged', false);
 $smarty->display('register.tpl'); 

@@ -103,6 +103,39 @@ Podczas developmentu możesz testować API bez konieczności wywoływania rzeczy
 - Google Geocoding API do weryfikacji nazwy miasta
 - Google Directions API do określania trasy dojazdu
 
+## Testy
+W projekcie zastosowano dwa rodzaje testów: jednostkowe oparte o PHPUnit oraz testy End-to-End (E2E) wykorzystujące Cypress.
+
+### Testy jednostkowe (PHPUnit)
+Testy jednostkowe sprawdzają poprawność działania poszczególnych komponentów i klas systemu w izolacji.
+
+#### Struktura testów jednostkowych
+- `/tests/unit/` - katalog zawierający testy jednostkowe
+  - `GeoHelperTest.php` - testy klasy GeoHelper odpowiadającej za weryfikację miast i obliczanie tras
+  - `DashboardTest.php` - testy funkcjonalności dashboardu
+
+#### Uruchamianie testów jednostkowych
+```
+vendor/bin/phpunit
+```
+
+### Testy End-to-End (Cypress)
+Testy E2E weryfikują działanie aplikacji z perspektywy użytkownika końcowego, symulując interakcje z interfejsem.
+
+#### Struktura testów E2E
+- `/cypress/e2e/` - katalog zawierający testy E2E
+  - `login_spec.cy.js` - testy procesu logowania
+  - `registration_spec.cy.js` - testy procesu rejestracji
+  - `homepage_spec.cy.js` - testy strony głównej
+
+#### Uruchamianie testów E2E
+```
+npx cypress open
+```
+lub w trybie headless:
+```
+npx cypress run
+```
 
 ### Narzędzia do testowania
 - **Testy jednostkowe:** PHPUnit - framework do testowania kodu PHP
@@ -140,6 +173,8 @@ Podczas developmentu możesz testować API bez konieczności wywoływania rzeczy
 - MySQL 5
 - Access to GPT-4.1-mini API
 - Google API keys (Geocoding and Directions)
+- Node.js i npm (dla testów Cypress)
+- Composer (dla testów PHPUnit)
 
 ### Installation Steps
 1. Clone the repository
@@ -158,9 +193,23 @@ Podczas developmentu możesz testować API bez konieczności wywoływania rzeczy
 
 4. Start your local server and navigate to the project URL
 
+5. Set up testing environment
+   - Install PHP dependencies:
+     ```
+     composer install
+     ```
+   - Install JavaScript dependencies:
+     ```
+     npm install
+     ```
+   - Update the `cypress.config.js` file with your local server URL if different from `http://10devs.local/`
+
 ## Available Scripts
 - `setup.php` - Initialize database and configuration
 - `test.php` - Test the connection to the API
+- `vendor/bin/phpunit` - Run PHPUnit tests
+- `npx cypress open` - Open Cypress Test Runner
+- `npx cypress run` - Run Cypress tests in headless mode
 
 ## Project Scope
 

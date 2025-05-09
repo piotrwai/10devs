@@ -52,4 +52,5 @@ if (isset($_GET['error'])) {
 }
 
 // Renderowanie szablonu login.tpl
+$smarty->assign('isLogged', false);
 $smarty->display('login.tpl'); 
