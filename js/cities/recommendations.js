@@ -109,8 +109,8 @@ $(document).ready(function() {
                                     data-status="${rec.status}">
                                     <div class="card-header d-flex justify-content-between align-items-start">
                                         <h5 class="card-title mb-0">${sanitizeHTML(rec.title)}</h5>
-                                        <div class="status-badges">
-                                            <span class="badge bg-secondary me-1">${sanitizeHTML(rec.model)}</span>
+                                        <div class="status-badges text-end">
+                                            <span class="badge bg-secondary">${sanitizeHTML(rec.model)}</span>
                                             <span class="badge bg-secondary"></span>
                                         </div>
                                     </div>
@@ -123,11 +123,17 @@ $(document).ready(function() {
                                         <div class="visited-status">
                                             ${doneElementHtml}
                                         </div>
-                                        <div class="btn-group" role="group" aria-label="Akcje dla rekomendacji">
-                                            <button class="btn btn-sm btn-success accept-btn" data-id="${rec.id}" title="Akceptuj"><i class="fas fa-check"></i></button>
-                                            <button class="btn btn-sm btn-danger reject-btn" data-id="${rec.id}" title="Odrzuć"><i class="fas fa-times"></i></button>
-                                            <button class="btn btn-sm btn-warning edit-btn" data-id="${rec.id}" title="Edytuj"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-sm btn-secondary delete-btn" data-id="${rec.id}" title="Usuń"><i class="fas fa-trash"></i></button>
+                                        <div class="d-flex align-items-center">
+                                            <div class="btn-group me-2" role="group" aria-label="Zmiana rozmiaru tekstu">
+                                                <button class="btn btn-sm btn-outline-secondary zoom-btn" data-action="decrease" title="Pomniejsz tekst"><i class="fas fa-search-minus"></i></button>
+                                                <button class="btn btn-sm btn-outline-secondary zoom-btn" data-action="increase" title="Powiększ tekst"><i class="fas fa-search-plus"></i></button>
+                                            </div>
+                                            <div class="btn-group" role="group" aria-label="Akcje dla rekomendacji">
+                                                <button class="btn btn-sm btn-success accept-btn" data-id="${rec.id}" title="Akceptuj"><i class="fas fa-check"></i></button>
+                                                <button class="btn btn-sm btn-danger reject-btn" data-id="${rec.id}" title="Odrzuć"><i class="fas fa-times"></i></button>
+                                                <button class="btn btn-sm btn-warning edit-btn" data-id="${rec.id}" title="Edytuj"><i class="fas fa-edit"></i></button>
+                                                <button class="btn btn-sm btn-secondary delete-btn" data-id="${rec.id}" title="Usuń"><i class="fas fa-trash"></i></button>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="print-only visited-status mt-2">
@@ -373,4 +379,18 @@ $(document).ready(function() {
         // Przekieruj do dashboardu z parametrami
         window.location.href = returnUrl;
     });
-}); 
+
+    // Obsługa powiększania i pomniejszania tekstu
+    $(document).on('click', '.zoom-btn', function() {
+        const action = $(this).data('action');
+        const $card = $(this).closest('.recommendation-card');
+        const $description = $card.find('.description-container');
+        let currentSize = parseFloat($description.css('font-size'));
+
+        if (action === 'increase') {
+            $description.css('font-size', (currentSize + 1) + 'px');
+        } else if (action === 'decrease') {
+            $description.css('font-size', (currentSize - 1) + 'px');
+        }
+    });
+});

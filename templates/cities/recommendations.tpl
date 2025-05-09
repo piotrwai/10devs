@@ -2,12 +2,14 @@
 {include file="../header.tpl" title="Rekomendacje dla `{$city.name}`"}
 
 <div class="container mt-4" id="recommendationsContainer" data-city-id="{$city.id}">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between mb-3">
         <h1>Rekomendacje: {$city.name|escape}</h1>
         <div class="no-print">
-            <a href="/dashboard" class="btn btn-secondary" id="returnToCitiesBtn">Lista</a>
-            <button class="btn btn-info ms-2 {if !$recommendations}disabled{/if}" onclick="{if $recommendations}window.print();{/if}" {if !$recommendations}disabled{/if}>Drukuj</button>
-            <button class="btn btn-primary ms-2" id="addRecBtn" title="Dodaj rekomendację">Dodaj</button>
+            <div class="btn-group" role="group" aria-label="Nawigacja">
+                <button class="btn btn-secondary" onclick="window.location.href='/dashboard'">Lista</button>
+                <button class="btn btn-info {if !$recommendations}disabled{/if}" onclick="{if $recommendations}window.print();{/if}" {if !$recommendations}disabled{/if}>Drukuj</button>
+                <button class="btn btn-primary" id="addRecBtn" title="Dodaj rekomendację">Dodaj</button>
+            </div>
         </div>
     </div>
 
@@ -21,8 +23,8 @@
                 <div class="card h-100 recommendation-card" data-rec-id="{$rec.id}" data-title="{$rec.title|escape}" data-description="{$rec.description|escape}" data-status="{$rec.status}">
                     <div class="card-header d-flex justify-content-between align-items-start">
                         <h5 class="card-title mb-0">{$rec.title|escape}</h5>
-                        <div class="status-badges">
-                            <span class="badge bg-secondary me-1">{$rec.model|escape}</span>
+                        <div class="status-badges text-end">
+                            <span class="badge bg-secondary">{$rec.model|escape}</span>
                             <span class="badge {if $rec.status == 'accepted'}bg-success
                                 {elseif $rec.status == 'edited'}bg-warning
                                 {elseif $rec.status == 'rejected'}bg-danger
@@ -53,11 +55,17 @@
                                 {/if}
                             </span>
                         </div>
-                        <div class="btn-group" role="group" aria-label="Akcje dla rekomendacji">
-                            <button class="btn btn-sm btn-success accept-btn" data-id="{$rec.id}" title="Akceptuj"><i class="fas fa-check"></i></button>
-                            <button class="btn btn-sm btn-danger reject-btn" data-id="{$rec.id}" title="Odrzuć"><i class="fas fa-times"></i></button>
-                            <button class="btn btn-sm btn-warning edit-btn" data-id="{$rec.id}" title="Edytuj"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-sm btn-secondary delete-btn" data-id="{$rec.id}" title="Usuń"><i class="fas fa-trash"></i></button>
+                        <div class="d-flex align-items-center">
+                            <div class="btn-group" role="group" aria-label="Zmiana rozmiaru tekstu">
+                                <button class="btn btn-sm btn-outline-secondary zoom-btn" data-action="decrease" title="Pomniejsz tekst"><i class="fas fa-search-minus"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary zoom-btn" data-action="increase" title="Powiększ tekst"><i class="fas fa-search-plus"></i></button>
+                            </div>
+                            <div class="btn-group" role="group" aria-label="Akcje dla rekomendacji">
+                                <button class="btn btn-sm btn-success accept-btn" data-id="{$rec.id}" title="Akceptuj"><i class="fas fa-check"></i></button>
+                                <button class="btn btn-sm btn-danger reject-btn" data-id="{$rec.id}" title="Odrzuć"><i class="fas fa-times"></i></button>
+                                <button class="btn btn-sm btn-warning edit-btn" data-id="{$rec.id}" title="Edytuj"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-sm btn-secondary delete-btn" data-id="{$rec.id}" title="Usuń"><i class="fas fa-trash"></i></button>
+                            </div>
                         </div>
                     </div>
                     {* Informacja o odwiedzeniu widoczna tylko na wydruku *}
