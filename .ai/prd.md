@@ -185,6 +185,18 @@ Kryteria akceptacji:
 - System informuje użytkownika o automatycznej korekcie nazwy.
 - Korekta nazwy następuje tylko podczas wyszukiwania.
 
+US-014
+Tytuł: Sprawdzanie duplikatów miast
+Opis: Jako turysta chcę być informowany, jeśli próbuję wyszukać miasto, które już istnieje w moich rekomendacjach, aby uniknąć duplikowania danych i móc szybko przejść do istniejących rekomendacji.
+Kryteria akceptacji:
+- System sprawdza, czy wyszukiwane miasto już istnieje w rekomendacjach użytkownika.
+- Jeśli miasto istnieje, system:
+  - Ukrywa przycisk wyszukiwania
+  - Wyświetla komunikat informujący o istniejących rekomendacjach
+  - Pokazuje przycisk umożliwiający przejście do istniejących rekomendacji
+  - Informuje o możliwości zmiany nazwy miasta w celu utworzenia nowego zestawu rekomendacji
+- Jeśli miasto nie istnieje, system kontynuuje standardowy proces wyszukiwania rekomendacji.
+
 ## 6. Metryki sukcesu
 - Minimum 60% propozycji musi być zaakceptowanych lub edytowanych i zaakceptowanych.
 - Monitorowanie poziomu akceptacji: jeśli akceptacje spadają poniżej 60%, pokazywana jest możliwość uzupełnienia rekomendacji.

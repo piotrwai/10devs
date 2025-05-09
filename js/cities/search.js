@@ -42,28 +42,72 @@ $(document).ready(function() {
             $('#cityName-error').text('Nazwa miasta nie może przekraczać 150 znaków');
             return;
         }
-        
-        // Zapisanie/aktualizacja nazwy miasta
-        currentCityName = cityName;
 
-        // Reset flagi użycia suplementu przy nowym wyszukiwaniu
-        supplementUsed = false;
-
-        // Przywrócenie domyślnego tekstu i stanu przycisku
-        $submitButton.html('Wyszukaj atrakcje').removeClass('btn-warning').addClass('btn-primary');
-        
-        // Pokazanie spinnera i blokada przycisku
+        // Pokazanie spinnera i blokada przycisku podczas sprawdzania
         $submitButton.prop('disabled', true);
         $spinner.removeClass('d-none');
-        
-        // Ustawienie komunikatu w zależności od trybu
-        if (currentMode === 'supplement') {
-            setLoadingMessage('Generuję dodatkowe rekomendacje...', 'bi-stars');
-            requestSupplement();
-        } else {
-            setLoadingMessage('Sprawdzam poprawność miasta...', 'bi-geo-alt');
-            searchCity(cityName);
-        }
+
+        // Sprawdzenie czy miasto już istnieje dla użytkownika
+        $.ajax({
+            url: '/api/cities/check',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({ cityName: cityName }),
+            success: function(response) {
+                if (response.data && response.data.exists) {
+                    // Ukrycie przycisku wyszukiwania
+                    $submitButton.hide();
+                    
+                    // Wyświetlenie komunikatu i przycisku
+                    $formMessages
+                        .removeClass('alert-danger alert-warning')
+                        .addClass('alert alert-success')
+                        .html(`
+                            <p>Istnieją już rekomendacje dla tego miasta.<br>
+                            Kliknij 'Przejdź', by się z nimi zapoznać.<br>
+                            Możesz samodzielnie dodać w nim nowe rekomendacje lub zmienić jego nazwę i wyszukać rekomendacje automatycznie dodając je jeszcze raz.</p>
+                            <a href="/city/${response.data.cityId}/recommendations" class="btn btn-primary mt-2">Przejdź</a>
+                        `);
+                } else {
+                    // Zapisanie/aktualizacja nazwy miasta
+                    currentCityName = cityName;
+
+                    // Reset flagi użycia suplementu przy nowym wyszukiwaniu
+                    supplementUsed = false;
+
+                    // Przywrócenie domyślnego tekstu i stanu przycisku
+                    $submitButton.html('Wyszukaj atrakcje').removeClass('btn-warning').addClass('btn-primary');
+                    
+                    // Pokazanie spinnera i blokada przycisku
+                    $submitButton.prop('disabled', true);
+                    $spinner.removeClass('d-none');
+                    
+                    // Ustawienie komunikatu w zależności od trybu
+                    if (currentMode === 'supplement') {
+                        setLoadingMessage('Generuję dodatkowe rekomendacje...', 'bi-stars');
+                        requestSupplement();
+                    } else {
+                        setLoadingMessage('Sprawdzam poprawność miasta...', 'bi-geo-alt');
+                        searchCity(cityName);
+                    }
+                }
+            },
+            error: function(xhr) {
+                let errorMessage = 'Wystąpił błąd podczas sprawdzania miasta';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.status === 404) {
+                    errorMessage = 'Nie znaleziono miasta';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'Wystąpił błąd serwera podczas sprawdzania miasta';
+                }
+                showErrorMessage(errorMessage, xhr.status === 400);
+                
+                // Przywrócenie przycisku w przypadku błędu
+                $submitButton.prop('disabled', false);
+                $spinner.addClass('d-none');
+            }
+        });
     });
 
     // Funkcja do ustawiania komunikatu ładowania

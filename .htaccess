@@ -32,6 +32,9 @@ RewriteRule ^cities/search$ cities/search.php [L]
 
 # API Endpoints
 
+# Przekierowanie /api/cities/check do api/cities/check.php
+RewriteRule ^api/cities/check$ api/cities/check.php [L]
+
 # 1b. Obsługa żądań PUT do konkretnego zasobu z ID: /api/cities/123
 #     Przepisuje na update.php przekazując ID.
 RewriteCond %{REQUEST_METHOD} PUT

@@ -17,8 +17,6 @@
 
 ## Testy
 - **Framework do testów jednostkowych:** PHPUnit
-- **Framework do testów E2E/UI:** Cypress, Selenium
-- **Testy API:** Postman, Insomnia
-- **Testy wydajnościowe:** Apache JMeter
-- **Testy bezpieczeństwa:** OWASP ZAP
+- **Framework do testów E2E/UI:** Cypress
+- **Testy API:** Postman
 </tech-stack>

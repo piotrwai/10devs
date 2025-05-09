@@ -42,8 +42,7 @@ class DashboardTest extends TestCase
         $userId = 123;
         $userProfile = [
             'id' => $userId,
-            'username' => 'testuser',
-            'email' => 'test@example.com'
+            'username' => 'testuser'
         ];
 
         // Mockowanie metody authenticateAndGetUserId

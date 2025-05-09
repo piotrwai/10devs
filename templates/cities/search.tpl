@@ -5,7 +5,7 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <h1 class="mb-4">Wyszukaj miasto</h1>
+            <h1 class="mb-4">Wyszukaj miasto:</h1>
             
             <!-- Formularz wyszukiwania -->
             <form id="city-search-form" class="mb-5">

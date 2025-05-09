@@ -73,7 +73,7 @@
                     <form id="editCityNameForm">
                         <input type="hidden" id="editCityId" name="cityId">
                         <div class="mb-3">
-                            <label for="newCityName" class="form-label">Nowa nazwa miasta</label>
+                            <label for="newCityName" class="form-label">Nowa nazwa miasta:</label>
                             <input type="text" class="form-control" id="newCityName" name="newName" maxlength="150" required>
                             <div class="invalid-feedback"></div>
                         </div>

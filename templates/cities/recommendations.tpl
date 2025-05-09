@@ -132,11 +132,11 @@
             <div class="modal-body">
                 <form id="addRecForm">
                     <div class="mb-3">
-                        <label for="newRecTitle" class="form-label">Tytuł</label>
+                        <label for="newRecTitle" class="form-label">Tytuł:</label>
                         <input type="text" class="form-control" id="newRecTitle" name="title" required maxlength="150">
                     </div>
                     <div class="mb-3">
-                        <label for="newRecDesc" class="form-label">Opis</label>
+                        <label for="newRecDesc" class="form-label">Opis:</label>
                         <textarea class="form-control" id="newRecDesc" name="description" rows="4" required></textarea>
                     </div>
                 </form>

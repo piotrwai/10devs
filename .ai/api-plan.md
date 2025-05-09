@@ -163,6 +163,26 @@
   - 401 Unauthorized
   - 500 Internal Server Error (Geocoding/Directions/AI service errors)
 
+#### POST /api/cities/check
+- **Description**: Sprawdza czy miasto o podanej nazwie już istnieje dla zalogowanego użytkownika.
+- **Request Payload**:
+  ```json
+  {
+    "cityName": "string"           // nazwa miasta do sprawdzenia
+  }
+  ```
+- **Response**:
+  - **Success (200 OK)**:
+    ```json
+    {
+      "exists": boolean,           // true jeśli miasto istnieje
+      "cityId": number            // ID miasta (tylko jeśli exists=true)
+    }
+    ```
+  - **Error (400 Bad Request)**: Brak lub nieprawidłowa nazwa miasta
+  - **Error (401 Unauthorized)**: Brak autoryzacji
+  - **Error (500 Internal Server Error)**: Błąd serwera podczas sprawdzania miasta
+
 #### POST /api/recommendations/save
 - **Description**: Save AI-generated city and recommendations after a user decides to keep them. This creates a new city record for the user (if not exists) and saves all accepted recommendations.
 - **Request Payload**:
