@@ -1,13 +1,44 @@
 <?php
-// Klasa obsługująca uwierzytelnianie poprzez JWT
-
+/**
+ * Klasa obsługująca uwierzytelnianie i autoryzację użytkowników w aplikacji 10devs.
+ * 
+ * Klasa zapewnia mechanizmy:
+ * - Generowania tokenów JWT (JSON Web Token)
+ * - Walidacji tokenów JWT
+ * - Zarządzania uwierzytelnianiem użytkowników
+ * - Uzyskiwania informacji o zalogowanym użytkowniku
+ * 
+ * @package 10devs
+ * @author 10devs Team
+ * @version 1.0
+ */
 class Auth {
+    /**
+     * Klucz tajny używany do podpisywania i weryfikacji tokenów JWT.
+     * 
+     * @var string
+     */
     private $secretKey;
+    
+    /**
+     * Czas ważności tokenu JWT w sekundach.
+     * 
+     * @var int
+     */
     private $expiration;
+    
+    /**
+     * Identyfikator wydawcy (issuer) tokenu JWT.
+     * 
+     * @var string
+     */
     private $issuer;
     
     /**
-     * Konstruktor inicjujący parametry JWT
+     * Inicjalizuje nową instancję klasy Auth z konfiguracją JWT.
+     * 
+     * Wczytuje konfigurację z pliku config.php, w tym tajny klucz, 
+     * czas ważności tokenu i identyfikator wydawcy.
      */
     public function __construct() {
         // Wczytanie konfiguracji z pliku
@@ -20,9 +51,12 @@ class Auth {
     }
     
     /**
-     * Uwierzytelnia użytkownika na podstawie tokenu JWT i zwraca ID użytkownika
+     * Uwierzytelnia użytkownika na podstawie tokenu JWT i zwraca ID użytkownika.
      * 
-     * @return int|null ID użytkownika lub null w przypadku niepowodzenia
+     * Metoda próbuje odczytać token JWT z ciasteczka lub nagłówka HTTP Authorization,
+     * a następnie weryfikuje jego poprawność i zwraca ID użytkownika.
+     * 
+     * @return int|null ID użytkownika, jeśli uwierzytelnienie się powiodło, lub null w przypadku niepowodzenia
      */
     public function authenticateAndGetUserId() {
         $token = '';
@@ -66,11 +100,14 @@ class Auth {
     }
     
     /**
-     * Dekoduje token JWT i zwraca zawarte w nim dane
+     * Dekoduje token JWT i zwraca zawarte w nim dane.
+     * 
+     * Metoda weryfikuje wszystkie trzy części tokenu JWT (nagłówek, ładunek, podpis),
+     * sprawdza czy token nie wygasł oraz czy podpis jest poprawny.
      * 
      * @param string $token Token JWT do zdekodowania
-     * @return object Zdekodowane dane z tokenu
-     * @throws Exception Gdy token jest nieprawidłowy
+     * @return object Zdekodowane dane z tokenu (payload)
+     * @throws Exception Gdy token jest nieprawidłowy (nieważny format, wygasły, nieprawidłowy podpis)
      */
     private function decodeJwtToken($token) {
         $tokenParts = explode('.', $token);
@@ -102,9 +139,15 @@ class Auth {
     }
 
     /**
-     * Generuje token JWT dla użytkownika
+     * Generuje token JWT dla użytkownika.
      * 
-     * @param array $userData Dane użytkownika (usr_id, usr_login, usr_admin)
+     * Metoda tworzy token JWT zawierający ID użytkownika, login, flagę administratora,
+     * czas wygenerowania (iat), czas wygaśnięcia (exp) i identyfikator wydawcy (iss).
+     * 
+     * @param array $userData Dane użytkownika zawierające:
+     *                        - usr_id (int): ID użytkownika
+     *                        - usr_login (string): Login użytkownika
+     *                        - usr_admin (bool, opcjonalnie): Flaga administratora
      * @return string Wygenerowany token JWT
      */
     public function generateJwtToken($userData) {

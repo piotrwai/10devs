@@ -1,4 +1,22 @@
 <?php
+/**
+ * Operacje bazodanowe związane z miastami w aplikacji 10devs.
+ * 
+ * Ten plik zawiera wszystkie funkcje dotyczące operacji CRUD na tabeli cities
+ * oraz funkcje powiązane z zarządzaniem miastami w systemie 10devs.
+ * 
+ * Funkcje w tym pliku umożliwiają:
+ * - Pobieranie informacji o miastach użytkownika
+ * - Dodawanie nowych miast
+ * - Aktualizację danych miast
+ * - Usuwanie miast
+ * - Oznaczanie miast jako odwiedzone
+ * 
+ * @package 10devs
+ * @author 10devs Team
+ * @version 1.0
+ */
+
 // Funkcje do obsługi operacji na bazie danych związanych z miastami
 
 // Dołączenie plików wspólnych - tylko raz na początku pliku

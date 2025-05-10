@@ -1,19 +1,64 @@
 <?php
-// Klasa obsługująca interakcje z serwisami AI
+/**
+ * Klasa AiService odpowiada za komunikację z serwisem AI, generowanie rekomendacji 
+ * i zarządzanie odpowiedziami AI dla aplikacji turystycznej 10devs.
+ * 
+ * Klasa wykorzystuje zewnętrzne API AI do generowania rekomendacji turystycznych
+ * dla wybranych miast. Obsługuje również formatowanie zapytań, przetwarzanie odpowiedzi
+ * i zarządzanie błędami podczas komunikacji z API AI.
+ * 
+ * @package 10devs
+ * @author 10devs Team
+ * @version 1.0
+ */
 
 // Dołączenie potrzebnych plików
 require_once __DIR__ . '/../commonDB/aiLogs.php';
 require_once __DIR__ . '/ErrorLogger.php';
 
 class AiService {
+    /**
+     * Klucz API dla serwisu AI.
+     * 
+     * @var string
+     */
     private $apiKey;
+    
+    /**
+     * URL bazowy dla API AI.
+     * 
+     * @var string
+     */
     private $apiEndpoint;
+    
+    /**
+     * Model AI używany do generowania treści.
+     * 
+     * @var string
+     */
     private $model;
+    
+    /**
+     * Temperatura używana przy generowaniu odpowiedzi (większa wartość = większa kreatywność).
+     * 
+     * @var float
+     */
     private $timeout;
+    
+    /**
+     * Maksymalna liczba tokenów (jednostek tekstu) w odpowiedzi.
+     * 
+     * @var int
+     */
     private $maxTokens;
     
     /**
-     * Konstruktor inicjujący serwis AI
+     * Inicjalizuje nową instancję klasy AiService.
+     * 
+     * Wczytuje konfigurację z pliku config.php i inicjalizuje wszystkie
+     * niezbędne parametry potrzebne do komunikacji z API AI.
+     * 
+     * @throws Exception Jeśli nie można załadować konfiguracji lub brakuje wymaganych parametrów.
      */
     public function __construct() {
         // Wczytanie konfiguracji z pliku

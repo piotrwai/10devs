@@ -1,9 +1,19 @@
 <?php
-// Klasa obsługująca rejestrowanie błędów w bazie danych
-
+/**
+ * Klasa ErrorLogger służy do logowania błędów systemu 10devs.
+ * 
+ * ErrorLogger zapewnia statyczny interfejs do jednolitego logowania błędów
+ * w bazie danych. Logowane błędy mogą być powiązane z użytkownikiem, 
+ * zawierać szczegółowe informacje o miejscu wystąpienia błędu oraz dodatkowe dane.
+ * 
+ * @package 10devs
+ * @author 10devs Team
+ * @version 1.0
+ */
 class ErrorLogger {
+    
     /**
-     * Zapisuje informacje o błędzie do bazy danych
+     * Loguje błąd aplikacji w bazie danych.
      * 
      * @param string $errorType Typ błędu (np. login_error, validation_error, ai_fetch_error)
      * @param string $errorMessage Wiadomość z opisem błędu
@@ -15,7 +25,9 @@ class ErrorLogger {
     public static function logError($errorType, $errorMessage, $userId = null, $url = null, $payload = null) {
         try {
             // Importowanie funkcji z commonDB
-            require_once __DIR__ . '/../commonDB/errorLogs.php';
+            if (!function_exists('setErrorLog')) {
+                require_once __DIR__ . '/../commonDB/errorLogs.php';
+            }
             
             // Wywołanie funkcji z commonDB do zapisania błędu
             return setErrorLog($errorType, $errorMessage, $userId, $url, $payload);
